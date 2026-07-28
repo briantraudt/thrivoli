@@ -30,7 +30,7 @@
   .team-tabs{display:flex;gap:7px;overflow-x:auto;padding:2px 1px 10px;scrollbar-width:none}
   .team-tabs::-webkit-scrollbar{display:none}
   .team-tab{border:1px solid #E5E0D8;background:#fff;color:#5B6A72;border-radius:999px;padding:7px 12px;font:700 12px inherit;white-space:nowrap;cursor:pointer}
-  .team-tab.is-active{border-color:#B42318;background:#FFF1F0;color:#B42318}
+  .team-tab.is-active{border-color:#0E6B5C;background:#E3F0ED;color:#0E6B5C}
   .team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
   .team-card{background:#fff;border:1px solid #E5E0D8;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;min-width:0}
   .team-photo{width:68px;height:68px;flex:0 0 68px;border-radius:13px;object-fit:cover;object-position:center top;background:#E8EEEC}
@@ -1661,7 +1661,7 @@
                 <div style="font-size:14px;font-weight:800;color:#1C2B33;">Cheshire Fitness Zone team</div>
                 <div style="font-size:12px;color:#6B7A82;margin-top:2px;">{{ teamCountLabel }} · current public staff directory</div>
               </div>
-              <span style="font-size:11px;font-weight:800;color:#B42318;background:#FFF1F0;border-radius:999px;padding:5px 9px;">Updated Jul 28, 2026</span>
+              <span style="font-size:11px;font-weight:800;color:#0E6B5C;background:#E3F0ED;border-radius:999px;padding:5px 9px;">Updated Jul 28, 2026</span>
             </div>
             <div class="team-tabs" role="tablist" aria-label="Team discipline">
               <sc-for list="{{ teamTabs }}" as="tab" hint-placeholder-count="5">
@@ -1680,7 +1680,7 @@
                 </sc-if>
                 <div style="min-width:0;">
                   <div style="font-size:14px;font-weight:800;letter-spacing:-0.15px;color:#1C2B33;">{{ t.name }}</div>
-                  <div style="font-size:11px;font-weight:800;color:#B42318;text-transform:uppercase;letter-spacing:.45px;margin-top:4px;">{{ t.groupLabel }}</div>
+                  <div style="font-size:11px;font-weight:800;color:#0E6B5C;text-transform:uppercase;letter-spacing:.45px;margin-top:4px;">{{ t.groupLabel }}</div>
                   <div style="font-size:12px;color:#5B6A72;line-height:1.4;margin-top:3px;">{{ t.role }}</div>
                 </div>
               </div>
