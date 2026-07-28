@@ -117,30 +117,47 @@
             </sc-for>
           </div>
 
-          <div style="background:#fff; border:1px solid #E5E0D8; border-radius:12px; overflow:hidden; overflow-x:auto; box-shadow:0 2px 10px rgba(28,43,51,0.05); margin-bottom:12px;">
-            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:13px 16px 11px; min-width:790px;">
+          <div style="background:#fff; border:1px solid #E5E0D8; border-radius:12px; overflow:hidden; box-shadow:0 2px 10px rgba(28,43,51,0.05); margin-bottom:12px;">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:13px 16px 11px;">
               <div>
-                <h2 style="margin:0; font-size:15.5px; font-weight:800; letter-spacing:-0.3px;">Visits, break-even & growth plan</h2>
-                <div style="font-size:11.5px; color:#6B7A82; margin-top:3px;">School-contract hours are credited to the location and staff capacity; cash programs are shown separately from insurance visits.</div>
+                <h2 style="margin:0; font-size:15.5px; font-weight:800; letter-spacing:-0.3px;">Location performance</h2>
+                <div style="font-size:11.5px; color:#6B7A82; margin-top:3px;">Month-to-date visits vs break-even · select a clinic to drill down</div>
               </div>
               <button onClick="{{ goLocations }}" style="border:none; background:none; color:#0E6B5C; font-family:inherit; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;">Open forecast →</button>
             </div>
-            <div style="display:grid; grid-template-columns:minmax(110px,1.2fr) repeat(6,minmax(78px,1fr)) minmax(140px,1.5fr); min-width:790px; column-gap:12px; padding:7px 16px; font-size:9.5px; font-weight:700; color:#6B7A82; text-transform:uppercase; letter-spacing:0.45px; background:#FAF8F5; border-top:1px solid #EEEAE2; border-bottom:1px solid #EEEAE2;">
-              <span>Location</span><span style="text-align:right;">Visits MTD</span><span style="text-align:right;">Break-even</span><span style="text-align:right;">Cushion</span><span style="text-align:right;">School hrs</span><span style="text-align:right;">Cash rev.</span><span style="text-align:right;">Margin</span><span>Growth signal</span>
-            </div>
-            <sc-for list="{{ locationEconomics }}" as="r" hint-placeholder-count="7">
-              <div onClick="{{ r.go }}" style="display:grid; grid-template-columns:minmax(110px,1.2fr) repeat(6,minmax(78px,1fr)) minmax(140px,1.5fr); min-width:790px; column-gap:12px; padding:8px 16px; font-size:12px; align-items:center; border-bottom:1px solid #F1EDE6; cursor:pointer;" style-hover="background:#F6F4F0">
-                <span style="display:flex; align-items:center; gap:7px; font-weight:700;"><span style="width:7px; height:7px; border-radius:50%; background:{{ r.dot }};"></span>{{ r.name }}</span>
-                <span style="text-align:right; font-weight:700; font-variant-numeric:tabular-nums;">{{ r.visits }}</span>
-                <span style="text-align:right; font-variant-numeric:tabular-nums;">{{ r.breakEven }}</span>
-                <span style="text-align:right; font-weight:700; color:{{ r.cushionColor }};">{{ r.cushion }}</span>
-                <span style="text-align:right; font-variant-numeric:tabular-nums;">{{ r.schoolHours }}</span>
-                <span style="text-align:right; font-variant-numeric:tabular-nums;">{{ r.cashRevenue }}</span>
-                <span style="text-align:right; font-weight:700; color:{{ r.marginColor }};">{{ r.margin }}</span>
-                <span style="font-size:11.5px; color:{{ r.signalColor }}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ r.signal }}</span>
+            <div style="display:grid; grid-template-columns:minmax(0,1.55fr) minmax(250px,0.75fr); border-top:1px solid #EEEAE2;">
+              <div style="padding:12px 16px 13px; min-width:0;">
+                <div style="display:flex; justify-content:flex-end; gap:14px; margin-bottom:7px; font-size:10.5px; color:#6B7A82;">
+                  <span style="display:flex; align-items:center; gap:5px;"><span style="width:11px; height:7px; border-radius:2px; background:#0E6B5C;"></span>Visits MTD</span>
+                  <span style="display:flex; align-items:center; gap:5px;"><span style="width:11px; height:7px; border-radius:2px; background:#D8D2C8;"></span>Break-even</span>
+                </div>
+                <sc-for list="{{ locationEconomics }}" as="r" hint-placeholder-count="7">
+                  <button onClick="{{ r.select }}" aria-label="{{ r.ariaLabel }}" style="width:100%; display:grid; grid-template-columns:90px minmax(100px,1fr) 88px; gap:10px; align-items:center; border:0; border-radius:7px; padding:5px 7px; background:{{ r.rowBg }}; color:#1C2B33; font-family:inherit; cursor:pointer; text-align:left; margin-bottom:2px;" style-hover="background:#F1EDE6">
+                    <span style="font-size:11.5px; font-weight:700; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ r.name }}</span>
+                    <span style="position:relative; height:12px; display:block;">
+                      <span style="position:absolute; inset:2px auto 2px 0; width:{{ r.breakEvenWidth }}; border-radius:3px; background:#D8D2C8;"></span>
+                      <span style="position:absolute; inset:0 auto 0 0; width:{{ r.visitsWidth }}; border-radius:4px; background:{{ r.barColor }}; opacity:0.92;"></span>
+                    </span>
+                    <span style="font-size:11.5px; text-align:right; font-variant-numeric:tabular-nums;"><strong>{{ r.visits }}</strong> <span style="color:#87939A;">/ {{ r.breakEven }}</span></span>
+                  </button>
+                </sc-for>
               </div>
-            </sc-for>
-            <div style="display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; padding:9px 16px; min-width:790px; font-size:11.5px; color:#6B7A82; background:#FAF8F5;">
+              <div style="padding:14px 16px; background:#FAF8F5; border-left:1px solid #EEEAE2;">
+                <div style="display:flex; align-items:center; justify-content:space-between; gap:8px;">
+                  <span style="display:flex; align-items:center; gap:7px; font-size:14px; font-weight:800;"><span style="width:8px; height:8px; border-radius:50%; background:{{ selectedEconomics.dot }};"></span>{{ selectedEconomics.name }}</span>
+                  <span style="font-size:11px; font-weight:800; color:{{ selectedEconomics.cushionColor }}; background:#fff; border:1px solid #E5E0D8; border-radius:999px; padding:3px 7px;">{{ selectedEconomics.cushion }} visits</span>
+                </div>
+                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin:12px 0;">
+                  <div><div style="font-size:9px; font-weight:700; color:#6B7A82; text-transform:uppercase; letter-spacing:0.45px;">Margin</div><div style="font-size:16px; font-weight:800; color:{{ selectedEconomics.marginColor }}; margin-top:3px;">{{ selectedEconomics.margin }}</div></div>
+                  <div><div style="font-size:9px; font-weight:700; color:#6B7A82; text-transform:uppercase; letter-spacing:0.45px;">School</div><div style="font-size:16px; font-weight:800; margin-top:3px;">{{ selectedEconomics.schoolHours }}</div></div>
+                  <div><div style="font-size:9px; font-weight:700; color:#6B7A82; text-transform:uppercase; letter-spacing:0.45px;">Cash</div><div style="font-size:16px; font-weight:800; margin-top:3px;">{{ selectedEconomics.cashRevenue }}</div></div>
+                </div>
+                <div style="font-size:10px; font-weight:700; color:#6B7A82; text-transform:uppercase; letter-spacing:0.45px; margin-bottom:4px;">Recommended action</div>
+                <div style="font-size:12px; font-weight:650; color:{{ selectedEconomics.signalColor }}; line-height:1.45;">{{ selectedEconomics.signal }}</div>
+                <button onClick="{{ selectedEconomics.go }}" style="border:0; background:none; color:#0E6B5C; font-family:inherit; font-size:11.5px; font-weight:750; cursor:pointer; padding:10px 0 0;">View full location →</button>
+              </div>
+            </div>
+            <div style="display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; padding:9px 16px; font-size:11.5px; color:#6B7A82; background:#FAF8F5; border-top:1px solid #EEEAE2;">
               <span><strong style="color:#1C2B33;">4,246</strong> visits delivered vs <strong style="color:#1C2B33;">3,450</strong> break-even</span>
               <span><strong style="color:#1C2B33;">22%</strong> school contracts · <strong style="color:#1C2B33;">5%</strong> cash programs · <strong style="color:#1C2B33;">73%</strong> insurance</span>
               <span><strong style="color:#0E6B5C;">+$83.3k</strong> operating contribution above break-even</span>
@@ -3979,7 +3996,7 @@ Thrivoli Pediatric Therapy · NPI 1487562203 · Tax ID 06-1884422</textarea>
 <template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#0B3B34"></rect><g transform="translate(30,30) scale(1.7)"><path d="M4 18.5c.8-9.5 15.2-9.5 16 0" fill="none" stroke="#E8674A" stroke-width="2.2" stroke-linecap="round"></path></g></svg></template></x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;startScreen&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;dashboard&quot;, &quot;options&quot;: [&quot;dashboard&quot;, &quot;locations&quot;, &quot;location&quot;, &quot;growth&quot;, &quot;schedule&quot;, &quot;appt&quot;, &quot;newAppt&quot;, &quot;patientList&quot;, &quot;patients&quot;, &quot;note&quot;, &quot;billing&quot;, &quot;claim&quot;, &quot;reimburse&quot;, &quot;referrals&quot;, &quot;referral&quot;, &quot;waitlist&quot;, &quot;reports&quot;, &quot;inventory&quot;, &quot;po&quot;, &quot;settings&quot;, &quot;brief&quot;, &quot;notifications&quot;, &quot;search&quot;, &quot;newPatient&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Prototype&quot;}}">
 class Component extends DCLogic {
-  state = { screen: null, params: {}, back: null, selectedApptSlot: '3:15p', bookedAppointments: [], tab: 'overview', ptab: 'roster', ctab: 'codes', yatab: 'carriers', doneTasks: { 2: true }, toast: null, confirm: null, autoOff: { 5: true }, stab: 'pnl', basis: 'accrual' };
+  state = { screen: null, params: {}, back: null, selectedApptSlot: '3:15p', selectedEconomics: 'Pool Location', bookedAppointments: [], tab: 'overview', ptab: 'roster', ctab: 'codes', yatab: 'carriers', doneTasks: { 2: true }, toast: null, confirm: null, autoOff: { 5: true }, stab: 'pnl', basis: 'accrual' };
   componentDidMount() {
     this._syncRoute = () => {
       const requested = window.location.hash.replace(/^#\/?/, '').split('?')[0];
@@ -4138,6 +4155,12 @@ class Component extends DCLogic {
         marginColor: margin >= 22 ? teal : margin >= 16 ? amber : red,
         signal, signalColor: severity === 'bad' ? red : severity === 'warn' ? amber : teal,
         dot: severity === 'bad' ? red : severity === 'warn' ? amber : teal,
+        visitsWidth: Math.round((visits / 900) * 100) + '%',
+        breakEvenWidth: Math.round((breakEven / 900) * 100) + '%',
+        barColor: difference >= 0 ? teal : severity === 'bad' ? red : amber,
+        rowBg: this.state.selectedEconomics === name ? '#EAF3F1' : 'transparent',
+        ariaLabel: name + ': ' + visits + ' visits, break-even ' + breakEven,
+        select: () => this.setState({ selectedEconomics: name }),
         go: () => this.nav('location', { loc: name }),
       };
     };
@@ -4150,6 +4173,7 @@ class Component extends DCLogic {
       economicsRow('Pool Location', 418, 500, 84, '$1.7k', 11, 'Below break-even · fill demand + hire PT', 'bad'),
       economicsRow('New Location', 164, 460, 32, '$0.8k', -8, 'Ramp plan · break-even in 11 weeks', 'warn'),
     ];
+    const selectedEconomics = locationEconomics.find(r => r.name === this.state.selectedEconomics) || locationEconomics[0];
     const leaks = [
       { amount: '$19,500', title: '186 unfilled slots this week', body: 'Pool Location is 73% full and Torrington 84% — 9 waitlist families could fill 31 slots today.', action: 'Offer waitlist', go: () => this.nav('waitlist') },
       { amount: '$12,480', title: '41 visits delivered but not billed', body: '17 claims are clean and ready; 24 are blocked by unsigned notes or missing auth.', action: 'Work queue', go: () => this.nav('reimburse') },
@@ -6081,7 +6105,7 @@ class Component extends DCLogic {
       goSettings: () => this.nav('settings'), goBrief: () => this.nav('brief'), goNotifications: () => this.nav('notifications'),
       goSearch: () => this.nav('search'), goPO: () => this.nav('po'), goNewPatient: () => this.nav('newPatient'),
       goReferralDetail: () => this.nav('referral'),
-      navGroups, leaks: leakTop, locationScore, locationEconomics, demand, capacityGrid, locCards: locCardsWired, funnel, sources,
+      navGroups, leaks: leakTop, locationScore, locationEconomics, selectedEconomics, demand, capacityGrid, locCards: locCardsWired, funnel, sources,
       goGrowth: () => this.nav('growth'), goLocations: () => this.nav('locations'),
       tabOverview: tab === 'overview', tabNotes: tab === 'notes', tabBillingTab: tab === 'billing',
       goSchedule: () => this.nav('schedule'), goChart, goApptDetail,
