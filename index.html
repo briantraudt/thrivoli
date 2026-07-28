@@ -529,11 +529,14 @@
                     <div style="position:absolute; left:0; right:0; top:{{ g.top }}px; border-top:1px solid #F1EDE6;"></div>
                   </sc-for>
                   <sc-for list="{{ d.appts }}" as="a" hint-placeholder-count="4">
-                    <div onClick="{{ goApptDetail }}" style="position:absolute; left:3px; right:3px; top:{{ a.top }}px; height:{{ a.height }}px; background:{{ a.bg }}; border-radius:7px; padding:5px 9px; overflow:hidden; cursor:pointer; box-shadow:inset 0 0 0 1px {{ a.ring }};" style-hover="filter:brightness(0.96)">
-                      <div style="font-size:11px; font-weight:700; color:{{ a.ink }}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ a.patient }}</div>
-                      <div style="font-size:10px; color:{{ a.ink }}; opacity:0.82; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
-                        {{ a.service }}<sc-if value="{{ a.hasTherapist }}" hint-placeholder-val="{{ true }}"> · <button class="therapist-link" onClick="{{ a.therapistGo }}" aria-label="View {{ a.therapistFullName }} on the Team page">{{ a.therapistLastName }}</button></sc-if>
+                    <div onClick="{{ goApptDetail }}" style="position:absolute; left:3px; right:3px; top:{{ a.top }}px; height:{{ a.height }}px; background:{{ a.bg }}; border-radius:7px; padding:6px 8px; overflow:hidden; cursor:pointer; box-shadow:inset 0 0 0 1px {{ a.ring }};" style-hover="filter:brightness(0.96)">
+                      <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:6px; min-width:0;">
+                        <div style="font-size:13px; line-height:1.05; font-weight:800; color:{{ a.ink }}; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; min-width:0; flex:1;">{{ a.patient }}</div>
+                        <sc-if value="{{ a.hasTherapist }}" hint-placeholder-val="{{ true }}">
+                          <button class="therapist-link" onClick="{{ a.therapistGo }}" aria-label="View {{ a.therapistFullName }} on the Team page" style="font-size:9.5px; line-height:1.05; flex:0 1 auto; max-width:46%; text-align:right; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ a.therapistLastName }}</button>
+                        </sc-if>
                       </div>
+                      <div style="font-size:10px; line-height:1.15; color:{{ a.ink }}; opacity:0.82; text-align:left; white-space:nowrap; overflow:hidden; text-overflow:ellipsis; margin-top:3px;">{{ a.service }}</div>
                     </div>
                   </sc-for>
                 </div>
