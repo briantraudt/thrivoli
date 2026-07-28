@@ -4330,7 +4330,21 @@ class Component extends DCLogic {
         ptVisits: insights.ops.pt.toLocaleString(),
         otVisits: insights.ops.ot.toLocaleString(),
         speechVisits: insights.ops.speech.toLocaleString(),
-        insuranceRevenue: '
+        insuranceRevenue: '$' + insights.ops.insurance.toFixed(1) + 'k',
+        schoolRevenue: '$' + insights.ops.school.toFixed(1) + 'k',
+        cashRevenue: '$' + insights.ops.cash.toFixed(1) + 'k',
+        totalRevenue: '$' + insights.ops.revenue.toFixed(1) + 'k',
+        totalCosts: '$' + insights.ops.costs.toFixed(1) + 'k',
+        operatingIncome: (insights.ops.income < 0 ? '−$' : '$') + Math.abs(insights.ops.income).toFixed(1) + 'k',
+        incomeColor: insights.ops.income >= 0 ? teal : red,
+        clinicHours: insights.ops.clinicHours.toLocaleString() + 'h',
+        adminHours: insights.ops.adminHours.toLocaleString() + 'h',
+        nonBillableHours: insights.ops.nonBillableHours.toLocaleString() + 'h',
+        clinicalPayroll: '$' + insights.ops.payroll.toFixed(1) + 'k',
+        adminPayroll: '$' + insights.ops.adminPayroll.toFixed(1) + 'k',
+        occupancy: '$' + insights.ops.occupancy.toFixed(1) + 'k',
+        otherCosts: '$' + insights.ops.other.toFixed(1) + 'k',
+        breakEvenFormula: '$' + insights.ops.costs.toFixed(1) + 'k operating costs − $' + insights.ops.school.toFixed(1) + 'k school revenue − $' + insights.ops.cash.toFixed(1) + 'k cash revenue = $' + (insights.ops.costs - insights.ops.school - insights.ops.cash).toFixed(1) + 'k to cover with insurance visits ÷ $' + insights.ops.netPerVisit + ' net revenue per visit ≈ ' + breakEven.toLocaleString() + ' visits.',
         go: () => this.nav('location', { loc: name }),
       };
     };
