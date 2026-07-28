@@ -33,8 +33,11 @@
   .team-tab.is-active{border-color:#0E6B5C;background:#E3F0ED;color:#0E6B5C}
   .team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
   .team-card{background:#fff;border:1px solid #E5E0D8;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;min-width:0}
+  .team-card.is-focused{border-color:#0E6B5C;box-shadow:0 0 0 3px rgba(14,107,92,.14);background:#F7FBFA}
   .team-photo{width:68px;height:68px;flex:0 0 68px;border-radius:13px;object-fit:cover;object-position:center top;background:#E8EEEC}
   .team-fallback{width:68px;height:68px;flex:0 0 68px;border-radius:13px;display:grid;place-items:center;background:#F1EDE6;color:#6B7A82;font-size:18px;font-weight:800}
+  .therapist-link{border:0;background:none;padding:0;min-height:0;color:inherit;font:inherit;font-weight:700;text-decoration:underline;text-decoration-color:rgba(14,107,92,.35);text-underline-offset:2px;cursor:pointer}
+  .therapist-link:hover{color:#0E6B5C;text-decoration-color:#0E6B5C}
   @media(max-width:920px){
     html,body{width:100%;overflow:hidden}
     body>div,x-dc>div{min-width:0!important;width:100%!important}
@@ -472,7 +475,7 @@
           <div style="display:flex; gap:14px; margin-bottom:12px; font-size:12px; color:#6B7A82; align-items:center;">
             <span style="font-weight:700; color:#1C2B33;">Therapists:</span>
             <sc-for list="{{ therapistLegend }}" as="tl" hint-placeholder-count="4">
-              <span style="display:flex; align-items:center; gap:5px;"><span style="width:9px; height:9px; border-radius:3px; background:{{ tl.color }};"></span>{{ tl.name }}</span>
+              <span style="display:flex; align-items:center; gap:5px;"><span style="width:9px; height:9px; border-radius:3px; background:{{ tl.color }};"></span><button class="therapist-link" onClick="{{ tl.go }}" aria-label="View {{ tl.fullName }} on the Team page">{{ tl.name }}</button></span>
             </sc-for>
           </div>
           <div style="background:#fff; border:1px solid #E5E0D8; border-radius:12px; overflow:hidden;">
@@ -499,7 +502,9 @@
                   <sc-for list="{{ d.appts }}" as="a" hint-placeholder-count="4">
                     <div onClick="{{ goApptDetail }}" style="position:absolute; left:3px; right:3px; top:{{ a.top }}px; height:{{ a.height }}px; background:{{ a.bg }}; border-radius:7px; padding:5px 9px; overflow:hidden; cursor:pointer; box-shadow:inset 0 0 0 1px {{ a.ring }};" style-hover="filter:brightness(0.96)">
                       <div style="font-size:11px; font-weight:700; color:{{ a.ink }}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ a.patient }}</div>
-                      <div style="font-size:10px; color:{{ a.ink }}; opacity:0.72; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ a.label }}</div>
+                      <div style="font-size:10px; color:{{ a.ink }}; opacity:0.82; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">
+                        {{ a.service }}<sc-if value="{{ a.hasTherapist }}" hint-placeholder-val="{{ true }}"> · <button class="therapist-link" onClick="{{ a.therapistGo }}" aria-label="View {{ a.therapistFullName }} on the Team page">{{ a.therapistLastName }}</button></sc-if>
+                      </div>
                     </div>
                   </sc-for>
                 </div>
@@ -1671,7 +1676,7 @@
           </div>
           <div class="team-grid">
             <sc-for list="{{ teamRows }}" as="t" hint-placeholder-count="12">
-              <div class="team-card">
+              <div class="team-card {{ t.focusClass }}" id="{{ t.profileId }}" tabindex="{{ t.tabIndex }}">
                 <sc-if value="{{ t.hasPhoto }}" hint-placeholder-val="{{ true }}">
                   <img class="team-photo" src="{{ t.photo }}" alt="{{ t.name }}" loading="lazy" referrerpolicy="no-referrer">
                 </sc-if>
@@ -4133,6 +4138,21 @@ class Component extends DCLogic {
     if (window.location.hash !== '#/' + s) window.history.pushState({}, '', '#/' + s);
     this.setState(st => ({ screen: s, params: params || {}, mobileNavOpen: false, back: (st.screen ?? 'dashboard') === s ? st.back : { screen: st.screen ?? 'dashboard', params: st.params, label: this.labelFor(st.screen ?? 'dashboard') } }));
   }
+  teamProfileId(name) {
+    return 'team-' + name.toLowerCase().replace(/[^a-z0-9]+/g, '-').replace(/^-|-$/g, '');
+  }
+  goTeamMember(event, name) {
+    if (event && event.stopPropagation) event.stopPropagation();
+    const profileId = this.teamProfileId(name);
+    this.nav('team', { teamGroup: 'physical-therapy', teamFocus: name });
+    window.setTimeout(() => {
+      const card = document.getElementById(profileId);
+      if (card) {
+        card.scrollIntoView({ behavior: 'smooth', block: 'center' });
+        card.focus({ preventScroll: true });
+      }
+    }, 80);
+  }
   goBack() {
     const b = this.state.back;
     if (window.history.length > 1) {
@@ -4374,10 +4394,24 @@ class Component extends DCLogic {
     }
     const tCol = { chen: [teal, tealBg], okafor: [coral, coralBg], patel: [blue, blueBg], torres: [purple, purpleBg] };
     const tInk = { chen: '#0A5348', okafor: '#A03A22', patel: '#245A88', torres: '#5D4380' };
-    const ap = (startH, startM, mins, patient, label, who) => ({
+    const therapistProfiles = {
+      chen: { short: 'K. Kolwicz', last: 'Kolwicz', full: 'Kristen Kolwicz' },
+      okafor: { short: 'J. Carbone', last: 'Carbone', full: 'Jessica Carbone' },
+      patel: { short: 'A. Morgan', last: 'Morgan', full: 'Amanda Morgan' },
+      torres: { short: 'K. Theriault', last: 'Theriault', full: 'Katherine Theriault' },
+    };
+    const ap = (startH, startM, mins, patient, label, who) => {
+      const labelParts = label.split(' · ');
+      const therapist = labelParts.length > 1 ? therapistProfiles[who] : null;
+      return {
       top: (startH - 7) * 60 + startM, height: mins - 4, patient, label,
       color: tCol[who][0], bg: tCol[who][1], ink: tInk[who], ring: tCol[who][0] + '2E',
-    });
+      service: labelParts[0], hasTherapist: Boolean(therapist),
+      therapistLastName: therapist ? therapist.last : '',
+      therapistFullName: therapist ? therapist.full : '',
+      therapistGo: therapist ? (event) => this.goTeamMember(event, therapist.full) : () => {},
+    };
+    };
     let weekDays = [
       { dow: 'Mon', num: '20', appts: [ap(8, 0, 45, 'Noah B.', 'Tx · Kolwicz', 'chen'), ap(9, 0, 60, 'Zoe L.', 'Eval · Carbone', 'okafor'), ap(10, 30, 45, 'Ivy R.', 'Tx · Morgan', 'patel'), ap(13, 0, 45, 'Leo K.', 'Tx · Theriault', 'torres'), ap(14, 30, 45, 'Mia S.', 'Tx · Kolwicz', 'chen')] },
       { dow: 'Tue', num: '21', appts: [ap(8, 30, 45, 'Harper N.', 'Tx · Morgan', 'patel'), ap(9, 30, 45, 'Eli T.', 'Re-eval · Kolwicz', 'chen'), ap(11, 0, 45, 'Amara D.', 'Tx · Theriault', 'torres'), ap(13, 30, 60, 'Owen C.', 'Eval · Carbone', 'okafor'), ap(15, 0, 45, 'Ruby F.', 'Tx · Morgan', 'patel')] },
@@ -4400,9 +4434,11 @@ class Component extends DCLogic {
       });
     }
     const therapistLegend = [
-      { name: 'K. Kolwicz', color: teal }, { name: 'J. Carbone', color: coral },
-      { name: 'A. Morgan', color: blue }, { name: 'K. Theriault', color: purple },
-    ];
+      { ...therapistProfiles.chen, name: therapistProfiles.chen.short, color: teal },
+      { ...therapistProfiles.okafor, name: therapistProfiles.okafor.short, color: coral },
+      { ...therapistProfiles.patel, name: therapistProfiles.patel.short, color: blue },
+      { ...therapistProfiles.torres, name: therapistProfiles.torres.short, color: purple },
+    ].map(therapist => ({ ...therapist, fullName: therapist.full, go: (event) => this.goTeamMember(event, therapist.full) }));
     // Chart
     const goals = [
       { text: 'Single-leg stance 5s each side for shoe donning (LTG 1)', pct: 75, color: teal, meta: 'Baseline 1s · Last measured 07/13 · On track' },
@@ -4624,9 +4660,16 @@ class Component extends DCLogic {
       initials: person.name.split(/\s+/).map(part => part[0]).slice(0, 2).join('').toUpperCase(),
     }));
     const teamGroup = P2.teamGroup || 'all';
-    const teamRows = teamGroup === 'all'
+    const filteredTeamRows = teamGroup === 'all'
       ? allTeamRows
       : allTeamRows.filter(person => person.group === teamGroup);
+    const teamFocus = P2.teamFocus || '';
+    const teamRows = filteredTeamRows.map(person => ({
+      ...person,
+      profileId: this.teamProfileId(person.name),
+      focusClass: person.name === teamFocus ? 'is-focused' : '',
+      tabIndex: person.name === teamFocus ? '0' : '-1',
+    }));
     const teamTabDefs = [
       ['all', 'All staff'],
       ['physical-therapy', 'Physical Therapy'],
