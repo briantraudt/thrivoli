@@ -25,8 +25,58 @@
   .skip-link{position:fixed;left:12px;top:-60px;z-index:9999;background:#fff;color:#0B3B34;border-radius:8px;padding:10px 14px;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,.18)}
   .skip-link:focus{top:12px}
   .demo-badge{display:inline-flex;align-items:center;gap:5px;margin-left:auto;padding:3px 7px;border:1px solid rgba(255,255,255,.22);border-radius:999px;color:#CFE3DE;font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap}
+  .mobile-menu-button,.mobile-nav-backdrop{display:none}
   @media(max-width:920px){
-    body>div,x-dc>div{min-width:760px}
+    html,body{width:100%;overflow:hidden}
+    body>div,x-dc>div{min-width:0!important;width:100%!important}
+    .app-shell{position:relative;width:100%;min-width:0}
+    .app-sidebar{
+      position:fixed!important;inset:0 auto 0 0;z-index:1000;width:min(84vw,300px)!important;
+      transform:translateX(-105%);transition:transform .22s ease;box-shadow:12px 0 36px rgba(11,59,52,.22)
+    }
+    .app-sidebar.is-open{transform:translateX(0)}
+    .mobile-nav-backdrop{
+      display:block;position:fixed;inset:0;z-index:999;border:0;background:rgba(11,31,28,.46);
+      opacity:0;pointer-events:none;transition:opacity .2s ease
+    }
+    .mobile-nav-backdrop.is-open{opacity:1;pointer-events:auto}
+    .app-content{width:100%;min-width:0}
+    .mobile-menu-button{
+      display:grid;place-items:center;width:42px;height:42px;min-height:42px;flex:0 0 42px;
+      border:1px solid #E5E0D8;border-radius:9px;background:#fff;color:#1C2B33;cursor:pointer
+    }
+    .page-heading{align-items:center!important;margin-bottom:12px!important}
+    .page-title-wrap{display:flex!important;align-items:flex-start;gap:10px;flex-basis:100%!important}
+    .page-actions{justify-content:flex-start!important;flex-basis:100%!important}
+    .page-actions>div:first-child{max-width:none!important;flex-basis:100%!important}
+    .page-actions select{flex:1 1 150px;min-width:0}
+    .app-main{padding:12px 12px 28px!important;-webkit-overflow-scrolling:touch}
+    .responsive-split{grid-template-columns:1fr!important}
+    .responsive-split>div+div{border-left:0!important;border-top:1px solid #EEEAE2}
+    [style*="grid-template-columns:minmax(0,1.62fr)"],
+    [style*="grid-template-columns:minmax(0,1.6fr)"],
+    [style*="grid-template-columns:minmax(0,1.5fr)"],
+    [style*="grid-template-columns:minmax(0,1.4fr)"],
+    [style*="grid-template-columns:1fr 1fr"],
+    [style*="grid-template-columns:repeat(2"]{grid-template-columns:1fr!important}
+    [style*="grid-template-columns:repeat(3"]{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+    [style*="grid-template-columns:repeat(4"]{grid-template-columns:repeat(2,minmax(0,1fr))!important}
+    [style*="min-width:590px"],[style*="min-width:600px"],[style*="min-width:640px"],
+    [style*="min-width:680px"],[style*="min-width:700px"],[style*="min-width:720px"],
+    [style*="min-width:760px"],[style*="min-width:800px"],[style*="min-width:900px"]{max-width:none}
+    button,a,[role="button"]{touch-action:manipulation}
+    button{min-height:40px}
+    input,select,textarea{font-size:16px!important;max-width:100%}
+    [style*="position:fixed"][style*="width:"]{max-width:calc(100vw - 24px)!important}
+  }
+  @media(max-width:560px){
+    .app-main{padding:10px 10px 24px!important}
+    .page-actions>span[style*="width:1px"]{display:none!important}
+    .page-actions>button:not(.mobile-menu-button){flex:1 1 auto}
+    [style*="grid-template-columns:repeat(3"],
+    [style*="grid-template-columns:repeat(4"]{grid-template-columns:1fr!important}
+    h1{font-size:21px!important}
+    h2{line-height:1.25}
   }
   @media(prefers-reduced-motion:reduce){
     *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}
@@ -34,9 +84,10 @@
 </style>
 </helmet>
 <a class="skip-link" href="#main-content">Skip to main content</a>
-<div style="display:flex; height:100vh; overflow:hidden; background:#F6F4F0;">
+<div class="app-shell" style="display:flex; height:100vh; overflow:hidden; background:#F6F4F0;">
   <!-- ============ SIDEBAR ============ -->
-  <nav style="width:232px; flex-shrink:0; background:#0B3B34; display:flex; flex-direction:column; padding:14px 12px 12px;">
+  <button class="mobile-nav-backdrop {{ mobileNavClass }}" onClick="{{ closeMobileNav }}" aria-label="Close navigation" tabindex="-1"></button>
+  <nav class="app-sidebar {{ mobileNavClass }}" aria-label="Primary navigation" style="width:232px; flex-shrink:0; background:#0B3B34; display:flex; flex-direction:column; padding:14px 12px 12px;">
     <div style="display:flex; align-items:center; gap:10px; padding:2px 8px 14px;">
       <span style="width:36px; height:36px; display:grid; place-items:center; flex-shrink:0; position:relative; z-index:2; margin-right:-13px; transform:translateY(0px);">
         <svg width="26" height="26" viewBox="0 0 32 32" style="display:block; overflow:visible;"><path d="M5.5 26.5C5.5 14.5 13.5 6.5 26.5 6" style="fill:none; stroke:#7FB3A8; stroke-width:3.2; stroke-linecap:round;"></path><path d="M12 26.5C12 18.5 16.8 13.6 25 13" style="fill:none; stroke:#E8674A; stroke-width:3.2; stroke-linecap:round;"></path></svg>
@@ -74,16 +125,21 @@
   </nav>
 
   <!-- ============ MAIN ============ -->
-  <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
-    <main id="main-content" tabindex="-1" style="flex:1; overflow:auto; padding:18px 22px 32px;">
-      <div style="display:flex; flex-wrap:wrap; align-items:flex-start; gap:10px 16px; margin-bottom:14px;">
-        <div style="flex:1 1 200px; min-width:0; padding-top:2px;">
+  <div class="app-content" style="flex:1; display:flex; flex-direction:column; min-width:0;">
+    <main class="app-main" id="main-content" tabindex="-1" style="flex:1; overflow:auto; padding:18px 22px 32px;">
+      <div class="page-heading" style="display:flex; flex-wrap:wrap; align-items:flex-start; gap:10px 16px; margin-bottom:14px;">
+        <div class="page-title-wrap" style="flex:1 1 200px; min-width:0; padding-top:2px;">
+          <button class="mobile-menu-button" onClick="{{ openMobileNav }}" aria-label="Open navigation" aria-expanded="{{ mobileNavExpanded }}">
+            <svg width="21" height="21" viewBox="0 0 24 24" style="fill:none;stroke:currentColor;stroke-width:2;stroke-linecap:round"><path d="M4 6h16M4 12h16M4 18h16"></path></svg>
+          </button>
+          <div style="min-width:0;">
           <h1 style="margin:0; font-size:23px; font-weight:800; letter-spacing:-0.5px;">{{ pageTitle }}</h1>
           <sc-if value="{{ hasSub }}" hint-placeholder-val="{{ true }}">
             <div style="color:#6B7A82; font-size:13px; margin-top:4px;">{{ pageSub }}</div>
           </sc-if>
+          </div>
         </div>
-        <div style="display:flex; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:8px; flex:1 1 auto; min-width:0;">
+        <div class="page-actions" style="display:flex; flex-wrap:wrap; justify-content:flex-end; align-items:center; gap:8px; flex:1 1 auto; min-width:0;">
           <div onClick="{{ goSearch }}" style="display:flex; align-items:center; gap:8px; background:#fff; border:1px solid #E5E0D8; border-radius:8px; padding:8px 12px; color:#6B7A82; font-size:13px; flex:1 1 170px; min-width:0; max-width:250px; cursor:pointer;" style-hover="border-color:#0E6B5C">
             <svg width="14" height="14" viewBox="0 0 24 24" style="fill:none; stroke:currentColor; stroke-width:2px; stroke-linecap:round; flex-shrink:0;"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg><span style="overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">Search patients, claims…</span><span style="margin-left:auto; font-size:11px; border:1px solid #D8D2C8; border-radius:4px; padding:0 5px;">⌘K</span>
           </div>
@@ -125,7 +181,7 @@
               </div>
               <button onClick="{{ goLocations }}" style="border:none; background:none; color:#0E6B5C; font-family:inherit; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;">Open forecast →</button>
             </div>
-            <div style="display:grid; grid-template-columns:minmax(0,1.55fr) minmax(250px,0.75fr); border-top:1px solid #EEEAE2;">
+            <div class="responsive-split" style="display:grid; grid-template-columns:minmax(0,1.45fr) minmax(310px,0.9fr); border-top:1px solid #EEEAE2;">
               <div style="padding:12px 16px 13px; min-width:0;">
                 <div style="display:flex; justify-content:flex-end; gap:14px; margin-bottom:7px; font-size:10.5px; color:#6B7A82;">
                   <span style="display:flex; align-items:center; gap:5px;"><span style="width:11px; height:7px; border-radius:2px; background:#0E6B5C;"></span>Visits MTD</span>
@@ -147,10 +203,32 @@
                   <span style="display:flex; align-items:center; gap:7px; font-size:14px; font-weight:800;"><span style="width:8px; height:8px; border-radius:50%; background:{{ selectedEconomics.dot }};"></span>{{ selectedEconomics.name }}</span>
                   <span style="font-size:11px; font-weight:800; color:{{ selectedEconomics.cushionColor }}; background:#fff; border:1px solid #E5E0D8; border-radius:999px; padding:3px 7px;">{{ selectedEconomics.cushion }} visits</span>
                 </div>
-                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin:12px 0;">
+                <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:7px; margin:11px 0 10px;">
                   <div><div style="font-size:9px; font-weight:700; color:#6B7A82; text-transform:uppercase; letter-spacing:0.45px;">Margin</div><div style="font-size:16px; font-weight:800; color:{{ selectedEconomics.marginColor }}; margin-top:3px;">{{ selectedEconomics.margin }}</div></div>
                   <div><div style="font-size:9px; font-weight:700; color:#6B7A82; text-transform:uppercase; letter-spacing:0.45px;">School</div><div style="font-size:16px; font-weight:800; margin-top:3px;">{{ selectedEconomics.schoolHours }}</div></div>
                   <div><div style="font-size:9px; font-weight:700; color:#6B7A82; text-transform:uppercase; letter-spacing:0.45px;">Cash</div><div style="font-size:16px; font-weight:800; margin-top:3px;">{{ selectedEconomics.cashRevenue }}</div></div>
+                </div>
+                <div style="border-top:1px solid #E5E0D8; border-bottom:1px solid #E5E0D8; padding:9px 0 8px;">
+                  <div style="display:flex; align-items:flex-end; justify-content:space-between; gap:12px;">
+                    <div>
+                      <div style="font-size:9px; font-weight:700; color:#6B7A82; text-transform:uppercase; letter-spacing:0.45px;">4-week visit trend</div>
+                      <div style="display:flex; align-items:baseline; gap:5px; margin-top:2px;"><strong style="font-size:14px;">{{ selectedEconomics.weeklyVisits }}</strong><span style="font-size:10px; color:{{ selectedEconomics.trendColor }}; font-weight:700;">{{ selectedEconomics.trend }}</span></div>
+                    </div>
+                    <div style="height:32px; display:flex; align-items:flex-end; gap:4px;" aria-label="{{ selectedEconomics.trendAria }}">
+                      <sc-for list="{{ selectedEconomics.trendBars }}" as="bar" hint-placeholder-count="4">
+                        <span style="display:block; width:13px; height:{{ bar.height }}; border-radius:3px 3px 1px 1px; background:{{ bar.color }};" title="{{ bar.label }}"></span>
+                      </sc-for>
+                    </div>
+                  </div>
+                  <div style="display:grid; grid-template-columns:repeat(3,1fr); gap:8px; margin-top:8px;">
+                    <div><div style="font-size:9px; color:#6B7A82;">Schedule fill</div><div style="font-size:12px; font-weight:800; margin-top:2px; color:{{ selectedEconomics.utilizationColor }};">{{ selectedEconomics.utilization }}</div></div>
+                    <div><div style="font-size:9px; color:#6B7A82;">Clinical FTE</div><div style="font-size:12px; font-weight:800; margin-top:2px;">{{ selectedEconomics.clinicalFte }}</div></div>
+                    <div><div style="font-size:9px; color:#6B7A82;">Auth at risk</div><div style="font-size:12px; font-weight:800; margin-top:2px; color:{{ selectedEconomics.authColor }};">{{ selectedEconomics.authRisk }}</div></div>
+                  </div>
+                </div>
+                <div style="padding:8px 0 7px;">
+                  <div style="display:flex; justify-content:space-between; gap:10px; font-size:10px;"><span style="color:#6B7A82;">Payer mix</span><strong>{{ selectedEconomics.payerMix }}</strong></div>
+                  <div style="display:flex; justify-content:space-between; gap:10px; font-size:10px; margin-top:5px;"><span style="color:#6B7A82;">Projected month end</span><strong style="color:{{ selectedEconomics.forecastColor }};">{{ selectedEconomics.forecast }}</strong></div>
                 </div>
                 <div style="font-size:10px; font-weight:700; color:#6B7A82; text-transform:uppercase; letter-spacing:0.45px; margin-bottom:4px;">Recommended action</div>
                 <div style="font-size:12px; font-weight:650; color:{{ selectedEconomics.signalColor }}; line-height:1.45;">{{ selectedEconomics.signal }}</div>
@@ -3996,7 +4074,7 @@ Thrivoli Pediatric Therapy · NPI 1487562203 · Tax ID 06-1884422</textarea>
 <template id="__bundler_thumbnail"><svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 100 100"><rect width="100" height="100" fill="#0B3B34"></rect><g transform="translate(30,30) scale(1.7)"><path d="M4 18.5c.8-9.5 15.2-9.5 16 0" fill="none" stroke="#E8674A" stroke-width="2.2" stroke-linecap="round"></path></g></svg></template></x-dc>
 <script type="text/x-dc" data-dc-script data-props="{&quot;startScreen&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;dashboard&quot;, &quot;options&quot;: [&quot;dashboard&quot;, &quot;locations&quot;, &quot;location&quot;, &quot;growth&quot;, &quot;schedule&quot;, &quot;appt&quot;, &quot;newAppt&quot;, &quot;patientList&quot;, &quot;patients&quot;, &quot;note&quot;, &quot;billing&quot;, &quot;claim&quot;, &quot;reimburse&quot;, &quot;referrals&quot;, &quot;referral&quot;, &quot;waitlist&quot;, &quot;reports&quot;, &quot;inventory&quot;, &quot;po&quot;, &quot;settings&quot;, &quot;brief&quot;, &quot;notifications&quot;, &quot;search&quot;, &quot;newPatient&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Prototype&quot;}}">
 class Component extends DCLogic {
-  state = { screen: null, params: {}, back: null, selectedApptSlot: '3:15p', selectedEconomics: 'Pool Location', bookedAppointments: [], tab: 'overview', ptab: 'roster', ctab: 'codes', yatab: 'carriers', doneTasks: { 2: true }, toast: null, confirm: null, autoOff: { 5: true }, stab: 'pnl', basis: 'accrual' };
+  state = { screen: null, params: {}, back: null, mobileNavOpen: false, selectedApptSlot: '3:15p', selectedEconomics: 'Pool Location', bookedAppointments: [], tab: 'overview', ptab: 'roster', ctab: 'codes', yatab: 'carriers', doneTasks: { 2: true }, toast: null, confirm: null, autoOff: { 5: true }, stab: 'pnl', basis: 'accrual' };
   componentDidMount() {
     this._syncRoute = () => {
       const requested = window.location.hash.replace(/^#\/?/, '').split('?')[0];
@@ -4008,6 +4086,8 @@ class Component extends DCLogic {
     };
     window.addEventListener('popstate', this._syncRoute);
     window.addEventListener('hashchange', this._syncRoute);
+    this._mobileKey = (event) => { if (event.key === 'Escape' && this.state.mobileNavOpen) this.setState({ mobileNavOpen: false }); };
+    window.addEventListener('keydown', this._mobileKey);
     this._syncRoute();
   }
   toast(msg) { clearTimeout(this._t); this.setState({ toast: msg }); this._t = setTimeout(() => this.setState({ toast: null }), 3200); }
@@ -4038,10 +4118,11 @@ class Component extends DCLogic {
     clearTimeout(this._t);
     window.removeEventListener('popstate', this._syncRoute);
     window.removeEventListener('hashchange', this._syncRoute);
+    window.removeEventListener('keydown', this._mobileKey);
   }
   nav(s, params) {
     if (window.location.hash !== '#/' + s) window.history.pushState({}, '', '#/' + s);
-    this.setState(st => ({ screen: s, params: params || {}, back: (st.screen ?? 'dashboard') === s ? st.back : { screen: st.screen ?? 'dashboard', params: st.params, label: this.labelFor(st.screen ?? 'dashboard') } }));
+    this.setState(st => ({ screen: s, params: params || {}, mobileNavOpen: false, back: (st.screen ?? 'dashboard') === s ? st.back : { screen: st.screen ?? 'dashboard', params: st.params, label: this.labelFor(st.screen ?? 'dashboard') } }));
   }
   goBack() {
     const b = this.state.back;
@@ -4145,8 +4226,9 @@ class Component extends DCLogic {
       { label: 'OPERATING MARGIN', value: '23.0%', sub: 'Target 21% · 2 locations below plan', delta: '+2.0 pts', deltaColor: teal },
       { label: 'GROWTH CAPACITY', value: '186', sub: 'Open visit slots this week = $19.5k', delta: '2 hires', deltaColor: amber },
     ].map((k, i) => ({ ...k, bl: i ? '1px solid #F1EDE6' : 'none' }));
-    const economicsRow = (name, visits, breakEven, schoolHours, cashRevenue, margin, signal, severity = 'ok') => {
+    const economicsRow = (name, visits, breakEven, schoolHours, cashRevenue, margin, signal, insights, severity = 'ok') => {
       const difference = visits - breakEven;
+      const maxTrend = Math.max(...insights.weeks);
       return {
         name, visits: visits.toLocaleString(), breakEven: breakEven.toLocaleString(),
         cushion: (difference >= 0 ? '+' : '−') + Math.abs(difference),
@@ -4160,18 +4242,35 @@ class Component extends DCLogic {
         barColor: difference >= 0 ? teal : severity === 'bad' ? red : amber,
         rowBg: this.state.selectedEconomics === name ? '#EAF3F1' : 'transparent',
         ariaLabel: name + ': ' + visits + ' visits, break-even ' + breakEven,
+        weeklyVisits: insights.weeks[3] + ' visits',
+        trend: (insights.change >= 0 ? '+' : '') + insights.change + '%',
+        trendColor: insights.change >= 0 ? teal : red,
+        trendAria: 'Weekly visits: ' + insights.weeks.join(', '),
+        trendBars: insights.weeks.map((value, i) => ({
+          height: Math.max(8, Math.round((value / maxTrend) * 30)) + 'px',
+          color: i === insights.weeks.length - 1 ? (insights.change >= 0 ? teal : red) : '#BFD5D0',
+          label: 'Week ' + (i + 1) + ': ' + value + ' visits',
+        })),
+        utilization: insights.utilization + '%',
+        utilizationColor: insights.utilization >= 88 ? teal : insights.utilization >= 80 ? amber : red,
+        clinicalFte: insights.fte.toFixed(1),
+        authRisk: insights.authRisk + ' visits',
+        authColor: insights.authRisk >= 20 ? red : insights.authRisk >= 10 ? amber : teal,
+        payerMix: insights.payerMix,
+        forecast: insights.forecast.toLocaleString() + ' visits',
+        forecastColor: insights.forecast >= breakEven ? teal : red,
         select: () => this.setState({ selectedEconomics: name }),
         go: () => this.nav('location', { loc: name }),
       };
     };
     const locationEconomics = [
-      economicsRow('Cheshire', 870, 550, 168, '$4.8k', 27, 'Capacity supports another 0.6 FTE'),
-      economicsRow('Meriden', 784, 540, 142, '$3.9k', 23, 'Near plan · protect school coverage'),
-      economicsRow('Orange', 756, 510, 126, '$4.1k', 25, 'Room to add 52 visits/month'),
-      economicsRow('Guilford', 651, 430, 118, '$5.2k', 31, 'Model location · replicate staffing mix'),
-      economicsRow('Torrington', 603, 460, 96, '$2.4k', 19, 'Improve no-shows before hiring', 'warn'),
-      economicsRow('Pool Location', 418, 500, 84, '$1.7k', 11, 'Below break-even · fill demand + hire PT', 'bad'),
-      economicsRow('New Location', 164, 460, 32, '$0.8k', -8, 'Ramp plan · break-even in 11 weeks', 'warn'),
+      economicsRow('Cheshire', 870, 550, 168, '$4.8k', 27, 'Capacity supports another 0.6 FTE', { weeks: [196, 207, 218, 224], change: 14, utilization: 94, fte: 8.4, authRisk: 8, payerMix: '71% ins · 24% school · 5% cash', forecast: 1128 }),
+      economicsRow('Meriden', 784, 540, 142, '$3.9k', 23, 'Near plan · protect school coverage', { weeks: [188, 194, 199, 203], change: 8, utilization: 90, fte: 7.6, authRisk: 14, payerMix: '74% ins · 22% school · 4% cash', forecast: 1024 }),
+      economicsRow('Orange', 756, 510, 126, '$4.1k', 25, 'Room to add 52 visits/month', { weeks: [176, 183, 193, 201], change: 14, utilization: 88, fte: 7.1, authRisk: 6, payerMix: '72% ins · 23% school · 5% cash', forecast: 998 }),
+      economicsRow('Guilford', 651, 430, 118, '$5.2k', 31, 'Model location · replicate staffing mix', { weeks: [156, 164, 166, 170], change: 9, utilization: 96, fte: 5.9, authRisk: 4, payerMix: '67% ins · 25% school · 8% cash', forecast: 854 }),
+      economicsRow('Torrington', 603, 460, 96, '$2.4k', 19, 'Improve no-shows before hiring', { weeks: [158, 154, 149, 142], change: -10, utilization: 84, fte: 6.2, authRisk: 18, payerMix: '77% ins · 19% school · 4% cash', forecast: 742 }, 'warn'),
+      economicsRow('Pool Location', 418, 500, 84, '$1.7k', 11, 'Below break-even · fill demand + hire PT', { weeks: [112, 108, 103, 95], change: -15, utilization: 73, fte: 4.8, authRisk: 27, payerMix: '76% ins · 20% school · 4% cash', forecast: 486 }, 'bad'),
+      economicsRow('New Location', 164, 460, 32, '$0.8k', -8, 'Ramp plan · break-even in 11 weeks', { weeks: [24, 34, 46, 60], change: 150, utilization: 61, fte: 3.2, authRisk: 2, payerMix: '75% ins · 20% school · 5% cash', forecast: 286 }, 'warn'),
     ];
     const selectedEconomics = locationEconomics.find(r => r.name === this.state.selectedEconomics) || locationEconomics[0];
     const leaks = [
@@ -6070,6 +6169,10 @@ class Component extends DCLogic {
       teamRows, staffMetrics: staffMetrics.map(m => ({ ...m, color: m.color || '#1C2B33' })), staffCreds, payerRates,
       eraClaims, appealDocs, msgThread: msgThread.map(m => ({ ...m, bg: m.mine ? '#E3F0ED' : '#F6F4F0', align: m.mine ? 'flex-end' : 'flex-start' })), pnlRows,
       toastMsg: this.state.toast, hasToast: !!this.state.toast,
+      mobileNavClass: this.state.mobileNavOpen ? 'is-open' : '',
+      mobileNavExpanded: this.state.mobileNavOpen ? 'true' : 'false',
+      openMobileNav: () => this.setState({ mobileNavOpen: true }),
+      closeMobileNav: () => this.setState({ mobileNavOpen: false }),
       confirmOpen: !!this.state.confirm,
       confirmTitle: this.state.confirm ? this.state.confirm.title : '',
       confirmBody: this.state.confirm ? this.state.confirm.body : '',
