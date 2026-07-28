@@ -5,6 +5,7 @@
 <meta name="viewport" content="width=device-width, initial-scale=1">
 <script type="module" src="/src/prototype-workflows.ts"></script>
 <script src="./support.js"></script>
+<script src="./team-roster.js"></script>
 </head>
 <body>
 <x-dc>
@@ -26,6 +27,14 @@
   .skip-link:focus{top:12px}
   .demo-badge{display:inline-flex;align-items:center;gap:5px;margin-left:auto;padding:3px 7px;border:1px solid rgba(255,255,255,.22);border-radius:999px;color:#CFE3DE;font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap}
   .mobile-menu-button,.mobile-nav-backdrop{display:none}
+  .team-tabs{display:flex;gap:7px;overflow-x:auto;padding:2px 1px 10px;scrollbar-width:none}
+  .team-tabs::-webkit-scrollbar{display:none}
+  .team-tab{border:1px solid #E5E0D8;background:#fff;color:#5B6A72;border-radius:999px;padding:7px 12px;font:700 12px inherit;white-space:nowrap;cursor:pointer}
+  .team-tab.is-active{border-color:#B42318;background:#FFF1F0;color:#B42318}
+  .team-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}
+  .team-card{background:#fff;border:1px solid #E5E0D8;border-radius:14px;padding:14px;display:flex;align-items:center;gap:12px;min-width:0}
+  .team-photo{width:68px;height:68px;flex:0 0 68px;border-radius:13px;object-fit:cover;object-position:center top;background:#E8EEEC}
+  .team-fallback{width:68px;height:68px;flex:0 0 68px;border-radius:13px;display:grid;place-items:center;background:#F1EDE6;color:#6B7A82;font-size:18px;font-weight:800}
   @media(max-width:920px){
     html,body{width:100%;overflow:hidden}
     body>div,x-dc>div{min-width:0!important;width:100%!important}
@@ -77,6 +86,9 @@
     [style*="grid-template-columns:repeat(4"]{grid-template-columns:1fr!important}
     h1{font-size:21px!important}
     h2{line-height:1.25}
+    .team-grid{grid-template-columns:1fr}
+    .team-card{padding:12px}
+    .team-photo,.team-fallback{width:60px;height:60px;flex-basis:60px}
   }
   @media(prefers-reduced-motion:reduce){
     *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}
@@ -1643,36 +1655,33 @@
       <!-- ============ TEAM ============ -->
       <sc-if value="{{ isTeam }}" hint-placeholder-val="{{ false }}">
         <div data-screen-label="Team">
-          <div style="display:grid; grid-template-columns:repeat(auto-fill, minmax(268px,1fr)); gap:12px;">
-            <sc-for list="{{ teamRows }}" as="t" hint-placeholder-count="9">
-              <div onClick="{{ t.go }}" style="background:#fff; border:1px solid #E5E0D8; border-radius:14px; padding:16px 17px; cursor:pointer; display:flex; flex-direction:column; gap:13px;" style-hover="border-color:#0E6B5C; box-shadow:0 4px 14px rgba(11,59,52,0.09)">
-                <div style="display:flex; align-items:center; gap:12px;">
-                  <span style="width:52px; height:52px; flex-shrink:0; position:relative; border-radius:50%; overflow:hidden; background:{{ t.avatarBg }}; display:grid; place-items:center;">
-                    <sc-if value="{{ t.hasPhoto }}" hint-placeholder-val="{{ false }}">
-                      <span style="width:52px; height:52px; border-radius:50%; display:block; background-size:cover; background-position:center; background-image:{{ t.photoCss }};"></span>
-                    </sc-if>
-                    <sc-if value="{{ t.isReq }}" hint-placeholder-val="{{ false }}">
-                      <span style="font-size:17px; font-weight:800; color:#8A9399;">+</span>
-                    </sc-if>
-                  </span>
-                  <span style="flex:1; min-width:0;">
-                    <span style="display:block; font-size:14px; font-weight:700; letter-spacing:-0.2px; color:#1C2B33;">{{ t.name }}</span>
-                    <span style="display:block; font-size:12px; color:#6B7A82; margin-top:2px;">{{ t.role }} · {{ t.clinic }}</span>
-                  </span>
-                </div>
-                <div style="display:grid; grid-template-columns:1fr 1fr; gap:8px;">
-                  <span style="background:#FAF8F5; border-radius:9px; padding:8px 10px;">
-                    <span style="display:block; font-size:10px; font-weight:700; color:#6B7A82; letter-spacing:0.6px;">UTILIZATION</span>
-                    <span style="display:block; font-size:17px; font-weight:800; letter-spacing:-0.4px; margin-top:2px; color:{{ t.utilColor }};">{{ t.util }}</span>
-                  </span>
-                  <span style="background:#FAF8F5; border-radius:9px; padding:8px 10px;">
-                    <span style="display:block; font-size:10px; font-weight:700; color:#6B7A82; letter-spacing:0.6px;">CASELOAD</span>
-                    <span style="display:block; font-size:17px; font-weight:800; letter-spacing:-0.4px; margin-top:2px;">{{ t.caseload }}</span>
-                  </span>
-                </div>
-                <div style="display:flex; align-items:center; gap:8px; border-top:1px solid #F1EDE6; padding-top:11px;">
-                  <span style="display:inline-flex; align-items:center; gap:6px; font-size:11.5px; font-weight:700; color:{{ t.credColor }};"><span style="width:6px; height:6px; border-radius:50%; background:{{ t.credColor }}; flex-shrink:0;"></span>{{ t.cred }}</span>
-                  <span style="flex:1; text-align:right; color:#6B7A82; font-size:11.5px;">{{ t.flag }}</span>
+          <div style="background:#fff;border:1px solid #E5E0D8;border-radius:14px;padding:14px 15px 4px;margin-bottom:12px;">
+            <div style="display:flex;align-items:center;gap:10px;flex-wrap:wrap;margin-bottom:8px;">
+              <div style="flex:1;min-width:190px;">
+                <div style="font-size:14px;font-weight:800;color:#1C2B33;">Cheshire Fitness Zone team</div>
+                <div style="font-size:12px;color:#6B7A82;margin-top:2px;">{{ teamCountLabel }} · current public staff directory</div>
+              </div>
+              <span style="font-size:11px;font-weight:800;color:#B42318;background:#FFF1F0;border-radius:999px;padding:5px 9px;">Updated Jul 28, 2026</span>
+            </div>
+            <div class="team-tabs" role="tablist" aria-label="Team discipline">
+              <sc-for list="{{ teamTabs }}" as="tab" hint-placeholder-count="5">
+                <button class="team-tab {{ tab.activeClass }}" onClick="{{ tab.go }}" role="tab" aria-selected="{{ tab.selected }}">{{ tab.label }} · {{ tab.count }}</button>
+              </sc-for>
+            </div>
+          </div>
+          <div class="team-grid">
+            <sc-for list="{{ teamRows }}" as="t" hint-placeholder-count="12">
+              <div class="team-card">
+                <sc-if value="{{ t.hasPhoto }}" hint-placeholder-val="{{ true }}">
+                  <img class="team-photo" src="{{ t.photo }}" alt="{{ t.name }}" loading="lazy" referrerpolicy="no-referrer">
+                </sc-if>
+                <sc-if value="{{ t.noPhoto }}" hint-placeholder-val="{{ false }}">
+                  <span class="team-fallback" aria-label="{{ t.name }}">{{ t.initials }}</span>
+                </sc-if>
+                <div style="min-width:0;">
+                  <div style="font-size:14px;font-weight:800;letter-spacing:-0.15px;color:#1C2B33;">{{ t.name }}</div>
+                  <div style="font-size:11px;font-weight:800;color:#B42318;text-transform:uppercase;letter-spacing:.45px;margin-top:4px;">{{ t.groupLabel }}</div>
+                  <div style="font-size:12px;color:#5B6A72;line-height:1.4;margin-top:3px;">{{ t.role }}</div>
                 </div>
               </div>
             </sc-for>
@@ -4608,32 +4617,31 @@ class Component extends DCLogic {
       { label: 'Eval scheduled', done: false, when: 'Offer Cheshire Tue 3:15p' },
       { label: 'Plan of care started', done: false, when: '—' },
     ];
-    const teamRows = [
-      { name: 'M. Chen, PT DPT', role: 'Lead therapist', clinic: 'Cheshire', util: '92%', utilColor: teal, caseload: '38', cred: 'Current', credColor: teal, flag: 'Waitlist backed up' },
-      { name: 'J. Okafor, PT', role: 'Therapist · evals', clinic: 'Cheshire', util: '84%', utilColor: teal, caseload: '31', cred: 'Current', credColor: teal, flag: 'On plan' },
-      { name: 'S. Patel, PTA', role: 'Assistant', clinic: 'Torrington', util: '78%', utilColor: '#1C2B33', caseload: '27', cred: 'CPR expires Aug 14', credColor: amber, flag: '4 notes unsigned' },
-      { name: 'L. Torres, PT', role: 'Therapist · aquatic', clinic: 'Pool Location', util: '61%', utilColor: amber, caseload: '19', cred: 'Current', credColor: teal, flag: 'New hire, ramping' },
-      { name: 'D. Whitmore, PT DPT', role: 'Therapist', clinic: 'Meriden', util: '88%', utilColor: teal, caseload: '34', cred: 'Current', credColor: teal, flag: 'On plan' },
-      { name: 'R. Ibarra, PTA', role: 'Assistant', clinic: 'Orange', util: '81%', utilColor: '#1C2B33', caseload: '29', cred: 'License renewal due', credColor: amber, flag: 'On plan' },
-      { name: 'K. Sørensen, PT', role: 'Therapist · school', clinic: 'Guilford', util: '90%', utilColor: teal, caseload: '36', cred: 'Current', credColor: teal, flag: 'IEP contract lead' },
-      { name: 'Open req · Pediatric PT', role: 'Posted 61 days', clinic: 'Pool Location', util: '—', utilColor: gray, caseload: '—', cred: 'Needs approval', credColor: red, flag: '41 families waiting' },
-      { name: 'Open req · PTA', role: 'Posted 22 days', clinic: 'Pool Location', util: '—', utilColor: gray, caseload: '—', cred: 'Needs approval', credColor: red, flag: 'Backfill for J. Dunn' },
-    ].map((t, i) => {
-      const isReq = t.name.indexOf('Open req') === 0;
-      const teamPhotos = [
-        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&h=160&q=85',
-        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&h=160&q=85',
-        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=160&h=160&q=85',
-        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=160&h=160&q=85',
-        'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=160&h=160&q=85',
-        'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=160&h=160&q=85',
-        'https://images.unsplash.com/photo-1531384441138-2736e62e0919?auto=format&fit=crop&w=160&h=160&q=85'
-      ];
-      return { ...t, isReq, hasPhoto: !isReq, slotId: 'team-avatar-' + i,
-        avatarBg: isReq ? '#F1EDE6' : '#E8EEEC',
-        photoCss: !isReq ? 'url("' + teamPhotos[i] + '")' : 'none',
-        go: () => this.nav('staff', { staff: t.name }) };
-    });
+    const allTeamRows = (window.CFZ_TEAM || []).map(person => ({
+      ...person,
+      hasPhoto: Boolean(person.photo),
+      noPhoto: !person.photo,
+      initials: person.name.split(/\s+/).map(part => part[0]).slice(0, 2).join('').toUpperCase(),
+    }));
+    const teamGroup = P2.teamGroup || 'all';
+    const teamRows = teamGroup === 'all'
+      ? allTeamRows
+      : allTeamRows.filter(person => person.group === teamGroup);
+    const teamTabDefs = [
+      ['all', 'All staff'],
+      ['physical-therapy', 'Physical Therapy'],
+      ['occupational-therapy', 'Occupational Therapy'],
+      ['speech-therapy', 'Speech Therapy'],
+      ['administrative-team', 'Administrative'],
+    ];
+    const teamTabs = teamTabDefs.map(([value, label]) => ({
+      label,
+      count: value === 'all' ? allTeamRows.length : allTeamRows.filter(person => person.group === value).length,
+      activeClass: teamGroup === value ? 'is-active' : '',
+      selected: teamGroup === value ? 'true' : 'false',
+      go: () => this.nav('team', { teamGroup: value }),
+    }));
+    const teamCountLabel = `${teamRows.length} ${teamRows.length === 1 ? 'person' : 'people'}`;
     const staffName = P2.staff || 'S. Patel, PTA';
     const staffMetrics = [
       { label: 'UTILIZATION', value: '78%', sub: 'Target 80% · 4-week average' },
@@ -6168,7 +6176,7 @@ class Component extends DCLogic {
       isEra: screen === 'era', isAppeal: screen === 'appeal', isMessages: screen === 'messages', isPnl: screen === 'pnl',
       cd: CD, cdDenied: CD.denied, cdOpen: !CD.denied,
       toastResubmit: () => this.toast(CD.denied ? 'Corrected claim resubmitted to ' + CD.payer + '.' : claimId + ' sent to Availity — acknowledgement expected within the hour.'), cdStatusColor: CD.denied ? red : CD.status === 'Pending payer' ? gray : blue,
-      teamRows, staffMetrics: staffMetrics.map(m => ({ ...m, color: m.color || '#1C2B33' })), staffCreds, payerRates,
+      teamRows, teamTabs, teamCountLabel, staffMetrics: staffMetrics.map(m => ({ ...m, color: m.color || '#1C2B33' })), staffCreds, payerRates,
       eraClaims, appealDocs, msgThread: msgThread.map(m => ({ ...m, bg: m.mine ? '#E3F0ED' : '#F6F4F0', align: m.mine ? 'flex-end' : 'flex-start' })), pnlRows,
       toastMsg: this.state.toast, hasToast: !!this.state.toast,
       mobileNavClass: this.state.mobileNavOpen ? 'is-open' : '',
