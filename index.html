@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script type="module" src="/src/prototype-workflows.ts"></script>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -3965,7 +3966,20 @@ class Component extends DCLogic {
   toast(msg) { clearTimeout(this._t); this.setState({ toast: msg }); this._t = setTimeout(() => this.setState({ toast: null }), 3200); }
   ask(title, body, cta, done) { this.setState({ confirm: { title, body, cta, done } }); }
   closeConfirm() { this.setState({ confirm: null }); }
-  runConfirm() { const c = this.state.confirm; this.setState({ confirm: null }); if (c) { if (c.done.go) this.nav(c.done.go); this.toast(c.done.msg); } }
+  async runConfirm() {
+    const c = this.state.confirm;
+    this.setState({ confirm: null });
+    if (!c) return;
+    if (c.done.workflow && window.thrivoliWorkflows) {
+      const result = await window.thrivoliWorkflows.execute(c.done.workflow);
+      if (!result.ok) {
+        this.toast(result.message);
+        return;
+      }
+    }
+    if (c.done.go) this.nav(c.done.go);
+    this.toast(c.done.msg);
+  }
   componentWillUnmount() {
     clearTimeout(this._t);
     window.removeEventListener('popstate', this._syncRoute);
@@ -5959,8 +5973,8 @@ class Component extends DCLogic {
       goAppeal: () => this.nav('appeal'), goMessages: () => this.nav('messages'), goPnl: () => this.nav('pnl'),
       askApproveReqs: () => this.ask('Approve 2 open therapist reqs?', 'Pool Location will post a Pediatric PT and a PTA role. Budget impact is about $18.4k per month in loaded labor cost, against roughly $8.2k per month of recoverable revenue plus 41 waiting families.', 'Approve reqs', { msg: 'Both reqs approved and posted to the job boards.' }),
       askSendOffers: () => this.ask('Send offers to 9 waitlist families?', 'Each family receives a text with the open slots that match their preference. First to accept books the slot automatically.', 'Send 9 offers', { msg: 'Offers sent. 9 families notified — replies land in Notifications.' }),
-      askSignNote: () => this.ask('Sign and bill this visit?', 'Signing locks the note, releases 3 units of billing, and marks visit 21 of 24 against the authorization. This cannot be undone.', 'Sign & bill', { go: 'patients', msg: 'Note signed. Claim queued for tonight\'s batch.' }),
-      askSubmitBatch: () => this.ask('Submit 17 claims to the clearinghouse?', 'Claims total $2,846 and passed scrubbing with 0 errors. Availity acknowledgement usually returns within an hour.', 'Submit batch', { msg: 'Batch BATCH-0731 submitted — 17 claims, $2,846.' }),
+      askSignNote: () => this.ask('Sign and bill this visit?', 'Signing locks the note, releases 3 units of billing, and marks visit 21 of 24 against the authorization. This cannot be undone.', 'Sign & bill', { workflow: { type: 'sign-note', noteId: this.state.params.noteId }, go: 'patients', msg: 'Note signed. Claim queued for tonight\'s batch.' }),
+      askSubmitBatch: () => this.ask('Submit 17 claims to the clearinghouse?', 'Claims total $2,846 and passed scrubbing with 0 errors. Availity acknowledgement usually returns within an hour.', 'Submit batch', { workflow: { type: 'submit-claim-batch', batchId: this.state.params.batchId }, msg: 'Batch BATCH-0731 submitted — 17 claims, $2,846.' }),
       askSendPO: () => this.ask('Send purchase order to Rehab Supply Co.?', 'PO-1184 totals $662.60 and will be charged to Pool Location supplies. Expected delivery in 3 business days.', 'Send PO', { msg: 'PO-1184 sent to Rehab Supply Co.' }),
       askPostEra: () => this.ask('Post $1,904 across 12 claims?', 'Payments and contractual adjustments post to each patient ledger. Two claims have variances over $50 and will be flagged for review.', 'Post payments', { msg: 'ERA-4412 posted. 2 variances flagged for review.' }),
       askSubmitAppeal: () => this.ask('Submit appeal for CLM-2219?', 'Four documents are attached including authorization A-88231. Cigna appeals average 21 days to decision.', 'Submit appeal', { msg: 'Appeal submitted to Cigna with 4 attachments.' }),
