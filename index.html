@@ -4443,9 +4443,18 @@ class Component extends DCLogic {
       { name: 'Open req · PTA', role: 'Posted 22 days', clinic: 'Pool Location', util: '—', utilColor: gray, caseload: '—', cred: 'Needs approval', credColor: red, flag: 'Backfill for J. Dunn' },
     ].map((t, i) => {
       const isReq = t.name.indexOf('Open req') === 0;
+      const teamPhotos = [
+        'https://images.unsplash.com/photo-1494790108377-be9c29b29330?auto=format&fit=crop&w=160&h=160&q=85',
+        'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?auto=format&fit=crop&w=160&h=160&q=85',
+        'https://images.unsplash.com/photo-1534528741775-53994a69daeb?auto=format&fit=crop&w=160&h=160&q=85',
+        'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?auto=format&fit=crop&w=160&h=160&q=85',
+        'https://images.unsplash.com/photo-1551836022-d5d88e9218df?auto=format&fit=crop&w=160&h=160&q=85',
+        'https://images.unsplash.com/photo-1531123897727-8f129e1688ce?auto=format&fit=crop&w=160&h=160&q=85',
+        'https://images.unsplash.com/photo-1531384441138-2736e62e0919?auto=format&fit=crop&w=160&h=160&q=85'
+      ];
       return { ...t, isReq, hasPhoto: !isReq, slotId: 'team-avatar-' + i,
         avatarBg: isReq ? '#F1EDE6' : '#E8EEEC',
-        photoCss: 'url("./avatars/team-avatar-' + i + '.png")',
+        photoCss: !isReq ? 'url("' + teamPhotos[i] + '")' : 'none',
         go: () => this.nav('staff', { staff: t.name }) };
     });
     const staffName = P2.staff || 'S. Patel, PTA';
