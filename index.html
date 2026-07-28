@@ -466,7 +466,7 @@
             </div>
             <span style="font-size:14px; font-weight:700;">Jul 20 – 24, 2026</span>
             <div style="flex:1;"></div>
-            <select style="font-family:inherit; font-size:12.5px; font-weight:600; border:1px solid #E5E0D8; border-radius:8px; padding:7px 10px; background:#fff; cursor:pointer;"><option>All therapists</option><option>M. Chen</option><option>J. Okafor</option><option>S. Patel</option><option>L. Torres</option></select>
+            <select style="font-family:inherit; font-size:12.5px; font-weight:600; border:1px solid #E5E0D8; border-radius:8px; padding:7px 10px; background:#fff; cursor:pointer;"><option>All therapists</option><option>K. Kolwicz</option><option>J. Carbone</option><option>A. Morgan</option><option>K. Theriault</option></select>
             <select style="font-family:inherit; font-size:12.5px; font-weight:600; border:1px solid #E5E0D8; border-radius:8px; padding:7px 10px; background:#fff; cursor:pointer;"><option>Week</option><option>Day</option><option>Month</option></select>
           </div>
           <div style="display:flex; gap:14px; margin-bottom:12px; font-size:12px; color:#6B7A82; align-items:center;">
@@ -1214,7 +1214,7 @@
                 <div><div style="font-size:10.5px; font-weight:700; color:#6B7A82; letter-spacing:0.6px; text-transform:uppercase;">Visit type</div><div style="font-weight:700; margin-top:3px;">Treatment · 45 min</div></div>
                 <div><div style="font-size:10.5px; font-weight:700; color:#6B7A82; letter-spacing:0.6px; text-transform:uppercase;">When</div><div style="font-weight:700; margin-top:3px;">Wed Jul 22 · 8:00–8:45a</div></div>
                 <div><div style="font-size:10.5px; font-weight:700; color:#6B7A82; letter-spacing:0.6px; text-transform:uppercase;">Where</div><div style="font-weight:700; margin-top:3px;">Cheshire · Gym A</div></div>
-                <div><div style="font-size:10.5px; font-weight:700; color:#6B7A82; letter-spacing:0.6px; text-transform:uppercase;">Therapist</div><div style="font-weight:700; margin-top:3px;">M. Chen, PT DPT</div></div>
+                <div><div style="font-size:10.5px; font-weight:700; color:#6B7A82; letter-spacing:0.6px; text-transform:uppercase;">Therapist</div><div style="font-weight:700; margin-top:3px;">Kristen Kolwicz, PT, DPT</div></div>
                 <div><div style="font-size:10.5px; font-weight:700; color:#6B7A82; letter-spacing:0.6px; text-transform:uppercase;">Planned codes</div><div style="font-weight:700; margin-top:3px;">97110 ×2 · 97530</div></div>
               </div>
               <div style="border-top:1px solid #F1EDE6; margin-top:14px; padding-top:12px;">
@@ -1266,7 +1266,7 @@
                 <div><div style="font-size:10.5px; font-weight:700; color:#6B7A82; letter-spacing:0.6px; text-transform:uppercase;">Patient</div><input value="Mateo Alvarez" style="width:100%; font-family:inherit; font-size:13px; border:1px solid #E5E0D8; border-radius:8px; padding:9px 11px; background:#FAF8F5; color:#1C2B33; margin-top:5px;"></div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                   <div><div style="font-size:10.5px; font-weight:700; color:#6B7A82; letter-spacing:0.6px; text-transform:uppercase;">Visit type</div><select style="width:100%; font-family:inherit; font-size:13px; border:1px solid #E5E0D8; border-radius:8px; padding:9px 11px; background:#FAF8F5; color:#1C2B33; margin-top:5px;"><option>Treatment · 45 min</option><option>Initial eval · 60 min</option><option>Re-eval · 45 min</option><option>Aquatic Tx · 45 min</option></select></div>
-                  <div><div style="font-size:10.5px; font-weight:700; color:#6B7A82; letter-spacing:0.6px; text-transform:uppercase;">Therapist</div><select style="width:100%; font-family:inherit; font-size:13px; border:1px solid #E5E0D8; border-radius:8px; padding:9px 11px; background:#FAF8F5; color:#1C2B33; margin-top:5px;"><option>M. Chen, PT DPT</option><option>J. Okafor, PT</option><option>S. Patel, PTA</option><option>L. Torres, PT</option></select></div>
+                  <div><div style="font-size:10.5px; font-weight:700; color:#6B7A82; letter-spacing:0.6px; text-transform:uppercase;">Therapist</div><select style="width:100%; font-family:inherit; font-size:13px; border:1px solid #E5E0D8; border-radius:8px; padding:9px 11px; background:#FAF8F5; color:#1C2B33; margin-top:5px;"><option>Kristen Kolwicz, PT, DPT</option><option>Jessica Carbone, PTA</option><option>Amanda Morgan, PT, DPT</option><option>Katherine Theriault, PTA</option></select></div>
                 </div>
                 <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
                   <div><div style="font-size:10.5px; font-weight:700; color:#6B7A82; letter-spacing:0.6px; text-transform:uppercase;">Clinic</div><select style="width:100%; font-family:inherit; font-size:13px; border:1px solid #E5E0D8; border-radius:8px; padding:9px 11px; background:#FAF8F5; color:#1C2B33; margin-top:5px;"><option>Cheshire</option><option>Meriden</option><option>Orange</option><option>Guilford</option><option>Torrington</option><option>Pool Location</option></select></div>
@@ -4108,7 +4108,7 @@ class Component extends DCLogic {
     if (c.done.bookAppointment) {
       const slot = this.state.selectedApptSlot || '3:15p';
       if (window.location.hash !== '#/schedule') window.history.pushState({}, '', '#/schedule');
-      this.setState(st => ({ confirm: null, screen: 'schedule', params: {}, back: null, bookedAppointments: [...(st.bookedAppointments || []), { slot, patient: 'Mateo A.', label: 'Tx · Chen' }] }));
+      this.setState(st => ({ confirm: null, screen: 'schedule', params: {}, back: null, bookedAppointments: [...(st.bookedAppointments || []), { slot, patient: 'Mateo A.', label: 'Tx · Kolwicz' }] }));
       this.toast('Appointment booked and added to the schedule — family notified by text.');
       return;
     }
@@ -4379,11 +4379,11 @@ class Component extends DCLogic {
       color: tCol[who][0], bg: tCol[who][1], ink: tInk[who], ring: tCol[who][0] + '2E',
     });
     let weekDays = [
-      { dow: 'Mon', num: '20', appts: [ap(8, 0, 45, 'Noah B.', 'Tx · Chen', 'chen'), ap(9, 0, 60, 'Zoe L.', 'Eval · Okafor', 'okafor'), ap(10, 30, 45, 'Ivy R.', 'Tx · Patel', 'patel'), ap(13, 0, 45, 'Leo K.', 'Tx · Torres', 'torres'), ap(14, 30, 45, 'Mia S.', 'Tx · Chen', 'chen')] },
-      { dow: 'Tue', num: '21', appts: [ap(8, 30, 45, 'Harper N.', 'Tx · Patel', 'patel'), ap(9, 30, 45, 'Eli T.', 'Re-eval · Chen', 'chen'), ap(11, 0, 45, 'Amara D.', 'Tx · Torres', 'torres'), ap(13, 30, 60, 'Owen C.', 'Eval · Okafor', 'okafor'), ap(15, 0, 45, 'Ruby F.', 'Tx · Patel', 'patel')] },
-      { dow: 'Wed', num: '22', today: true, appts: [ap(8, 0, 45, 'Mateo A.', 'Tx · Chen', 'chen'), ap(8, 45, 60, 'Zoe L.', 'Eval · Okafor', 'okafor'), ap(9, 30, 45, 'Harper N.', 'Tx · Patel', 'patel'), ap(10, 15, 45, 'Eli T.', 'Re-eval · Chen', 'chen'), ap(11, 0, 45, 'Amara D.', 'Tx · Torres', 'torres'), ap(13, 0, 45, 'Jonah P.', 'Tx · Patel', 'patel'), ap(14, 0, 45, 'Sofia G.', 'Tx · Chen', 'chen')] },
-      { dow: 'Thu', num: '23', appts: [ap(9, 0, 45, 'Noah B.', 'Tx · Chen', 'chen'), ap(10, 0, 60, 'Waitlist hold', 'Eval slot', 'okafor'), ap(11, 15, 45, 'Ivy R.', 'Tx · Patel', 'patel'), ap(14, 0, 45, 'Leo K.', 'Tx · Torres', 'torres')] },
-      { dow: 'Fri', num: '24', appts: [ap(8, 30, 45, 'Mateo A.', 'Tx · Chen', 'chen'), ap(9, 30, 45, 'Mia S.', 'Tx · Chen', 'chen'), ap(10, 30, 60, 'Nova W.', 'Eval · Okafor', 'okafor'), ap(13, 0, 45, 'Ruby F.', 'Tx · Patel', 'patel'), ap(14, 30, 45, 'Jonah P.', 'Tx · Torres', 'torres')] },
+      { dow: 'Mon', num: '20', appts: [ap(8, 0, 45, 'Noah B.', 'Tx · Kolwicz', 'chen'), ap(9, 0, 60, 'Zoe L.', 'Eval · Carbone', 'okafor'), ap(10, 30, 45, 'Ivy R.', 'Tx · Morgan', 'patel'), ap(13, 0, 45, 'Leo K.', 'Tx · Theriault', 'torres'), ap(14, 30, 45, 'Mia S.', 'Tx · Kolwicz', 'chen')] },
+      { dow: 'Tue', num: '21', appts: [ap(8, 30, 45, 'Harper N.', 'Tx · Morgan', 'patel'), ap(9, 30, 45, 'Eli T.', 'Re-eval · Kolwicz', 'chen'), ap(11, 0, 45, 'Amara D.', 'Tx · Theriault', 'torres'), ap(13, 30, 60, 'Owen C.', 'Eval · Carbone', 'okafor'), ap(15, 0, 45, 'Ruby F.', 'Tx · Morgan', 'patel')] },
+      { dow: 'Wed', num: '22', today: true, appts: [ap(8, 0, 45, 'Mateo A.', 'Tx · Kolwicz', 'chen'), ap(8, 45, 60, 'Zoe L.', 'Eval · Carbone', 'okafor'), ap(9, 30, 45, 'Harper N.', 'Tx · Morgan', 'patel'), ap(10, 15, 45, 'Eli T.', 'Re-eval · Kolwicz', 'chen'), ap(11, 0, 45, 'Amara D.', 'Tx · Theriault', 'torres'), ap(13, 0, 45, 'Jonah P.', 'Tx · Morgan', 'patel'), ap(14, 0, 45, 'Sofia G.', 'Tx · Kolwicz', 'chen')] },
+      { dow: 'Thu', num: '23', appts: [ap(9, 0, 45, 'Noah B.', 'Tx · Kolwicz', 'chen'), ap(10, 0, 60, 'Waitlist hold', 'Eval slot', 'okafor'), ap(11, 15, 45, 'Ivy R.', 'Tx · Morgan', 'patel'), ap(14, 0, 45, 'Leo K.', 'Tx · Theriault', 'torres')] },
+      { dow: 'Fri', num: '24', appts: [ap(8, 30, 45, 'Mateo A.', 'Tx · Kolwicz', 'chen'), ap(9, 30, 45, 'Mia S.', 'Tx · Kolwicz', 'chen'), ap(10, 30, 60, 'Nova W.', 'Eval · Carbone', 'okafor'), ap(13, 0, 45, 'Ruby F.', 'Tx · Morgan', 'patel'), ap(14, 30, 45, 'Jonah P.', 'Tx · Theriault', 'torres')] },
     ].map(d => ({ ...d, hdBg: d.today ? tealBg : '#fff', numColor: d.today ? teal : '#1C2B33', colBg: d.today ? '#FBFDFC' : '#fff' }));
     const booked = this.state.bookedAppointments || [];
     if (booked.length) {
@@ -4400,8 +4400,8 @@ class Component extends DCLogic {
       });
     }
     const therapistLegend = [
-      { name: 'M. Chen', color: teal }, { name: 'J. Okafor', color: coral },
-      { name: 'S. Patel', color: blue }, { name: 'L. Torres', color: purple },
+      { name: 'K. Kolwicz', color: teal }, { name: 'J. Carbone', color: coral },
+      { name: 'A. Morgan', color: blue }, { name: 'K. Theriault', color: purple },
     ];
     // Chart
     const goals = [
@@ -6036,7 +6036,7 @@ class Component extends DCLogic {
           case 'era': return this.ask('Post $1,904 across 12 claims?', 'Payments and contractual adjustments post to each patient ledger. Two claims have variances over $50 and will be flagged for review.', 'Post payments', { msg: 'ERA-4412 posted. 2 variances flagged for review.' });
           case 'waitlist': return this.ask('Send offers to 9 waitlist families?', 'Each family receives a text with the open slots that match their preference. First to accept books the slot automatically.', 'Send 9 offers', { msg: 'Offers sent. 9 families notified — replies land in Notifications.' });
           case 'po': return this.ask('Send purchase order to Rehab Supply Co.?', 'PO-1184 totals $662.60 and will be charged to Pool Location supplies. Expected delivery in 3 business days.', 'Send PO', { msg: 'PO-1184 sent to Rehab Supply Co.' });
-          case 'newAppt': { const slot = this.state.selectedApptSlot || '3:15p'; return this.ask('Book this appointment?', 'Thu Jul 23 at ' + slot + ' with M. Chen at Cheshire. A reminder text goes out 24 hours ahead and the $30 copay runs on the card on file.', 'Book appointment', { bookAppointment: true, msg: 'Appointment booked and added to the schedule — family notified by text.' }); }
+          case 'newAppt': { const slot = this.state.selectedApptSlot || '3:15p'; return this.ask('Book this appointment?', 'Thu Jul 23 at ' + slot + ' with Kristen Kolwicz at Cheshire. A reminder text goes out 24 hours ahead and the $30 copay runs on the card on file.', 'Book appointment', { bookAppointment: true, msg: 'Appointment booked and added to the schedule — family notified by text.' }); }
           case 'newPatient': return this.toast('Patient created. Benefits check sent to the payer.');
           case 'messages': return this.toast('Message sent to Rosa Alvarez.');
           case 'payer': return this.toast('Renegotiation packet started — 1,180 Cigna visits pulled in.');
