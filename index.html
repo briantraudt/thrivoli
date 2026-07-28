@@ -199,7 +199,7 @@
             <div class="responsive-split" style="display:grid; grid-template-columns:minmax(0,1.45fr) minmax(310px,0.9fr); border-top:1px solid #EEEAE2;">
               <div style="padding:12px 16px 13px; min-width:0;">
                 <div style="display:flex; justify-content:flex-end; gap:14px; margin-bottom:7px; font-size:10.5px; color:#6B7A82;">
-                  <span style="display:flex; align-items:center; gap:5px;"><span style="width:11px; height:7px; border-radius:2px; background:#C9473B;"></span>Visits MTD</span>
+                  <span style="display:flex; align-items:center; gap:5px;"><span style="width:11px; height:7px; border-radius:2px; background:linear-gradient(90deg,#0E6B5C 0 60%,#C98A17 60% 80%,#C9473B 80%);"></span>Performance</span>
                   <span style="display:flex; align-items:center; gap:5px;"><span style="width:11px; height:7px; border-radius:2px; background:#D8D2C8;"></span>Break-even</span>
                 </div>
                 <sc-for list="{{ locationEconomics }}" as="r" hint-placeholder-count="7">
@@ -4265,11 +4265,13 @@ class Component extends DCLogic {
         schoolHours: schoolHours + 'h', cashRevenue, margin: margin + '%',
         marginColor: margin >= 22 ? teal : margin >= 16 ? amber : red,
         signal, signalColor: severity === 'bad' ? red : severity === 'warn' ? amber : teal,
-        dot: name === 'Cheshire' ? red : severity === 'bad' ? red : severity === 'warn' ? amber : teal,
+        dot: severity === 'bad' ? red : severity === 'warn' ? amber : teal,
         visitsWidth: Math.round((visits / 900) * 100) + '%',
         breakEvenWidth: Math.round((breakEven / 900) * 100) + '%',
-        barColor: red,
-        rowBg: this.state.selectedEconomics === name ? '#FBEDEC' : 'transparent',
+        barColor: severity === 'bad' ? red : severity === 'warn' ? amber : teal,
+        rowBg: this.state.selectedEconomics === name
+          ? (severity === 'bad' ? '#FBEDEC' : severity === 'warn' ? '#FFF6DF' : '#EAF4F1')
+          : 'transparent',
         ariaLabel: name + ': ' + visits + ' visits, break-even ' + breakEven,
         weeklyVisits: insights.weeks[3] + ' visits',
         trend: (insights.change >= 0 ? '+' : '') + insights.change + '%',
@@ -4277,9 +4279,11 @@ class Component extends DCLogic {
         trendAria: 'Weekly visits: ' + insights.weeks.join(', '),
         trendBars: insights.weeks.map((value, i) => ({
           height: Math.max(8, Math.round((value / maxTrend) * 30)) + 'px',
-          color: name === 'Cheshire'
+          color: severity === 'bad'
             ? (i === insights.weeks.length - 1 ? red : '#E7AAA4')
-            : (i === insights.weeks.length - 1 ? (insights.change >= 0 ? teal : red) : '#BFD5D0'),
+            : severity === 'warn'
+              ? (i === insights.weeks.length - 1 ? amber : '#E8C982')
+              : (i === insights.weeks.length - 1 ? teal : '#BFD5D0'),
           label: 'Week ' + (i + 1) + ': ' + value + ' visits',
         })),
         utilization: insights.utilization + '%',
@@ -4299,9 +4303,9 @@ class Component extends DCLogic {
       economicsRow('Meriden', 784, 540, 142, '$3.9k', 23, 'Near plan · protect school coverage', { weeks: [188, 194, 199, 203], change: 8, utilization: 90, fte: 7.6, authRisk: 14, payerMix: '74% ins · 22% school · 4% cash', forecast: 1024 }),
       economicsRow('Orange', 756, 510, 126, '$4.1k', 25, 'Room to add 52 visits/month', { weeks: [176, 183, 193, 201], change: 14, utilization: 88, fte: 7.1, authRisk: 6, payerMix: '72% ins · 23% school · 5% cash', forecast: 998 }),
       economicsRow('Guilford', 651, 430, 118, '$5.2k', 31, 'Model location · replicate staffing mix', { weeks: [156, 164, 166, 170], change: 9, utilization: 96, fte: 5.9, authRisk: 4, payerMix: '67% ins · 25% school · 8% cash', forecast: 854 }),
-      economicsRow('Torrington', 603, 460, 96, '$2.4k', 19, 'Improve no-shows before hiring', { weeks: [158, 154, 149, 142], change: -10, utilization: 84, fte: 6.2, authRisk: 18, payerMix: '77% ins · 19% school · 4% cash', forecast: 742 }, 'warn'),
-      economicsRow('Pool Location', 418, 500, 84, '$1.7k', 11, 'Below break-even · fill demand + hire PT', { weeks: [112, 108, 103, 95], change: -15, utilization: 73, fte: 4.8, authRisk: 27, payerMix: '76% ins · 20% school · 4% cash', forecast: 486 }, 'bad'),
-      economicsRow('New Location', 164, 460, 32, '$0.8k', -8, 'Ramp plan · break-even in 11 weeks', { weeks: [24, 34, 46, 60], change: 150, utilization: 61, fte: 3.2, authRisk: 2, payerMix: '75% ins · 20% school · 5% cash', forecast: 286 }, 'warn'),
+      economicsRow('Torrington', 603, 460, 96, '$2.4k', 19, 'Improve no-shows before hiring', { weeks: [158, 154, 149, 142], change: -10, utilization: 84, fte: 6.2, authRisk: 18, payerMix: '77% ins · 19% school · 4% cash', forecast: 742 }),
+      economicsRow('Pool Location', 418, 500, 84, '$1.7k', 11, 'Below break-even · fill demand + hire PT', { weeks: [112, 108, 103, 95], change: -15, utilization: 73, fte: 4.8, authRisk: 27, payerMix: '76% ins · 20% school · 4% cash', forecast: 486 }, 'warn'),
+      economicsRow('New Location', 164, 460, 32, '$0.8k', -8, 'Ramp plan · break-even in 11 weeks', { weeks: [24, 34, 46, 60], change: 150, utilization: 61, fte: 3.2, authRisk: 2, payerMix: '75% ins · 20% school · 5% cash', forecast: 286 }, 'bad'),
     ];
     const selectedEconomics = locationEconomics.find(r => r.name === this.state.selectedEconomics) || locationEconomics[0];
     const leaks = [
