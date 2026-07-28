@@ -3,6 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
+<script type="module" src="/src/prototype-workflows.ts"></script>
 <script src="./support.js"></script>
 </head>
 <body>
@@ -17,8 +18,22 @@
   *{box-sizing:border-box;}
   a{color:#0E6B5C;text-decoration:none;} a:hover{color:#0A5348;text-decoration:underline;}
   ::-webkit-scrollbar{width:10px;height:10px;} ::-webkit-scrollbar-thumb{background:#D8D2C8;border-radius:5px;}
+  button:focus-visible,select:focus-visible,input:focus-visible,textarea:focus-visible,[tabindex]:focus-visible{
+    outline:3px solid rgba(14,107,92,.28);outline-offset:2px;
+  }
+  button,select,input,textarea{min-height:36px;}
+  .skip-link{position:fixed;left:12px;top:-60px;z-index:9999;background:#fff;color:#0B3B34;border-radius:8px;padding:10px 14px;font-weight:700;box-shadow:0 4px 20px rgba(0,0,0,.18)}
+  .skip-link:focus{top:12px}
+  .demo-badge{display:inline-flex;align-items:center;gap:5px;margin-left:auto;padding:3px 7px;border:1px solid rgba(255,255,255,.22);border-radius:999px;color:#CFE3DE;font-size:9px;font-weight:800;letter-spacing:.5px;text-transform:uppercase;white-space:nowrap}
+  @media(max-width:920px){
+    body>div,x-dc>div{min-width:760px}
+  }
+  @media(prefers-reduced-motion:reduce){
+    *,*::before,*::after{scroll-behavior:auto!important;transition-duration:.01ms!important;animation-duration:.01ms!important}
+  }
 </style>
 </helmet>
+<a class="skip-link" href="#main-content">Skip to main content</a>
 <div style="display:flex; height:100vh; overflow:hidden; background:#F6F4F0;">
   <!-- ============ SIDEBAR ============ -->
   <nav style="width:232px; flex-shrink:0; background:#0B3B34; display:flex; flex-direction:column; padding:14px 12px 12px;">
@@ -29,6 +44,7 @@
       <span style="display:flex; flex-direction:column; line-height:1.15;">
         <span style="color:#fff; font-weight:800; font-size:17.5px; letter-spacing:-0.4px;">Thrivoli</span>
       </span>
+      <span class="demo-badge" title="All people and clinical data shown are fictional">Demo</span>
     </div>
     <div style="flex:1; min-height:0; overflow-y:auto;">
     <sc-for list="{{ navGroups }}" as="grp" hint-placeholder-count="4">
@@ -59,7 +75,7 @@
 
   <!-- ============ MAIN ============ -->
   <div style="flex:1; display:flex; flex-direction:column; min-width:0;">
-    <main style="flex:1; overflow:auto; padding:18px 22px 32px;">
+    <main id="main-content" tabindex="-1" style="flex:1; overflow:auto; padding:18px 22px 32px;">
       <div style="display:flex; flex-wrap:wrap; align-items:flex-start; gap:10px 16px; margin-bottom:14px;">
         <div style="flex:1 1 200px; min-width:0; padding-top:2px;">
           <h1 style="margin:0; font-size:23px; font-weight:800; letter-spacing:-0.5px;">{{ pageTitle }}</h1>
@@ -3934,15 +3950,54 @@ Thrivoli Pediatric Therapy · NPI 1487562203 · Tax ID 06-1884422</textarea>
 <script type="text/x-dc" data-dc-script data-props="{&quot;startScreen&quot;: {&quot;editor&quot;: &quot;enum&quot;, &quot;default&quot;: &quot;dashboard&quot;, &quot;options&quot;: [&quot;dashboard&quot;, &quot;locations&quot;, &quot;location&quot;, &quot;growth&quot;, &quot;schedule&quot;, &quot;appt&quot;, &quot;newAppt&quot;, &quot;patientList&quot;, &quot;patients&quot;, &quot;note&quot;, &quot;billing&quot;, &quot;claim&quot;, &quot;reimburse&quot;, &quot;referrals&quot;, &quot;referral&quot;, &quot;waitlist&quot;, &quot;reports&quot;, &quot;inventory&quot;, &quot;po&quot;, &quot;settings&quot;, &quot;brief&quot;, &quot;notifications&quot;, &quot;search&quot;, &quot;newPatient&quot;], &quot;tsType&quot;: &quot;string&quot;, &quot;section&quot;: &quot;Prototype&quot;}}">
 class Component extends DCLogic {
   state = { screen: null, params: {}, back: null, tab: 'overview', ptab: 'roster', ctab: 'codes', yatab: 'carriers', doneTasks: { 2: true }, toast: null, confirm: null, autoOff: { 5: true }, stab: 'pnl', basis: 'accrual' };
+  componentDidMount() {
+    this._syncRoute = () => {
+      const requested = window.location.hash.replace(/^#\/?/, '').split('?')[0];
+      if (requested && this.labelFor(requested) !== 'Back') {
+        this.setState({ screen: requested, params: {}, back: null });
+      } else if (!requested) {
+        window.history.replaceState({}, '', '#/dashboard');
+      }
+    };
+    window.addEventListener('popstate', this._syncRoute);
+    window.addEventListener('hashchange', this._syncRoute);
+    this._syncRoute();
+  }
   toast(msg) { clearTimeout(this._t); this.setState({ toast: msg }); this._t = setTimeout(() => this.setState({ toast: null }), 3200); }
   ask(title, body, cta, done) { this.setState({ confirm: { title, body, cta, done } }); }
   closeConfirm() { this.setState({ confirm: null }); }
-  runConfirm() { const c = this.state.confirm; this.setState({ confirm: null }); if (c) { if (c.done.go) this.nav(c.done.go); this.toast(c.done.msg); } }
-  componentWillUnmount() { clearTimeout(this._t); }
+  async runConfirm() {
+    const c = this.state.confirm;
+    this.setState({ confirm: null });
+    if (!c) return;
+    if (c.done.workflow && window.thrivoliWorkflows) {
+      const result = await window.thrivoliWorkflows.execute(c.done.workflow);
+      if (!result.ok) {
+        this.toast(result.message);
+        return;
+      }
+    }
+    if (c.done.go) this.nav(c.done.go);
+    this.toast(c.done.msg);
+  }
+  componentWillUnmount() {
+    clearTimeout(this._t);
+    window.removeEventListener('popstate', this._syncRoute);
+    window.removeEventListener('hashchange', this._syncRoute);
+  }
   nav(s, params) {
+    if (window.location.hash !== '#/' + s) window.history.pushState({}, '', '#/' + s);
     this.setState(st => ({ screen: s, params: params || {}, back: (st.screen ?? 'dashboard') === s ? st.back : { screen: st.screen ?? 'dashboard', params: st.params, label: this.labelFor(st.screen ?? 'dashboard') } }));
   }
-  goBack() { const b = this.state.back; this.setState({ screen: b ? b.screen : 'dashboard', params: b ? b.params : {}, back: null }); }
+  goBack() {
+    const b = this.state.back;
+    if (window.history.length > 1) {
+      window.history.back();
+    } else {
+      window.history.replaceState({}, '', '#/' + (b ? b.screen : 'dashboard'));
+      this.setState({ screen: b ? b.screen : 'dashboard', params: b ? b.params : {}, back: null });
+    }
+  }
   labelFor(id) {
     return { dashboard: 'Overview', schedule: 'Schedule', patientList: 'Patients', patients: 'Patient chart', billing: 'Billing & claims',
       reimburse: 'Reimbursements', referrals: 'Referrals & intake', reports: 'Financials', inventory: 'Inventory', locations: 'Locations',
@@ -5918,8 +5973,8 @@ class Component extends DCLogic {
       goAppeal: () => this.nav('appeal'), goMessages: () => this.nav('messages'), goPnl: () => this.nav('pnl'),
       askApproveReqs: () => this.ask('Approve 2 open therapist reqs?', 'Pool Location will post a Pediatric PT and a PTA role. Budget impact is about $18.4k per month in loaded labor cost, against roughly $8.2k per month of recoverable revenue plus 41 waiting families.', 'Approve reqs', { msg: 'Both reqs approved and posted to the job boards.' }),
       askSendOffers: () => this.ask('Send offers to 9 waitlist families?', 'Each family receives a text with the open slots that match their preference. First to accept books the slot automatically.', 'Send 9 offers', { msg: 'Offers sent. 9 families notified — replies land in Notifications.' }),
-      askSignNote: () => this.ask('Sign and bill this visit?', 'Signing locks the note, releases 3 units of billing, and marks visit 21 of 24 against the authorization. This cannot be undone.', 'Sign & bill', { go: 'patients', msg: 'Note signed. Claim queued for tonight\'s batch.' }),
-      askSubmitBatch: () => this.ask('Submit 17 claims to the clearinghouse?', 'Claims total $2,846 and passed scrubbing with 0 errors. Availity acknowledgement usually returns within an hour.', 'Submit batch', { msg: 'Batch BATCH-0731 submitted — 17 claims, $2,846.' }),
+      askSignNote: () => this.ask('Sign and bill this visit?', 'Signing locks the note, releases 3 units of billing, and marks visit 21 of 24 against the authorization. This cannot be undone.', 'Sign & bill', { workflow: { type: 'sign-note', noteId: this.state.params.noteId }, go: 'patients', msg: 'Note signed. Claim queued for tonight\'s batch.' }),
+      askSubmitBatch: () => this.ask('Submit 17 claims to the clearinghouse?', 'Claims total $2,846 and passed scrubbing with 0 errors. Availity acknowledgement usually returns within an hour.', 'Submit batch', { workflow: { type: 'submit-claim-batch', batchId: this.state.params.batchId }, msg: 'Batch BATCH-0731 submitted — 17 claims, $2,846.' }),
       askSendPO: () => this.ask('Send purchase order to Rehab Supply Co.?', 'PO-1184 totals $662.60 and will be charged to Pool Location supplies. Expected delivery in 3 business days.', 'Send PO', { msg: 'PO-1184 sent to Rehab Supply Co.' }),
       askPostEra: () => this.ask('Post $1,904 across 12 claims?', 'Payments and contractual adjustments post to each patient ledger. Two claims have variances over $50 and will be flagged for review.', 'Post payments', { msg: 'ERA-4412 posted. 2 variances flagged for review.' }),
       askSubmitAppeal: () => this.ask('Submit appeal for CLM-2219?', 'Four documents are attached including authorization A-88231. Cigna appeals average 21 days to decision.', 'Submit appeal', { msg: 'Appeal submitted to Cigna with 4 attachments.' }),
