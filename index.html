@@ -88,7 +88,7 @@
             <svg width="14" height="14" viewBox="0 0 24 24" style="fill:none; stroke:currentColor; stroke-width:2px; stroke-linecap:round; flex-shrink:0;"><circle cx="11" cy="11" r="7"></circle><path d="M21 21l-4.3-4.3"></path></svg><span style="overflow:hidden; white-space:nowrap; text-overflow:ellipsis;">Search patients, claims…</span><span style="margin-left:auto; font-size:11px; border:1px solid #D8D2C8; border-radius:4px; padding:0 5px;">⌘K</span>
           </div>
           <select style="font-family:inherit; font-size:12.5px; font-weight:600; color:#1C2B33; border:1px solid #E5E0D8; border-radius:8px; padding:8px 10px; background:#fff; cursor:pointer;">
-            <option>All 6 clinics</option><option>Cheshire</option><option>Meriden</option><option>Orange</option><option>Guilford</option><option>Torrington</option><option>Pool Location</option>
+            <option>All 7 clinics</option><option>Cheshire</option><option>Meriden</option><option>Orange</option><option>Guilford</option><option>Torrington</option><option>Pool Location</option><option>New Location</option>
           </select>
           <button onClick="{{ goNotifications }}" style="position:relative; border:1px solid #E5E0D8; background:#fff; border-radius:8px; width:36px; height:36px; cursor:pointer; display:grid; place-items:center;" style-hover="background:#F6F4F0"><svg width="17" height="17" viewBox="0 0 24 24" style="fill:none; stroke:#1C2B33; stroke-width:1.8px; stroke-linecap:round; stroke-linejoin:round;"><path d="M18 8a6 6 0 1 0-12 0c0 7-3 9-3 9h18s-3-2-3-9"></path><path d="M10.3 21a1.94 1.94 0 0 0 3.4 0"></path></svg><span style="position:absolute; top:-4px; right:-4px; background:#E8674A; color:#fff; font-size:10px; font-weight:700; border-radius:8px; padding:0 5px;">4</span></button>
           <span style="width:1px; height:26px; background:#DCD6CC; margin:0 2px;"></span>
@@ -115,6 +115,36 @@
                 <div style="font-size:11.5px; color:#6B7A82; margin-top:3px;">{{ k.sub }}</div>
               </div>
             </sc-for>
+          </div>
+
+          <div style="background:#fff; border:1px solid #E5E0D8; border-radius:12px; overflow:hidden; overflow-x:auto; box-shadow:0 2px 10px rgba(28,43,51,0.05); margin-bottom:12px;">
+            <div style="display:flex; align-items:flex-start; justify-content:space-between; gap:12px; padding:13px 16px 11px; min-width:790px;">
+              <div>
+                <h2 style="margin:0; font-size:15.5px; font-weight:800; letter-spacing:-0.3px;">Visits, break-even & growth plan</h2>
+                <div style="font-size:11.5px; color:#6B7A82; margin-top:3px;">School-contract hours are credited to the location and staff capacity; cash programs are shown separately from insurance visits.</div>
+              </div>
+              <button onClick="{{ goLocations }}" style="border:none; background:none; color:#0E6B5C; font-family:inherit; font-size:12px; font-weight:700; cursor:pointer; white-space:nowrap;">Open forecast →</button>
+            </div>
+            <div style="display:grid; grid-template-columns:minmax(110px,1.2fr) repeat(6,minmax(78px,1fr)) minmax(140px,1.5fr); min-width:790px; column-gap:12px; padding:7px 16px; font-size:9.5px; font-weight:700; color:#6B7A82; text-transform:uppercase; letter-spacing:0.45px; background:#FAF8F5; border-top:1px solid #EEEAE2; border-bottom:1px solid #EEEAE2;">
+              <span>Location</span><span style="text-align:right;">Visits MTD</span><span style="text-align:right;">Break-even</span><span style="text-align:right;">Cushion</span><span style="text-align:right;">School hrs</span><span style="text-align:right;">Cash rev.</span><span style="text-align:right;">Margin</span><span>Growth signal</span>
+            </div>
+            <sc-for list="{{ locationEconomics }}" as="r" hint-placeholder-count="7">
+              <div onClick="{{ r.go }}" style="display:grid; grid-template-columns:minmax(110px,1.2fr) repeat(6,minmax(78px,1fr)) minmax(140px,1.5fr); min-width:790px; column-gap:12px; padding:8px 16px; font-size:12px; align-items:center; border-bottom:1px solid #F1EDE6; cursor:pointer;" style-hover="background:#F6F4F0">
+                <span style="display:flex; align-items:center; gap:7px; font-weight:700;"><span style="width:7px; height:7px; border-radius:50%; background:{{ r.dot }};"></span>{{ r.name }}</span>
+                <span style="text-align:right; font-weight:700; font-variant-numeric:tabular-nums;">{{ r.visits }}</span>
+                <span style="text-align:right; font-variant-numeric:tabular-nums;">{{ r.breakEven }}</span>
+                <span style="text-align:right; font-weight:700; color:{{ r.cushionColor }};">{{ r.cushion }}</span>
+                <span style="text-align:right; font-variant-numeric:tabular-nums;">{{ r.schoolHours }}</span>
+                <span style="text-align:right; font-variant-numeric:tabular-nums;">{{ r.cashRevenue }}</span>
+                <span style="text-align:right; font-weight:700; color:{{ r.marginColor }};">{{ r.margin }}</span>
+                <span style="font-size:11.5px; color:{{ r.signalColor }}; white-space:nowrap; overflow:hidden; text-overflow:ellipsis;">{{ r.signal }}</span>
+              </div>
+            </sc-for>
+            <div style="display:flex; justify-content:space-between; gap:14px; flex-wrap:wrap; padding:9px 16px; min-width:790px; font-size:11.5px; color:#6B7A82; background:#FAF8F5;">
+              <span><strong style="color:#1C2B33;">4,246</strong> visits delivered vs <strong style="color:#1C2B33;">3,450</strong> break-even</span>
+              <span><strong style="color:#1C2B33;">22%</strong> school contracts · <strong style="color:#1C2B33;">5%</strong> cash programs · <strong style="color:#1C2B33;">73%</strong> insurance</span>
+              <span><strong style="color:#0E6B5C;">+$83.3k</strong> operating contribution above break-even</span>
+            </div>
           </div>
 
           <div style="display:grid; grid-template-columns:minmax(0,1.62fr) minmax(0,1fr); gap:12px; align-items:stretch; margin-bottom:12px;">
@@ -4094,10 +4124,32 @@ class Component extends DCLogic {
     ];
     const kpis = [
       { label: 'NET REVENUE MTD', value: '$444.1k', sub: 'Pacing $558k vs $560k target', delta: '+7.9%', deltaColor: teal },
-      { label: 'REVENUE PER VISIT', value: '$104.60', sub: 'Best: Guilford $118 · Worst: Pool Location $91', delta: '-$2.10', deltaColor: amber },
-      { label: 'SCHEDULE FILL RATE', value: '86%', sub: '186 open slots this week = $19.5k', delta: '+3 pts', deltaColor: teal },
-      { label: 'CASH COLLECTED MTD', value: '$402.4k', sub: '18.4 days in A/R · 96.2% clean claims', delta: '+11%', deltaColor: teal },
+      { label: 'VISITS ABOVE BREAK-EVEN', value: '+796', sub: '4,246 delivered · 3,450 needed', delta: '+$83.3k', deltaColor: teal },
+      { label: 'OPERATING MARGIN', value: '23.0%', sub: 'Target 21% · 2 locations below plan', delta: '+2.0 pts', deltaColor: teal },
+      { label: 'GROWTH CAPACITY', value: '186', sub: 'Open visit slots this week = $19.5k', delta: '2 hires', deltaColor: amber },
     ].map((k, i) => ({ ...k, bl: i ? '1px solid #F1EDE6' : 'none' }));
+    const economicsRow = (name, visits, breakEven, schoolHours, cashRevenue, margin, signal, severity = 'ok') => {
+      const difference = visits - breakEven;
+      return {
+        name, visits: visits.toLocaleString(), breakEven: breakEven.toLocaleString(),
+        cushion: (difference >= 0 ? '+' : '−') + Math.abs(difference),
+        cushionColor: difference >= 0 ? teal : red,
+        schoolHours: schoolHours + 'h', cashRevenue, margin: margin + '%',
+        marginColor: margin >= 22 ? teal : margin >= 16 ? amber : red,
+        signal, signalColor: severity === 'bad' ? red : severity === 'warn' ? amber : teal,
+        dot: severity === 'bad' ? red : severity === 'warn' ? amber : teal,
+        go: () => this.nav('location', { loc: name }),
+      };
+    };
+    const locationEconomics = [
+      economicsRow('Cheshire', 870, 550, 168, '$4.8k', 27, 'Capacity supports another 0.6 FTE'),
+      economicsRow('Meriden', 784, 540, 142, '$3.9k', 23, 'Near plan · protect school coverage'),
+      economicsRow('Orange', 756, 510, 126, '$4.1k', 25, 'Room to add 52 visits/month'),
+      economicsRow('Guilford', 651, 430, 118, '$5.2k', 31, 'Model location · replicate staffing mix'),
+      economicsRow('Torrington', 603, 460, 96, '$2.4k', 19, 'Improve no-shows before hiring', 'warn'),
+      economicsRow('Pool Location', 418, 500, 84, '$1.7k', 11, 'Below break-even · fill demand + hire PT', 'bad'),
+      economicsRow('New Location', 164, 460, 32, '$0.8k', -8, 'Ramp plan · break-even in 11 weeks', 'warn'),
+    ];
     const leaks = [
       { amount: '$19,500', title: '186 unfilled slots this week', body: 'Pool Location is 73% full and Torrington 84% — 9 waitlist families could fill 31 slots today.', action: 'Offer waitlist', go: () => this.nav('waitlist') },
       { amount: '$12,480', title: '41 visits delivered but not billed', body: '17 claims are clean and ready; 24 are blocked by unsigned notes or missing auth.', action: 'Work queue', go: () => this.nav('reimburse') },
@@ -6029,7 +6081,7 @@ class Component extends DCLogic {
       goSettings: () => this.nav('settings'), goBrief: () => this.nav('brief'), goNotifications: () => this.nav('notifications'),
       goSearch: () => this.nav('search'), goPO: () => this.nav('po'), goNewPatient: () => this.nav('newPatient'),
       goReferralDetail: () => this.nav('referral'),
-      navGroups, leaks: leakTop, locationScore, demand, capacityGrid, locCards: locCardsWired, funnel, sources,
+      navGroups, leaks: leakTop, locationScore, locationEconomics, demand, capacityGrid, locCards: locCardsWired, funnel, sources,
       goGrowth: () => this.nav('growth'), goLocations: () => this.nav('locations'),
       tabOverview: tab === 'overview', tabNotes: tab === 'notes', tabBillingTab: tab === 'billing',
       goSchedule: () => this.nav('schedule'), goChart, goApptDetail,
