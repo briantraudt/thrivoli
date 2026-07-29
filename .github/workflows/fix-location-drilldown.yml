@@ -1,0 +1,43 @@
+name: Fix location drill-down
+
+on:
+  push:
+    paths:
+      - .github/workflows/fix-location-drilldown.yml
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Add missing clinic selection handler
+        run: |
+          python - <<'PY'
+          from pathlib import Path
+
+          path = Path('index.html')
+          text = path.read_text()
+          old = "        name, visits: visits.toLocaleString(), breakEven: breakEven.toLocaleString(),\n"
+          new = old + "        select: () => this.setState({ selectedEconomics: name }),\n"
+          if new in text:
+              print('Selection handler already present')
+          elif old in text:
+              path.write_text(text.replace(old, new, 1))
+              print('Added selection handler')
+          else:
+              raise SystemExit('Expected economicsRow anchor was not found')
+          PY
+      - name: Commit repair
+        run: |
+          if git diff --quiet; then
+            echo "No change needed"
+            exit 0
+          fi
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          git commit -m "Fix location performance drill-down clicks"
+          git push
