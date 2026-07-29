@@ -4292,6 +4292,7 @@ class Component extends DCLogic {
       const maxTrend = Math.max(...insights.weeks);
       return {
         name, visits: visits.toLocaleString(), breakEven: breakEven.toLocaleString(),
+        select: () => this.setState({ selectedEconomics: name }),
         cushion: (difference >= 0 ? '+' : '−') + Math.abs(difference),
         cushionColor: difference >= 0 ? teal : red,
         schoolHours: schoolHours + 'h', cashRevenue, margin: margin + '%',
