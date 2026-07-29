@@ -1,4 +1,5 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
+import "./chat-widget";
 
 type Workflow =
   | { type: "sign-note"; noteId?: string }
@@ -94,4 +95,3 @@ declare global {
     };
   }
 }
-
