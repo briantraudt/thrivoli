@@ -1,5 +1,11 @@
 import { useState } from "react";
-import { CheckCircle2, RefreshCw, ShieldCheck, TriangleAlert } from "lucide-react";
+import {
+  CheckCircle2,
+  ChevronRight,
+  RefreshCw,
+  ShieldCheck,
+  TriangleAlert,
+} from "lucide-react";
 
 type EligibilityResult = {
   id: string | null;
@@ -25,6 +31,49 @@ function humanizeStatus(status: string) {
   if (normalized === "6" || normalized.includes("inactive")) return "Inactive";
   return status;
 }
+
+const patients = [
+  {
+    name: "Jordan Lee",
+    guardian: "Elena Lee",
+    payer: "Aetna",
+    memberId: "•••• 4821",
+    status: "Active",
+    detail: "Verified today",
+    tone: "positive",
+    sandbox: false,
+  },
+  {
+    name: "Mason Hernandez",
+    guardian: "Sofia Hernandez",
+    payer: "Anthem",
+    memberId: "•••• 1834",
+    status: "Recheck",
+    detail: "Last checked 28 days ago",
+    tone: "attention",
+    sandbox: false,
+  },
+  {
+    name: "Avery King",
+    guardian: "Dana King",
+    payer: "ConnectiCare",
+    memberId: "•••• 7092",
+    status: "Auth risk",
+    detail: "4 visits remaining",
+    tone: "warning",
+    sandbox: false,
+  },
+  {
+    name: "Bernie Prohas",
+    guardian: "Stedi synthetic subscriber",
+    payer: "STEDI",
+    memberId: "23051322",
+    status: "Ready",
+    detail: "Approved sandbox patient",
+    tone: "info",
+    sandbox: true,
+  },
+] as const;
 
 export function StediEligibility() {
   const [result, setResult] = useState<EligibilityResult | null>(null);
@@ -62,21 +111,54 @@ export function StediEligibility() {
     <section className="card eligibility-console" aria-labelledby="stedi-title">
       <div className="eligibility-heading">
         <div>
-          <span className="eyebrow">Stedi sandbox · 270/271</span>
-          <h2 id="stedi-title">Real-time eligibility verification</h2>
+          <span className="eyebrow">Patient coverage</span>
+          <h2 id="stedi-title">Insurance eligibility</h2>
           <p>
-            Send Stedi’s approved synthetic patient to the test payer and return
-            a normalized benefit response inside Thrivoli.
+            Verify coverage before the visit, surface authorization risk, and
+            keep front-desk follow-up connected to each patient.
           </p>
         </div>
         <span className="sandbox-chip">
-          <ShieldCheck size={14} /> No real PHI
+          <ShieldCheck size={14} /> Stedi connected
         </span>
+      </div>
+
+      <div className="eligibility-overview">
+        <div><span>Verified</span><strong>186</strong><small>92% of active patients</small></div>
+        <div><span>Needs recheck</span><strong>11</strong><small>Before next appointment</small></div>
+        <div><span>Authorization risk</span><strong>8</strong><small>34 visits potentially blocked</small></div>
+        <div><span>Coverage issues</span><strong>3</strong><small>Assigned to front desk</small></div>
+      </div>
+
+      <div className="patient-eligibility-list" role="table" aria-label="Patient eligibility">
+        <div className="patient-eligibility-header" role="row">
+          <span>Patient</span><span>Insurance</span><span>Eligibility</span><span>Action</span>
+        </div>
+        {patients.map((patient) => (
+          <div className={`patient-eligibility-row ${patient.sandbox ? "sandbox-row" : ""}`} role="row" key={patient.name}>
+            <div role="cell"><strong>{patient.name}</strong><small>{patient.guardian}</small></div>
+            <div role="cell"><strong>{patient.payer}</strong><small>Member {patient.memberId}</small></div>
+            <div role="cell">
+              <span className={`status status-${patient.tone}`}><i />{patient.status}</span>
+              <small>{patient.detail}</small>
+            </div>
+            <div role="cell">
+              {patient.sandbox ? (
+                <button className="primary eligibility-row-action" onClick={runCheck} disabled={loading}>
+                  <RefreshCw size={14} className={loading ? "spin" : ""} />
+                  {loading ? "Checking…" : result ? "Run again" : "Run Stedi test"}
+                </button>
+              ) : (
+                <button className="row-link" type="button">View coverage <ChevronRight size={14} /></button>
+              )}
+            </div>
+          </div>
+        ))}
       </div>
 
       <div className="eligibility-patient">
         <div>
-          <span>Test subscriber</span>
+          <span>Sandbox subscriber</span>
           <strong>Bernie Prohas</strong>
           <small>Member 23051322</small>
         </div>
@@ -90,10 +172,7 @@ export function StediEligibility() {
           <strong>Health benefit plan</strong>
           <small>Service type 30</small>
         </div>
-        <button className="primary" onClick={runCheck} disabled={loading}>
-          <RefreshCw size={15} className={loading ? "spin" : ""} />
-          {loading ? "Checking Stedi…" : result ? "Run again" : "Check eligibility"}
-        </button>
+        <span className="sandbox-chip"><ShieldCheck size={14} /> No real PHI</span>
       </div>
 
       {error && (

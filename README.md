@@ -14,8 +14,8 @@ The interface works with its fictional demo dataset without environment variable
 
 ## Stedi sandbox
 
-Thrivoli includes a server-side Stedi real-time eligibility proof of concept at
-`/patients/jordan-lee/authorizations`. It sends Stedi's approved synthetic test
+Thrivoli includes a server-side Stedi real-time eligibility proof of concept on
+the main `/patients` screen. It sends Stedi's approved synthetic test
 subscriber through the 270/271 JSON endpoint and displays a normalized response.
 
 Add `STEDI_API_KEY` as a server-side environment variable in Vercel. Do not use a

@@ -167,6 +167,27 @@ th:nth-child(3), td:nth-child(3) { text-align: right; }
 .eligibility-heading h2 { margin: 3px 0 5px; font-size: 18px; letter-spacing: -.35px; }
 .eligibility-heading p { max-width: 700px; }
 .sandbox-chip { display: inline-flex; align-items: center; gap: 6px; color: var(--teal); background: #e7f1ee; border: 1px solid #c9dfd9; border-radius: 999px; padding: 6px 10px; font-size: 10.5px; font-weight: 800; white-space: nowrap; }
+.eligibility-overview { display: grid; grid-template-columns: repeat(4, minmax(0, 1fr)); border-bottom: 1px solid var(--line); }
+.eligibility-overview > div { padding: 14px 20px; min-width: 0; }
+.eligibility-overview > div + div { border-left: 1px solid #f1ede6; }
+.eligibility-overview span, .eligibility-overview strong, .eligibility-overview small { display: block; }
+.eligibility-overview span { color: var(--muted); font-size: 9.5px; font-weight: 700; letter-spacing: .55px; text-transform: uppercase; }
+.eligibility-overview strong { margin: 4px 0 2px; font-size: 19px; }
+.eligibility-overview small { color: var(--muted); font-size: 10.5px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.patient-eligibility-list { padding: 6px 20px 14px; }
+.patient-eligibility-header, .patient-eligibility-row { display: grid; grid-template-columns: 1.25fr 1fr 1fr 145px; align-items: center; gap: 16px; }
+.patient-eligibility-header { color: var(--muted); padding: 8px 10px; font-size: 9.5px; font-weight: 700; letter-spacing: .55px; text-transform: uppercase; }
+.patient-eligibility-row { min-height: 58px; padding: 9px 10px; border-top: 1px solid #f1ede6; }
+.patient-eligibility-row:hover { background: #faf8f5; }
+.patient-eligibility-row.sandbox-row { background: #f1f7f5; border: 1px solid #d5e6e1; border-radius: 9px; margin-top: 4px; }
+.patient-eligibility-row > div { min-width: 0; }
+.patient-eligibility-row strong, .patient-eligibility-row small { display: block; }
+.patient-eligibility-row strong { font-size: 11.5px; }
+.patient-eligibility-row small { color: var(--muted); font-size: 10px; margin-top: 3px; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; }
+.patient-eligibility-row .status + small { margin-left: 12px; }
+.eligibility-row-action { min-height: 32px; padding: 6px 10px; font-size: 10.5px; width: 100%; }
+.row-link { display: inline-flex; align-items: center; justify-content: flex-end; gap: 3px; color: var(--teal); background: transparent; font-size: 10.5px; font-weight: 700; width: 100%; padding: 7px 0; }
+.row-link:hover { text-decoration: underline; }
 .eligibility-patient { display: grid; grid-template-columns: repeat(3, minmax(0, 1fr)) auto; align-items: center; gap: 18px; padding: 15px 20px; background: #faf8f5; border-bottom: 1px solid var(--line); }
 .eligibility-patient > div span, .eligibility-patient > div strong, .eligibility-patient > div small { display: block; }
 .eligibility-patient > div span, .eligibility-summary span { color: var(--muted); font-size: 9.5px; font-weight: 700; letter-spacing: .55px; text-transform: uppercase; }
@@ -214,6 +235,14 @@ th:nth-child(3), td:nth-child(3) { text-align: right; }
   .driver-grid { grid-template-columns: 1fr; }
   .eligibility-patient { grid-template-columns: repeat(2, minmax(0, 1fr)); }
   .eligibility-patient .primary { width: 100%; }
+  .eligibility-overview { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+  .eligibility-overview > div:nth-child(3) { border-left: 0; }
+  .eligibility-overview > div:nth-child(n+3) { border-top: 1px solid #f1ede6; }
+  .patient-eligibility-header, .patient-eligibility-row { grid-template-columns: 1.1fr 1fr 1fr; }
+  .patient-eligibility-header span:last-child { display: none; }
+  .patient-eligibility-row > div:last-child { grid-column: 1 / -1; }
+  .patient-eligibility-row .row-link { justify-content: flex-start; }
+  .eligibility-row-action { width: auto; }
 }
 @media (max-width: 600px) {
   .performance-heading, .location-drilldown { padding-left: 14px; padding-right: 14px; }
@@ -234,6 +263,11 @@ th:nth-child(3), td:nth-child(3) { text-align: right; }
   .trend-good, .trend-bad { margin-bottom: 8px; }
   .eligibility-heading { flex-direction: column; padding-left: 14px; padding-right: 14px; }
   .eligibility-patient { grid-template-columns: 1fr; padding-left: 14px; padding-right: 14px; }
+  .eligibility-overview > div { padding-left: 14px; padding-right: 14px; }
+  .patient-eligibility-list { padding-left: 14px; padding-right: 14px; }
+  .patient-eligibility-header { display: none; }
+  .patient-eligibility-row { grid-template-columns: 1fr 1fr; gap: 10px; padding: 12px 8px; }
+  .patient-eligibility-row > div:nth-child(3), .patient-eligibility-row > div:last-child { grid-column: 1 / -1; }
   .eligibility-alert, .eligibility-summary, .benefit-list, .eligibility-response-errors { margin-left: 14px; margin-right: 14px; }
   .eligibility-summary { grid-template-columns: 1fr; }
   .eligibility-summary > div + div { border-left: 0; border-top: 1px solid var(--line); }

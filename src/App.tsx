@@ -282,7 +282,7 @@ function Screen({ screen, openConfirm }: { screen: ScreenDefinition; openConfirm
       </div>}
       <Kpis metrics={screen.metrics} />
       {screen.id === "dashboard" && <LocationPerformance />}
-      {screen.id === "auths" && <StediEligibility />}
+      {screen.id === "patientList" && <StediEligibility />}
       <div className="two-column">
         <section className="card work-card">
           <div className="card-title-row">
