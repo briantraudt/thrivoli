@@ -6,6 +6,7 @@ import {
   ShieldCheck, Sparkles, TrendingUp, Users, WalletCards, X
 } from "lucide-react";
 import { screenByPath, screens } from "./data";
+import { StediEligibility } from "./stedi-eligibility";
 import type { Metric, ScreenDefinition, Tone } from "./types";
 
 const nav = [
@@ -281,6 +282,7 @@ function Screen({ screen, openConfirm }: { screen: ScreenDefinition; openConfirm
       </div>}
       <Kpis metrics={screen.metrics} />
       {screen.id === "dashboard" && <LocationPerformance />}
+      {screen.id === "auths" && <StediEligibility />}
       <div className="two-column">
         <section className="card work-card">
           <div className="card-title-row">
