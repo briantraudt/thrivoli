@@ -12,7 +12,7 @@ type ChatMeta = {
   roleScope: string;
   unsupportedPeriod?: string | null;
 };
-type ChatMessage = { role: ChatRole; content: string; meta?: ChatMeta; feedback?: number; actionStatus?: string };
+type ChatMessage = { role: ChatRole; content: string; meta?: ChatMeta; feedback?: number; actionStatus?: string; actionId?: string };
 
 const escapeHtml = (value: string) =>
   value.replace(/[&<>'"]/g, (char) => ({ "&": "&amp;", "<": "&lt;", ">": "&gt;", "'": "&#39;", '"': "&quot;" })[char] ?? char);
@@ -71,7 +71,12 @@ function mountChat() {
     if (!meta) return "";
     const card = meta.card ? `<div class="tv-ai-card"><div class="tv-ai-card-label">${escapeHtml(meta.card.label)}</div><div class="tv-ai-card-value">${escapeHtml(meta.card.value)}</div><div class="tv-ai-card-period">${escapeHtml(meta.card.period)}</div></div>` : "";
     const proof = `<details class="tv-ai-proof"><summary>View sources and calculation</summary><div class="tv-ai-proof-body">${meta.evidence.map((item) => `<div class="tv-ai-proof-row"><b>${escapeHtml(item.label)}</b>${item.value ? `: ${escapeHtml(item.value)}` : ""}<span class="tv-ai-badge">${escapeHtml(item.status)}</span><br>${escapeHtml(item.source)} · ${escapeHtml(item.period)}</div>`).join("")}<div>Data refreshed ${escapeHtml(formatFreshness(meta.dataAsOf))}</div><div>${escapeHtml(meta.dataStatus)} · ${escapeHtml(meta.roleScope)}</div></div></details>`;
-    const actions = `<div class="tv-ai-actions"><button class="tv-ai-mini ${message.feedback === 1 ? "active" : ""}" data-feedback="1" data-index="${index}" aria-label="Helpful answer">Helpful</button><button class="tv-ai-mini ${message.feedback === -1 ? "active" : ""}" data-feedback="-1" data-index="${index}" aria-label="Report incorrect answer">Incorrect</button><button class="tv-ai-mini" data-action="task" data-index="${index}">Create follow-up task</button></div>${message.actionStatus ? `<div class="tv-ai-action-note">${escapeHtml(message.actionStatus)}</div>` : ""}`;
+    const taskControls = message.actionStatus === "Ready to confirm"
+      ? `<button class="tv-ai-mini active" data-action="confirm" data-index="${index}">Confirm task</button><button class="tv-ai-mini" data-action="cancel" data-index="${index}">Cancel</button>`
+      : message.actionStatus === "Task created"
+        ? ""
+        : `<button class="tv-ai-mini" data-action="task" data-index="${index}">Create follow-up task</button>`;
+    const actions = `<div class="tv-ai-actions"><button class="tv-ai-mini ${message.feedback === 1 ? "active" : ""}" data-feedback="1" data-index="${index}" aria-label="Helpful answer">Helpful</button><button class="tv-ai-mini ${message.feedback === -1 ? "active" : ""}" data-feedback="-1" data-index="${index}" aria-label="Report incorrect answer">Incorrect</button>${taskControls}</div>${message.actionStatus ? `<div class="tv-ai-action-note">${escapeHtml(message.actionStatus === "Ready to confirm" ? "Preview: create one internal follow-up task. Confirm to continue." : message.actionStatus)}</div>` : ""}`;
     return `${card}${chartHtml(meta.chart)}${proof}${actions}`;
   };
 
@@ -132,12 +137,17 @@ function mountChat() {
       message.actionStatus = "Reviewing task preview…"; render();
       try {
         const preview = await saveEvent("action_preview", { interaction_id: message.meta.interactionId, action_type: "create_follow_up_task", title: `Follow up on: ${message.meta.card?.label || "AI analysis"}` });
-        if (window.confirm(`Create this follow-up task?\n\n${preview.preview?.title || "Review Thrivoli AI analysis"}`)) {
-          await saveEvent("action_confirm", { action_id: preview.action_id }); message.actionStatus = "Task created";
-        } else message.actionStatus = "Task not created";
+        message.actionId = preview.action_id; message.actionStatus = "Ready to confirm";
       } catch { message.actionStatus = "Could not create task"; }
       render();
     }
+    if (target.dataset.action === "confirm" && message.actionId) {
+      message.actionStatus = "Creating task…"; render();
+      try { await saveEvent("action_confirm", { action_id: message.actionId }); message.actionStatus = "Task created"; }
+      catch { message.actionStatus = "Could not create task"; }
+      render();
+    }
+    if (target.dataset.action === "cancel") { message.actionStatus = "Task not created"; render(); }
   });
 
   const setOpen = (open: boolean) => { panel.classList.toggle("is-open", open); launch.setAttribute("aria-expanded", String(open)); if (open) setTimeout(() => input.focus(), 50); };
