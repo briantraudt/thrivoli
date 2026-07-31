@@ -70,9 +70,6 @@ OUTPUT RULES:
 
 THRIVOLI DEMO DATA:
 ${JSON.stringify(THRIVOLI_DEMO_DATA)}`;
-  const conversation = messages.map(({ role, content }) => `${role.toUpperCase()}: ${content}`).join("\n\n");
-  const prompt = `${instructions}\n\nCONVERSATION:\n${conversation}\n\nRespond to the final USER message.`;
-
   try {
     const apiResponse = await fetch(`${process.env.SUPABASE_URL.replace(/\/$/, "")}/functions/v1/ai-chat`, {
       method: "POST",
@@ -81,7 +78,7 @@ ${JSON.stringify(THRIVOLI_DEMO_DATA)}`;
         "apikey": process.env.SUPABASE_PUBLISHABLE_KEY,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ prompt }),
+      body: JSON.stringify({ instructions, messages }),
     });
 
     const payload = await apiResponse.json();
@@ -91,7 +88,10 @@ ${JSON.stringify(THRIVOLI_DEMO_DATA)}`;
     }
 
     response.setHeader("Cache-Control", "no-store");
-    return response.status(200).json({ answer: payload.answer || "I could not produce an answer for that question.", sources: [] });
+    const answer = String(payload.answer || "I could not produce an answer for that question.")
+      .replace(/\*\*/g, "")
+      .trim();
+    return response.status(200).json({ answer, sources: [] });
   } catch (error) {
     console.error("Thrivoli chat error", error);
     return response.status(500).json({ error: "The assistant encountered a temporary error. Please try again." });
