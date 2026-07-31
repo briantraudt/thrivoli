@@ -1,6 +1,6 @@
 Deno.serve(async (request) => {
   try {
-    const { instructions, messages } = await request.json();
+    const { instructions, messages, stream = false } = await request.json();
 
     if (
       typeof instructions !== "string" ||
@@ -31,13 +31,13 @@ Deno.serve(async (request) => {
           max_tokens: 700,
           temperature: 0.1,
           reasoning_effort: "low",
+          stream,
         }),
       },
     );
 
-    const result = await response.json();
-
     if (!response.ok) {
+      const result = await response.json();
       return new Response(
         JSON.stringify({
           error:
@@ -52,6 +52,18 @@ Deno.serve(async (request) => {
       );
     }
 
+    if (stream) {
+      return new Response(response.body, {
+        status: 200,
+        headers: {
+          "Content-Type": "text/event-stream",
+          "Cache-Control": "no-cache",
+          "Connection": "keep-alive",
+        },
+      });
+    }
+
+    const result = await response.json();
     const answer = result.choices?.[0]?.message?.content ?? "";
 
     return new Response(JSON.stringify({ answer }), {

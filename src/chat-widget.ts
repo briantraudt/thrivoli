@@ -6,6 +6,13 @@ const escapeHtml = (value: string) =>
 
 const formatText = (value: string) => escapeHtml(value).replace(/\n/g, "<br>");
 
+const normalizeAssistantText = (value: string) =>
+  value
+    .replace(/\*\*/g, "")
+    .replace(/[\u00a0\u202f]/g, " ")
+    .replace(/\$(\d[\d,\s]*)\s+visits\b/gi, (_, count: string) => `${count.replace(/\s/g, "")} visits`)
+    .trim();
+
 function mountChat() {
   if (document.getElementById("thrivoli-ai-root")) return;
 
@@ -93,17 +100,53 @@ function mountChat() {
     messagesEl.appendChild(thinking);
     messagesEl.scrollTop = messagesEl.scrollHeight;
 
+    let assistantMessage: ChatMessage | null = null;
     try {
       const response = await fetch("/api/chat", {
         method: "POST",
         headers: { "Content-Type": "application/json" },
         body: JSON.stringify({ messages: history.slice(-10).map(({ role, content }) => ({ role, content })) }),
       });
-      const payload = await response.json();
-      if (!response.ok) throw new Error(payload?.error || "The assistant is unavailable.");
-      history.push({ role: "assistant", content: payload.answer, sources: payload.sources });
+      if (!response.ok) {
+        const payload = await response.json();
+        throw new Error(payload?.error || "The assistant is unavailable.");
+      }
+      if (!response.body) throw new Error("The assistant returned an empty response.");
+
+      thinking.remove();
+      assistantMessage = { role: "assistant", content: "" };
+      history.push(assistantMessage);
+      render();
+
+      const reader = response.body.getReader();
+      const decoder = new TextDecoder();
+      let buffer = "";
+
+      while (true) {
+        const { done, value } = await reader.read();
+        if (done) break;
+        buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
+        const events = buffer.split("\n\n");
+        buffer = events.pop() ?? "";
+
+        for (const event of events) {
+          for (const line of event.split("\n")) {
+            if (!line.startsWith("data:")) continue;
+            const data = line.slice(5).trim();
+            if (!data || data === "[DONE]") continue;
+            const payload = JSON.parse(data);
+            const delta = payload.choices?.[0]?.delta?.content;
+            if (typeof delta === "string") assistantMessage.content += delta;
+          }
+        }
+        render();
+      }
+
+      assistantMessage.content = normalizeAssistantText(assistantMessage.content) || "I could not produce an answer for that question.";
     } catch (error) {
-      history.push({ role: "assistant", content: error instanceof Error ? error.message : "The assistant is unavailable right now." });
+      const message = error instanceof Error ? error.message : "The assistant is unavailable right now.";
+      if (assistantMessage) assistantMessage.content = message;
+      else history.push({ role: "assistant", content: message });
     } finally {
       thinking.remove();
       send.disabled = false;
