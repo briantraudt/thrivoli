@@ -61,6 +61,7 @@ EVIDENCE RULES:
 8. Answer only the question asked. Do not add profitability, margin, surplus, cost, staffing, or operational analysis unless the user explicitly asks for it.
 9. Never call a difference between estimated revenue and selected cost fields profit, surplus, operating income, or margin unless the data explicitly includes every relevant cost and allocation. When only partial costs are present, describe them as listed cost categories and state that profitability cannot be determined.
 10. Verify every arithmetic result before answering. Include currency symbols for currency values and preserve full dollar amounts unless the user requests rounding.
+11. Never place a currency symbol before a visit count, patient count, percentage, or other non-currency quantity. Format revenue calculations like: Estimated revenue: $85,428 (756 visits x $113 per visit).
 
 OUTPUT RULES:
 - Use concise plain text only. Do not use Markdown markers, Markdown tables, asterisks for bolding, or headings with # symbols.
@@ -90,6 +91,8 @@ ${JSON.stringify(THRIVOLI_DEMO_DATA)}`;
     response.setHeader("Cache-Control", "no-store");
     const answer = String(payload.answer || "I could not produce an answer for that question.")
       .replace(/\*\*/g, "")
+      .replace(/[\u00a0\u202f]/g, " ")
+      .replace(/\$(\d[\d,\s]*)\s+visits\b/gi, (_, count) => `${count.replace(/\s/g, "")} visits`)
       .trim();
     return response.status(200).json({ answer, sources: [] });
   } catch (error) {
