@@ -13,13 +13,13 @@ const THRIVOLI_DEMO_DATA = {
     visits_break_even_mtd: 3450,
   },
   locations: [
-    { name: "Cheshire", visits: 870, break_even: 690, projected_visits: 1115, net_revenue_per_visit: 111, labor_cost_mtd: 69200, operating_cost_mtd: 18400, capacity_utilization: 0.89, cancellations: 31, no_shows: 14, open_slots_next_14_days: 46, disciplines: { PT: 392, OT: 281, SLP: 197 } },
-    { name: "Meriden", visits: 784, break_even: 610, projected_visits: 1002, net_revenue_per_visit: 108, labor_cost_mtd: 61500, operating_cost_mtd: 17200, capacity_utilization: 0.86, cancellations: 35, no_shows: 18, open_slots_next_14_days: 61, disciplines: { PT: 354, OT: 247, SLP: 183 } },
-    { name: "Orange", visits: 756, break_even: 590, projected_visits: 966, net_revenue_per_visit: 113, labor_cost_mtd: 60300, operating_cost_mtd: 16900, capacity_utilization: 0.84, cancellations: 39, no_shows: 17, open_slots_next_14_days: 72, disciplines: { PT: 326, OT: 251, SLP: 179 } },
-    { name: "Guilford", visits: 651, break_even: 520, projected_visits: 832, net_revenue_per_visit: 110, labor_cost_mtd: 52600, operating_cost_mtd: 15100, capacity_utilization: 0.81, cancellations: 42, no_shows: 21, open_slots_next_14_days: 84, disciplines: { PT: 289, OT: 211, SLP: 151 } },
-    { name: "Torrington", visits: 603, break_even: 480, projected_visits: 771, net_revenue_per_visit: 106, labor_cost_mtd: 49300, operating_cost_mtd: 14200, capacity_utilization: 0.79, cancellations: 46, no_shows: 24, open_slots_next_14_days: 95, disciplines: { PT: 276, OT: 191, SLP: 136 } },
-    { name: "Pool Location", visits: 418, break_even: 510, projected_visits: 534, net_revenue_per_visit: 102, labor_cost_mtd: 43800, operating_cost_mtd: 13700, capacity_utilization: 0.64, cancellations: 58, no_shows: 29, open_slots_next_14_days: 132, disciplines: { PT: 184, OT: 139, SLP: 95 } },
-    { name: "New Location", visits: 164, break_even: 350, projected_visits: 210, net_revenue_per_visit: 98, labor_cost_mtd: 27400, operating_cost_mtd: 11900, capacity_utilization: 0.39, cancellations: 24, no_shows: 12, open_slots_next_14_days: 186, disciplines: { PT: 76, OT: 53, SLP: 35 } },
+    { name: "Cheshire", visits: 870, break_even: 550, projected_visits: 1115, net_revenue_mtd: 94100, net_revenue_per_visit: 111, labor_cost_mtd: 69200, operating_cost_mtd: 18400, capacity_utilization: 0.89, cancellations: 31, no_shows: 14, open_slots_next_14_days: 46, disciplines: { PT: 392, OT: 281, SLP: 197 } },
+    { name: "Meriden", visits: 784, break_even: 540, projected_visits: 1002, net_revenue_mtd: 82700, net_revenue_per_visit: 108, labor_cost_mtd: 61500, operating_cost_mtd: 17200, capacity_utilization: 0.86, cancellations: 35, no_shows: 18, open_slots_next_14_days: 61, disciplines: { PT: 354, OT: 247, SLP: 183 } },
+    { name: "Orange", visits: 756, break_even: 510, projected_visits: 966, net_revenue_mtd: 79400, net_revenue_per_visit: 113, labor_cost_mtd: 60300, operating_cost_mtd: 16900, capacity_utilization: 0.84, cancellations: 39, no_shows: 17, open_slots_next_14_days: 72, disciplines: { PT: 326, OT: 251, SLP: 179 } },
+    { name: "Guilford", visits: 651, break_even: 430, projected_visits: 832, net_revenue_mtd: 76800, net_revenue_per_visit: 110, labor_cost_mtd: 52600, operating_cost_mtd: 15100, capacity_utilization: 0.81, cancellations: 42, no_shows: 21, open_slots_next_14_days: 84, disciplines: { PT: 289, OT: 211, SLP: 151 } },
+    { name: "Torrington", visits: 603, break_even: 460, projected_visits: 771, net_revenue_mtd: 66200, net_revenue_per_visit: 106, labor_cost_mtd: 49300, operating_cost_mtd: 14200, capacity_utilization: 0.79, cancellations: 46, no_shows: 24, open_slots_next_14_days: 95, disciplines: { PT: 276, OT: 191, SLP: 136 } },
+    { name: "Pool Location", visits: 418, break_even: 500, projected_visits: 534, net_revenue_mtd: 44900, net_revenue_per_visit: 102, labor_cost_mtd: 43800, operating_cost_mtd: 13700, capacity_utilization: 0.64, cancellations: 58, no_shows: 29, open_slots_next_14_days: 132, disciplines: { PT: 184, OT: 139, SLP: 95 } },
+    { name: "New Location", visits: 164, break_even: 460, projected_visits: 210, net_revenue_mtd: 17000, net_revenue_per_visit: 98, labor_cost_mtd: 27400, operating_cost_mtd: 11900, capacity_utilization: 0.39, cancellations: 24, no_shows: 12, open_slots_next_14_days: 186, disciplines: { PT: 76, OT: 53, SLP: 35 } },
   ],
   definitions: {
     break_even: "The visit volume required for location revenue to cover allocated labor and operating costs for the reporting period.",
@@ -62,6 +62,9 @@ EVIDENCE RULES:
 9. Never call a difference between estimated revenue and selected cost fields profit, surplus, operating income, or margin unless the data explicitly includes every relevant cost and allocation. When only partial costs are present, describe them as listed cost categories and state that profitability cannot be determined.
 10. Verify every arithmetic result before answering. Include currency symbols for currency values and preserve full dollar amounts unless the user requests rounding.
 11. Never place a currency symbol before a visit count, patient count, percentage, or other non-currency quantity. Format revenue calculations like: Estimated revenue: $85,428 (756 visits x $113 per visit).
+12. A supplied net_revenue_mtd field is the authoritative reported location revenue. Always use it instead of calculating visits x net_revenue_per_visit. Use the per-visit field only when net_revenue_mtd is absent, and then label the result estimated.
+13. Respect the reporting period exactly. The supplied data is month-to-date only. If asked for YTD, annual, quarterly, or another unsupported period, do not relabel or extrapolate MTD data; state that the requested period is unavailable and provide the MTD figure only as clearly labeled context.
+14. When dashboard-facing fields and derived fields differ, prefer the directly reported dashboard-facing field and do not present the derived value as the answer.
 
 OUTPUT RULES:
 - Use concise plain text only. Do not use Markdown markers, Markdown tables, asterisks for bolding, or headings with # symbols.
