@@ -1,9 +1,14 @@
 Deno.serve(async (request) => {
   try {
-    const { prompt } = await request.json();
+    const { instructions, messages } = await request.json();
 
-    if (typeof prompt !== "string" || !prompt.trim()) {
-      return new Response(JSON.stringify({ error: "A prompt is required." }), {
+    if (
+      typeof instructions !== "string" ||
+      !instructions.trim() ||
+      !Array.isArray(messages) ||
+      !messages.length
+    ) {
+      return new Response(JSON.stringify({ error: "Instructions and messages are required." }), {
         status: 400,
         headers: { "Content-Type": "application/json" },
       });
@@ -19,8 +24,11 @@ Deno.serve(async (request) => {
         },
         body: JSON.stringify({
           model: "openai/gpt-oss-120b:cerebras",
-          messages: [{ role: "user", content: prompt }],
-          max_tokens: 900,
+          messages: [
+            { role: "system", content: instructions },
+            ...messages,
+          ],
+          max_tokens: 700,
           temperature: 0.1,
           reasoning_effort: "low",
         }),
