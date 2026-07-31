@@ -79,22 +79,30 @@ ${JSON.stringify(THRIVOLI_DEMO_DATA)}`;
         "apikey": process.env.SUPABASE_PUBLISHABLE_KEY,
         "Content-Type": "application/json",
       },
-      body: JSON.stringify({ instructions, messages }),
+      body: JSON.stringify({ instructions, messages, stream: true }),
     });
 
-    const payload = await apiResponse.json();
     if (!apiResponse.ok) {
+      const payload = await apiResponse.json();
       console.error("Supabase AI response error", payload);
       return response.status(502).json({ error: payload?.error?.message || payload?.error || payload?.message || "The AI service could not complete this request." });
     }
 
-    response.setHeader("Cache-Control", "no-store");
-    const answer = String(payload.answer || "I could not produce an answer for that question.")
-      .replace(/\*\*/g, "")
-      .replace(/[\u00a0\u202f]/g, " ")
-      .replace(/\$(\d[\d,\s]*)\s+visits\b/gi, (_, count) => `${count.replace(/\s/g, "")} visits`)
-      .trim();
-    return response.status(200).json({ answer, sources: [] });
+    if (!apiResponse.body) {
+      return response.status(502).json({ error: "The AI service returned an empty response." });
+    }
+
+    response.status(200);
+    response.setHeader("Content-Type", "text/event-stream");
+    response.setHeader("Cache-Control", "no-cache, no-transform");
+    response.setHeader("Connection", "keep-alive");
+    response.setHeader("X-Accel-Buffering", "no");
+    response.flushHeaders?.();
+
+    for await (const chunk of apiResponse.body) {
+      response.write(Buffer.from(chunk));
+    }
+    return response.end();
   } catch (error) {
     console.error("Thrivoli chat error", error);
     return response.status(500).json({ error: "The assistant encountered a temporary error. Please try again." });
