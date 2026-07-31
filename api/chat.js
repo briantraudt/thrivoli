@@ -1,4 +1,5 @@
 import { buildProactiveInsights, buildSystemInstructions, resolveQuestion } from "./_lib/thrivoli-intelligence.js";
+import { loadLiveIntelligenceDataset } from "./_lib/live-intelligence.js";
 
 function normalizeMessages(value) {
   if (!Array.isArray(value)) return [];
@@ -9,7 +10,8 @@ function normalizeMessages(value) {
 }
 
 export default async function handler(request, response) {
-  if (request.method === "GET") return response.status(200).json({ insights: buildProactiveInsights() });
+  const liveDataset = await loadLiveIntelligenceDataset();
+  if (request.method === "GET") return response.status(200).json({ insights: buildProactiveInsights(liveDataset), data_status: liveDataset ? "live" : "demo" });
   if (request.method !== "POST") return response.status(405).json({ error: "Method not allowed." });
   if (!process.env.SUPABASE_URL || !process.env.SUPABASE_PUBLISHABLE_KEY) {
     return response.status(503).json({ error: "Thrivoli Intelligence is not configured yet." });
@@ -19,7 +21,7 @@ export default async function handler(request, response) {
   if (!messages.length || messages.at(-1).role !== "user") return response.status(400).json({ error: "Please enter a question." });
 
   const question = messages.at(-1).content;
-  const result = resolveQuestion(question, messages.slice(0, -1));
+  const result = resolveQuestion(question, messages.slice(0, -1), liveDataset);
   const instructions = buildSystemInstructions(result);
   const startedAt = Date.now();
 

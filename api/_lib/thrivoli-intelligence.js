@@ -69,7 +69,19 @@ function formatValue(value, format) {
   return Math.round(value).toLocaleString("en-US");
 }
 
-export function buildProactiveInsights() {
+export function buildProactiveInsights(dataset = null) {
+  if (dataset?.locations?.length) {
+    const below = dataset.locations.filter((item) => item.visits < item.breakEven).sort((a, b) => (a.visits - a.breakEven) - (b.visits - b.breakEven));
+    const bestMargin = [...dataset.locations].filter((item) => Number.isFinite(item.margin)).sort((a, b) => b.margin - a.margin)[0];
+    const insights = below.slice(0, 2).map((item, index) => ({
+      severity: index ? "warning" : "risk",
+      title: `${item.name} is below break-even`,
+      detail: `${item.visits.toLocaleString("en-US")} visits vs. ${item.breakEven.toLocaleString("en-US")} required`,
+      prompt: `Why is ${item.name} below break-even?`,
+    }));
+    if (bestMargin) insights.push({ severity: "opportunity", title: `${bestMargin.name} leads operating margin`, detail: `${Math.round(bestMargin.margin * 1000) / 10}% MTD margin`, prompt: `Why is ${bestMargin.name}'s margin highest?` });
+    return insights;
+  }
   return [
     { severity: "warning", title: "Pool Location is below break-even", detail: "418 visits vs. 500 required", prompt: "Why is Pool Location below break-even?" },
     { severity: "risk", title: "New Location needs attention", detail: "164 visits vs. 460 break-even", prompt: "What should we do about New Location?" },
@@ -77,9 +89,14 @@ export function buildProactiveInsights() {
   ];
 }
 
-export function resolveQuestion(question, history = []) {
+export function resolveQuestion(question, history = [], dataset = null) {
+  const locations = dataset?.locations?.length ? dataset.locations : LOCATIONS;
+  const organization = dataset?.organization || ORGANIZATION;
+  const reportingPeriod = dataset?.reportingPeriod || REPORTING_PERIOD;
+  const dataAsOf = dataset?.dataAsOf || DATA_AS_OF;
   const prior = history.slice(-4).map((message) => message.content).join(" ");
-  const location = findLocation(question, prior);
+  const searchText = `${question} ${prior}`.toLowerCase();
+  const location = locations.find((item) => searchText.includes(item.name.toLowerCase())) || null;
   const metricKey = findMetric(question, prior);
   const period = requestedPeriod(question);
   const unsupportedPeriod = period !== "month-to-date";
@@ -88,10 +105,10 @@ export function resolveQuestion(question, history = []) {
 
   const base = {
     interactionId,
-    reportingPeriod: REPORTING_PERIOD,
-    dataAsOf: DATA_AS_OF,
-    dataStatus: "Synthetic demo data; no PHI",
-    roleScope: "Executive demo — all locations",
+    reportingPeriod,
+    dataAsOf,
+    dataStatus: dataset ? "Live aggregate data; no patient-level PHI" : "Synthetic demo data; no PHI",
+    roleScope: dataset?.roleScope || "Executive demo — all locations",
     unsupportedPeriod: unsupportedPeriod ? period : null,
   };
 
@@ -100,27 +117,27 @@ export function resolveQuestion(question, history = []) {
       ...base,
       answerType: "narrative",
       evidence: [],
-      context: { organization: ORGANIZATION, locations: LOCATIONS, metricCatalog: METRIC_CATALOG },
+      context: { organization, locations, metricCatalog: METRIC_CATALOG },
     };
   }
 
   const metric = METRIC_CATALOG[metricKey];
   if (wantsComparison) {
-    const chart = LOCATIONS.map((item) => ({ label: item.name, value: item[metricKey], display: formatValue(item[metricKey], metric.format) }));
+    const chart = locations.map((item) => ({ label: item.name, value: item[metricKey], display: formatValue(item[metricKey], metric.format) }));
     return {
       ...base,
       answerType: "comparison",
       metricKey,
-      card: { label: `${metric.label} comparison`, value: "7 locations", period: REPORTING_PERIOD },
+      card: { label: `${metric.label} comparison`, value: `${locations.length} locations`, period: reportingPeriod },
       chart,
-      evidence: [{ label: metric.label, source: metric.source, status: metric.authoritative ? "reported" : "calculated", period: REPORTING_PERIOD }],
+      evidence: [{ label: metric.label, source: metric.source, status: metric.authoritative ? "reported" : "calculated", period: reportingPeriod }],
       context: { requestedMetric: metric, comparison: chart, unsupportedPeriod },
     };
   }
 
-  const entity = location || ORGANIZATION;
+  const entity = location || organization;
   let value = entity[metricKey];
-  if (value == null && metricKey === "revenue" && entity === ORGANIZATION) value = ORGANIZATION.revenue;
+  if (value == null && metricKey === "revenue" && entity === organization) value = organization.revenue;
   if (value == null) {
     return { ...base, answerType: "unsupported", metricKey, evidence: [], context: { missingMetric: metric.label, entity: location?.name || ORGANIZATION.name, unsupportedPeriod } };
   }
@@ -129,9 +146,9 @@ export function resolveQuestion(question, history = []) {
     ...base,
     answerType: "metric",
     metricKey,
-    card: { label: `${location?.name || "Company"} ${metric.label}`, value: formatValue(value, metric.format), period: REPORTING_PERIOD },
-    evidence: [{ label: metric.label, value: formatValue(value, metric.format), source: metric.source, status: metric.authoritative ? "reported" : "calculated", period: REPORTING_PERIOD }],
-    context: { entity: location?.name || ORGANIZATION.name, requestedMetric: metric, value, formattedValue: formatValue(value, metric.format), unsupportedPeriod },
+    card: { label: `${location?.name || "Company"} ${metric.label}`, value: formatValue(value, metric.format), period: reportingPeriod },
+    evidence: [{ label: metric.label, value: formatValue(value, metric.format), source: metric.source, status: metric.authoritative ? "reported" : "calculated", period: reportingPeriod }],
+    context: { entity: location?.name || organization.name, requestedMetric: metric, value, formattedValue: formatValue(value, metric.format), unsupportedPeriod },
   };
 }
 
