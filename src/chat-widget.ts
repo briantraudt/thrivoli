@@ -125,19 +125,17 @@ function mountChat() {
       while (true) {
         const { done, value } = await reader.read();
         if (done) break;
-        buffer += decoder.decode(value, { stream: true }).replace(/\r\n/g, "\n");
-        const events = buffer.split("\n\n");
-        buffer = events.pop() ?? "";
+        buffer += decoder.decode(value, { stream: true });
+        const lines = buffer.split(/\r?\n/);
+        buffer = lines.pop() ?? "";
 
-        for (const event of events) {
-          for (const line of event.split("\n")) {
-            if (!line.startsWith("data:")) continue;
-            const data = line.slice(5).trim();
-            if (!data || data === "[DONE]") continue;
-            const payload = JSON.parse(data);
-            const delta = payload.choices?.[0]?.delta?.content;
-            if (typeof delta === "string") assistantMessage.content += delta;
-          }
+        for (const line of lines) {
+          if (!line.startsWith("data:")) continue;
+          const data = line.slice(5).trim();
+          if (!data || data === "[DONE]") continue;
+          const payload = JSON.parse(data);
+          const delta = payload.choices?.[0]?.delta?.content;
+          if (typeof delta === "string") assistantMessage.content += delta;
         }
         render();
       }
