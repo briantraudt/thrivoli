@@ -1,5 +1,6 @@
 const SUPABASE_URL = Deno.env.get("SUPABASE_URL") ?? "";
 const SERVICE_KEY = Deno.env.get("SUPABASE_SERVICE_ROLE_KEY") ?? "";
+const INTERNAL_SECRET = Deno.env.get("THRIVOLI_AI_INTERNAL_SECRET") ?? "";
 const MODEL = "openai/gpt-oss-120b:cerebras";
 
 async function db(path: string, init: RequestInit = {}) {
@@ -18,6 +19,38 @@ async function defaultOrgId() {
 
 async function handleEvent(operation: string, payload: Record<string, unknown>) {
   const orgId = await defaultOrgId();
+  if (operation === "metric_snapshot") {
+    if (!orgId) return { live: false, rows: [] };
+    const latestResponse = await db(`kpi_snapshot?org_id=eq.${encodeURIComponent(orgId)}&grain=eq.month&select=as_of_date&order=as_of_date.desc&limit=1`);
+    if (!latestResponse.ok) throw new Error(await latestResponse.text());
+    const latest = await latestResponse.json();
+    const asOfDate = latest?.[0]?.as_of_date;
+    if (!asOfDate) return { live: false, rows: [] };
+    const snapshotResponse = await db(`kpi_snapshot?org_id=eq.${encodeURIComponent(orgId)}&grain=eq.month&as_of_date=eq.${encodeURIComponent(asOfDate)}&location_id=not.is.null&select=location_id,as_of_date,computed_at,metrics,location(name,code)&order=location_id`);
+    if (!snapshotResponse.ok) throw new Error(await snapshotResponse.text());
+    const snapshots = await snapshotResponse.json();
+    const liveRows = (snapshots || []).filter((row: Record<string, unknown>) => (row.metrics as Record<string, unknown>)?.data_status === "live");
+    if (!liveRows.length) return { live: false, rows: [] };
+    const orgResponse = await db(`org?id=eq.${encodeURIComponent(orgId)}&select=dba_name,legal_name&limit=1`);
+    const orgRows = orgResponse.ok ? await orgResponse.json() : [];
+    return {
+      live: true,
+      organization_name: orgRows?.[0]?.dba_name || orgRows?.[0]?.legal_name,
+      as_of_date: asOfDate,
+      period_start: (liveRows[0].metrics as Record<string, unknown>)?.period_start,
+      data_as_of: liveRows.reduce((latest: string | null, row: Record<string, unknown>) => {
+        const value = String((row.metrics as Record<string, unknown>)?.source_updated_at || row.computed_at || "");
+        return !latest || value > latest ? value : latest;
+      }, null),
+      role_scope: "Executive — all authorized locations",
+      rows: liveRows.map((row: Record<string, unknown>) => ({
+        location_id: row.location_id,
+        location_name: (row.location as Record<string, unknown>)?.name,
+        location_code: (row.location as Record<string, unknown>)?.code,
+        metrics: row.metrics,
+      })),
+    };
+  }
   if (operation === "feedback") {
     const interactionId = String(payload.interaction_id || "");
     const rating = Number(payload.rating);
@@ -87,7 +120,7 @@ function captureStream(stream: ReadableStream<Uint8Array>, interactionId: string
     }
     await finishInteraction(interactionId, answer, startedAt);
   })();
-  // @ts-ignore Supabase Edge Runtime extension
+  // @ts-expect-error Supabase Edge Runtime extension
   EdgeRuntime.waitUntil(audit);
   return clientStream;
 }
@@ -96,6 +129,9 @@ Deno.serve(async (request) => {
   const startedAt = Date.now();
   try {
     const body = await request.json();
+    if (body.operation === "metric_snapshot" && (!INTERNAL_SECRET || request.headers.get("x-thrivoli-internal-secret") !== INTERNAL_SECRET)) {
+      return new Response(JSON.stringify({ error: "Unauthorized." }), { status: 401, headers: { "Content-Type": "application/json" } });
+    }
     if (body.operation) {
       const result = await handleEvent(body.operation, body.payload || {});
       return new Response(JSON.stringify(result), { status: 200, headers: { "Content-Type": "application/json" } });
