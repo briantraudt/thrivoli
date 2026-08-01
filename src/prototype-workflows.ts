@@ -37,20 +37,36 @@ function installMobileViewportGuard() {
       body {
         width: 100% !important;
         max-width: 100vw !important;
+        min-height: 100% !important;
         overflow-x: hidden !important;
+        overflow-y: auto !important;
         overscroll-behavior-x: none;
+        -webkit-overflow-scrolling: touch;
       }
 
       body > x-dc,
-      x-dc,
+      x-dc {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100vw !important;
+        min-height: 100dvh !important;
+        margin: 0 !important;
+        overflow-x: clip !important;
+        overflow-y: visible !important;
+      }
+
       x-dc > .app-shell,
       .app-shell {
         display: block !important;
         width: 100% !important;
         min-width: 0 !important;
         max-width: 100vw !important;
+        height: auto !important;
+        min-height: 100dvh !important;
         margin: 0 !important;
         overflow-x: clip !important;
+        overflow-y: visible !important;
       }
 
       .app-sidebar {
@@ -58,24 +74,32 @@ function installMobileViewportGuard() {
         inset: 0 auto 0 0 !important;
         width: min(84vw, 300px) !important;
         max-width: 300px !important;
+        height: 100dvh !important;
         margin: 0 !important;
       }
 
       .app-content {
-        display: flex !important;
+        display: block !important;
         width: 100% !important;
         min-width: 0 !important;
         max-width: 100vw !important;
+        min-height: 100dvh !important;
         margin: 0 !important;
         transform: none !important;
+        overflow: visible !important;
       }
 
       .app-main {
+        display: block !important;
         width: 100% !important;
         min-width: 0 !important;
         max-width: 100vw !important;
+        height: auto !important;
+        min-height: 100dvh !important;
         margin: 0 !important;
         overflow-x: hidden !important;
+        overflow-y: visible !important;
+        -webkit-overflow-scrolling: touch;
       }
 
       .app-main > *,
