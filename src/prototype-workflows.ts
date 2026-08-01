@@ -13,6 +13,124 @@ const url = import.meta.env.VITE_SUPABASE_URL;
 const key = import.meta.env.VITE_SUPABASE_PUBLISHABLE_KEY;
 const client: SupabaseClient | null = url && key ? createClient(url, key) : null;
 
+function installMobileViewportGuard() {
+  const style = document.createElement("style");
+  style.dataset.thrivoliMobileViewport = "true";
+  style.textContent = `
+    html,
+    body,
+    x-dc,
+    .app-shell,
+    .app-content,
+    .app-main {
+      max-width: 100%;
+    }
+
+    x-dc {
+      display: block;
+      width: 100%;
+      min-width: 0;
+    }
+
+    @media (max-width: 920px) {
+      html,
+      body {
+        width: 100% !important;
+        max-width: 100vw !important;
+        overflow-x: hidden !important;
+        overscroll-behavior-x: none;
+      }
+
+      body > x-dc,
+      x-dc,
+      x-dc > .app-shell,
+      .app-shell {
+        display: block !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100vw !important;
+        margin: 0 !important;
+        overflow-x: clip !important;
+      }
+
+      .app-sidebar {
+        position: fixed !important;
+        inset: 0 auto 0 0 !important;
+        width: min(84vw, 300px) !important;
+        max-width: 300px !important;
+        margin: 0 !important;
+      }
+
+      .app-content {
+        display: flex !important;
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100vw !important;
+        margin: 0 !important;
+        transform: none !important;
+      }
+
+      .app-main {
+        width: 100% !important;
+        min-width: 0 !important;
+        max-width: 100vw !important;
+        margin: 0 !important;
+        overflow-x: hidden !important;
+      }
+
+      .app-main > *,
+      .page-heading,
+      .page-title-wrap,
+      .page-actions,
+      .responsive-split,
+      .team-grid {
+        min-width: 0 !important;
+        max-width: 100% !important;
+      }
+
+      .page-actions {
+        width: 100% !important;
+      }
+
+      .page-actions > div:first-child {
+        width: 100% !important;
+        max-width: none !important;
+      }
+
+      .app-main img,
+      .app-main svg,
+      .app-main canvas {
+        max-width: 100%;
+      }
+
+      .table-wrap,
+      .team-tabs,
+      [data-horizontal-scroll] {
+        max-width: 100%;
+        overflow-x: auto !important;
+        overscroll-behavior-x: contain;
+      }
+    }
+  `;
+  document.head.appendChild(style);
+
+  const resetHorizontalPosition = () => {
+    document.documentElement.scrollLeft = 0;
+    document.body.scrollLeft = 0;
+    document.querySelectorAll<HTMLElement>(".app-shell, .app-content, .app-main").forEach((element) => {
+      element.scrollLeft = 0;
+    });
+    if (window.scrollX !== 0) window.scrollTo(0, window.scrollY);
+  };
+
+  resetHorizontalPosition();
+  requestAnimationFrame(resetHorizontalPosition);
+  window.addEventListener("resize", resetHorizontalPosition, { passive: true });
+  window.addEventListener("orientationchange", resetHorizontalPosition, { passive: true });
+}
+
+installMobileViewportGuard();
+
 async function requireSession(): Promise<WorkflowResult | null> {
   if (!client) {
     return { ok: false, message: "Live data is not configured. This action remains in demo mode." };
