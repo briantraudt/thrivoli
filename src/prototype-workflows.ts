@@ -1,5 +1,6 @@
 import { createClient, type SupabaseClient } from "@supabase/supabase-js";
 import "./chat-widget";
+import "./mobile-dashboard-layout";
 
 type Workflow =
   | { type: "sign-note"; noteId?: string }
