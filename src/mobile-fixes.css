@@ -1,0 +1,106 @@
+/* Mobile viewport hardening: contain wide children without hiding intentional inner scrolling. */
+html,
+body,
+#root,
+.app-shell,
+.content {
+  width: 100%;
+  max-width: 100%;
+  overflow-x: clip;
+}
+
+.content,
+main,
+.page-header,
+.card,
+.two-column,
+.kpis,
+.card-title-row,
+.performance-heading,
+.location-bars {
+  min-width: 0;
+  max-width: 100%;
+}
+
+img,
+svg,
+canvas,
+video {
+  max-width: 100%;
+}
+
+.table-wrap,
+.step-rail {
+  width: 100%;
+  max-width: 100%;
+  overscroll-behavior-x: contain;
+  -webkit-overflow-scrolling: touch;
+}
+
+@media (max-width: 760px) {
+  .page-header,
+  .header-actions,
+  .performance-heading,
+  .performance-legend,
+  .location-bar-row {
+    min-width: 0;
+    max-width: 100%;
+  }
+
+  .page-header {
+    flex-wrap: wrap;
+  }
+
+  .page-header > div:first-child,
+  .header-actions {
+    min-width: 0;
+  }
+
+  .header-actions {
+    margin-left: auto;
+    flex-wrap: wrap;
+    justify-content: flex-end;
+  }
+
+  .performance-heading {
+    align-items: flex-start;
+    flex-direction: column;
+  }
+
+  .performance-legend {
+    width: 100%;
+    overflow-x: auto;
+    padding-bottom: 2px;
+  }
+
+  .location-bars {
+    padding-inline: 8px;
+  }
+
+  .location-bar-row {
+    grid-template-columns: minmax(88px, 0.9fr) minmax(90px, 1.4fr) minmax(76px, auto);
+    gap: 8px;
+    padding-inline: 6px;
+  }
+
+  .location-bar-row > strong,
+  .bar-value {
+    min-width: 0;
+  }
+
+  .location-bar-row > strong {
+    overflow-wrap: anywhere;
+  }
+
+  .bar-value {
+    gap: 3px;
+    white-space: nowrap;
+  }
+
+  .toast {
+    left: 12px;
+    right: 12px;
+    bottom: 12px;
+    max-width: calc(100vw - 24px);
+  }
+}
