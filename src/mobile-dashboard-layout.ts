@@ -191,15 +191,28 @@ style.textContent = `
     }
 
     #thrivoli-ai-root {
+      position: fixed !important;
+      inset: auto 14px calc(14px + env(safe-area-inset-bottom)) auto !important;
       left: auto !important;
       right: 14px !important;
       bottom: calc(14px + env(safe-area-inset-bottom)) !important;
+      width: max-content !important;
+      min-width: 0 !important;
+      max-width: none !important;
+      height: max-content !important;
+      margin: 0 !important;
+      padding: 0 !important;
       transform: none !important;
+      z-index: 5000 !important;
     }
 
     #thrivoli-ai-root .tv-ai-launch {
+      display: grid !important;
       width: 52px !important;
       height: 52px !important;
+      min-width: 52px !important;
+      min-height: 52px !important;
+      margin: 0 !important;
       border-radius: 16px !important;
     }
   }
