@@ -30,3 +30,10 @@
 .tree-row{padding:10px 14px}.tree-tags{gap:7px 8px}.grouped-tags{gap:9px}.grouped-tags>div{gap:10px}.grouped-tags small{width:90px;line-height:1.25}.tree-row h3{margin-bottom:9px}@media(max-height:800px) and (min-width:801px){.tree-row{padding:7px 10px}.tree-tags{gap:5px 6px}.grouped-tags{gap:5px}.grouped-tags>div{gap:7px}.grouped-tags small{width:76px}.tree-row h3{margin-bottom:6px}}
 .tree-bottom{grid-template-columns:1fr}.shared-costs{width:100%}
 .tree-row.revenue>.tree-tags,.tree-row.revenue-source>.tree-tags{margin-top:25px}
+
+/* Stop stretching rows to the viewport; retain aligned, compact business-unit rows. */
+.tree-canvas{height:auto;min-height:0;grid-template-rows:62px auto auto}
+.tree-columns{align-items:stretch}
+.tree-card{grid-template-rows:48px 88px 128px 128px 146px}
+.tree-bottom{padding-top:8px}
+@media(max-height:800px) and (min-width:801px){.tree-canvas{height:auto;grid-template-rows:52px auto auto}.tree-card{grid-template-rows:42px 76px 112px 112px 126px}}
