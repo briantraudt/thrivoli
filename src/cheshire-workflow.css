@@ -1,7 +1,7 @@
 /* Restrained financial workflow palette */
-.tree-card,.tree-card.orange,.tree-card.green{border-top-color:#43645c}
-.tree-card-header,.orange .tree-card-header,.green .tree-card-header{background:#edf1ee}
-.tree-card-header svg,.orange .tree-card-header svg,.green .tree-card-header svg{color:#43645c}
+.tree-card{border-top-color:#567681}.tree-card .tree-card-header{background:#e8eff1}.tree-card .tree-card-header svg{color:#567681}
+.tree-card.orange{border-top-color:#9a7445}.tree-card.orange .tree-card-header{background:#f3ece2}.tree-card.orange .tree-card-header svg{color:#9a7445}
+.tree-card.green{border-top-color:#5d7d67}.tree-card.green .tree-card-header{background:#e6efe8}.tree-card.green .tree-card-header svg{color:#5d7d67}
 .tree-row h3{display:flex;align-items:center;gap:6px}
 .tree-row h3 b{display:inline-grid;place-items:center;min-width:24px;height:17px;padding:0 4px;border-radius:2px;color:#fff;background:#7c8985;font-size:8px;letter-spacing:0}
 

@@ -21,7 +21,7 @@ export function CheshireProject(){
     <div className="tree-top">
       <div className="tree-root"><strong>Profitability Map</strong></div>
       <div className="tree-legend" aria-label="Color legend">
-        <span className="assignment">Assignment</span><span className="revenue-key">Revenue</span><span className="expense-key">Expenses</span><span className="overhead-key">Overhead</span><span className="profit-key">Profitability</span>
+        <span className="revenue-key">Revenue</span><span className="expense-key">Expenses</span><span className="overhead-key">Overhead</span>
       </div>
     </div>
     <div className="tree-columns">{segments.map(segment=><article className={`tree-card ${segment.tone} ${active&&active!==segment.name?"is-muted":""} ${active===segment.name?"is-active":""}`} key={segment.name}>
