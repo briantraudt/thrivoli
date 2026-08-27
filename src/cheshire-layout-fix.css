@@ -106,3 +106,14 @@
 }
 .tree-row{padding-bottom:18px}
 .shared-costs{padding-bottom:20px}
+
+/* Use the exact same three-column grid for overhead so every edge is seamless. */
+.shared-costs{padding:0;border-right:0;border-left:0;border-bottom:2px solid #b98524;background:#fbf6e8;background-image:none}
+.shared-costs h2{position:absolute;z-index:2;top:11px;left:14px;margin:0}
+.overhead-columns{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:14px;min-height:104px}
+.overhead-cell{padding:38px 14px 18px}
+.overhead-cell-1{border-left:2px solid #567681;border-right:2px solid #567681}
+.overhead-cell-2{border-left:2px solid #746b8f;border-right:2px solid #746b8f}
+.overhead-cell-3{border-left:2px solid #5d7d67;border-right:2px solid #5d7d67}
+.shared-costs .tree-tags{display:flex;grid-template-columns:none;gap:6px}
+@media(max-width:800px){.overhead-columns{display:block}.overhead-cell{min-height:70px;border-right:2px solid #b98524;border-left:2px solid #b98524}.overhead-cell+.overhead-cell{border-top:1px solid #dfc98f}}

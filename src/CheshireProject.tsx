@@ -92,6 +92,15 @@ export function CheshireProject(){
   const updateSegment=(segmentIndex:number,key:keyof SegmentContent,items:string[])=>setModel(current=>({
     ...current,segments:current.segments.map((segment,index)=>index===segmentIndex?{...segment,[key]:items}:segment),
   }));
+  const overheadColumns=[0,1,2].map(column=>model.overhead.filter((_,index)=>index%3===column));
+  const updateOverheadColumn=(columnIndex:number,items:string[])=>setModel(current=>{
+    const columns=[0,1,2].map(column=>current.overhead.filter((_,index)=>index%3===column));
+    columns[columnIndex]=items;
+    const overhead:string[]=[];
+    const rowCount=Math.max(...columns.map(column=>column.length));
+    for(let row=0;row<rowCount;row++)for(let column=0;column<3;column++)if(columns[column][row]!==undefined)overhead.push(columns[column][row]);
+    return {...current,overhead};
+  });
   return <main className="tree-page"><section className="tree-canvas" aria-label="Cheshire profitability model">
     <div className="tree-top">
       <div className="tree-root"><strong>Profitability Map</strong></div>
@@ -104,6 +113,6 @@ export function CheshireProject(){
       <EditableRow label="Expense · Labor" tone="cost" items={content.labor} onChange={items=>updateSegment(index,"labor",items)}/>
       <EditableRow label="Expense · Operations" tone="cost" items={content.expenses} onChange={items=>updateSegment(index,"expenses",items)}/>
     </article>})}</div>
-    <section className="tree-bottom"><div className="shared-costs"><h2>Overhead</h2><EditableTags items={model.overhead} onChange={items=>setModel(current=>({...current,overhead:items}))} label="Overhead"/><button className="cell-add" type="button" onClick={()=>setModel(current=>({...current,overhead:[...current.overhead,""]}))}>+ Add</button></div></section>
+    <section className="tree-bottom"><div className="shared-costs"><h2>Overhead</h2><div className="overhead-columns">{overheadColumns.map((items,column)=><div className={"overhead-cell overhead-cell-"+(column+1)} key={column}><EditableTags items={items} onChange={next=>updateOverheadColumn(column,next)} label="Overhead"/></div>)}</div><button className="cell-add" type="button" onClick={()=>setModel(current=>({...current,overhead:[...current.overhead,""]}))}>+ Add</button></div></section>
   </section></main>
 }
