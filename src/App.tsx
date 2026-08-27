@@ -7,6 +7,7 @@ import {
 } from "lucide-react";
 import { screenByPath, screens } from "./data";
 import { StediEligibility } from "./stedi-eligibility";
+import { CheshireProject, PublicHome } from "./CheshireProject";
 import type { Metric, ScreenDefinition, Tone } from "./types";
 
 const nav = [
@@ -359,7 +360,8 @@ function Shell() {
 
 export default function App() {
   return <Routes>
-    {screens.map((screen) => <Route path={screen.path} element={<Shell/>} key={screen.id}/>)}
-    <Route path="*" element={<Shell/>}/>
+    <Route path="/" element={<PublicHome/>}/>
+    <Route path="/cheshire" element={<CheshireProject/>}/>
+    <Route path="*" element={<PublicHome/>}/>
   </Routes>;
 }
