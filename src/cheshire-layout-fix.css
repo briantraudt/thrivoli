@@ -96,3 +96,13 @@
 .tree-row{padding-bottom:18px}
 .shared-costs{padding-bottom:18px}
 @media(max-height:800px) and (min-width:801px){.tree-card{grid-template-rows:42px 100px 135px 145px 165px}.tree-row{padding-bottom:14px}.shared-costs{padding-bottom:14px}}
+
+/* Shared responsive tracks keep columns aligned without wasting vertical space. */
+@media(min-width:801px){
+  .tree-columns{grid-template-rows:48px repeat(4,auto);column-gap:14px;row-gap:0}
+  .tree-card{grid-row:1 / span 5;grid-template-rows:subgrid}
+  .tree-card:nth-child(1){grid-column:1}.tree-card:nth-child(2){grid-column:2}.tree-card:nth-child(3){grid-column:3}
+  .tree-row.service{min-height:96px}.tree-row.revenue-source{min-height:118px}.tree-row.cost{min-height:138px}
+}
+.tree-row{padding-bottom:18px}
+.shared-costs{padding-bottom:20px}
