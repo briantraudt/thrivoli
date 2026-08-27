@@ -140,3 +140,31 @@
   .tree-top .tree-root{width:auto;margin:0;padding:8px 14px;font-size:14px}
   .tree-legend{margin:0;justify-content:flex-end}
 }
+
+/* Bolder Thrivoli-inspired palette with clear financial meaning. */
+.tree-card{border-color:#397f9d}
+.tree-card .tree-card-header{background:#d9edf5}
+.tree-card .tree-card-header svg{color:#237da3}
+.tree-card.orange{border-color:#75659b}
+.tree-card.orange .tree-card-header{background:#e8e2f2}
+.tree-card.orange .tree-card-header svg{color:#7560a5}
+.tree-card.green{border-color:#3c8a64}
+.tree-card.green .tree-card-header{background:#dcefe4}
+.tree-card.green .tree-card-header svg{color:#27845a}
+
+.tree-row.service{background:#e2f1fc}
+.tree-row.service .section-type{color:#176c9d}
+.tree-row.service .tree-tags span{border-color:#91bfda;background:#fafdff}
+.tree-row.revenue-source,.orange .tree-row.revenue-source,.green .tree-row.revenue-source{background:#e3f3e8;border-left-color:#358154}
+.tree-row.revenue-source .section-type{color:#286d43}
+.tree-row.revenue-source .tree-tags span{border-color:#9fc9ad;background:#fbfffc}
+.tree-row.cost{background:#fae7e3;border-left-color:#c55345}
+.tree-row.cost .section-type{color:#a23d32}
+.tree-row.cost .tree-tags span{border-color:#dda9a1;background:#fffdfc}
+
+.shared-costs{background:#fff0c9;border-color:#d59a20;color:#6d4a09}
+.shared-costs h2{color:#82590b}
+.shared-costs .tree-tags span{border-color:#dfb75f;background:#fffaf0}
+.tree-legend .revenue-key:before{background:#358154}
+.tree-legend .expense-key:before{background:#c55345}
+.tree-legend .overhead-key:before{background:#d59a20}
