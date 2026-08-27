@@ -12,22 +12,32 @@ const segmentMeta=[
   {name:"Schools",icon:GraduationCap,tone:"orange"},
   {name:"Private Programs",icon:Waves,tone:"green"},
 ];
+const requiredServices=[
+  "Physical Therapy",
+  "Occupational Therapy",
+  "Speech Therapy",
+  "Feeding Therapy Services",
+  "Cage Therapy (Universal Exercise Unit)",
+  "Pelvic Floor Therapy",
+  "Aquatic Therapy Services",
+  "Dynamic Movement Intervention",
+];
 const defaultModel:EditableModel={
   segments:[
     {
-      services:["PT","OT – General","OT – Feeding","Speech"],
+      services:requiredServices,
       revenue:["Commercial insurers","Medicaid","Copay / coinsurance","Deductible","Self-pay"],
       labor:["Wages / salary","Payroll taxes","Benefits","Contract labor","Treatment time","Documentation / prep","PTO / nonproductive"],
       expenses:["Rent","Utilities","Cleaning / waste","Clinical supplies","Practice Pro / ClaimMD","Equipment / depreciation","Repairs & maintenance"],
     },
     {
-      services:["PT hours","OT hours","Speech hours"],
+      services:requiredServices,
       revenue:["School district / LEA","Individual school","Other education organization"],
       labor:["Wages / salary","Payroll taxes","Benefits","Contract labor","Service hours","Travel time","Documentation / prep"],
       expenses:["Mileage / travel","School supplies","Contract-specific costs","District fees"],
     },
     {
-      services:["Swim lessons","DMI / Intensives","Other programs"],
+      services:[...requiredServices,"Swim lessons","Other programs"],
       revenue:["Patient / family","Program participant","Third-party sponsor · if applicable"],
       labor:["Wages / salary","Payroll taxes","Benefits","Contract instructors","Program delivery","Setup / prep"],
       expenses:["Program supplies","Pool / facility cost","Equipment / depreciation","Program marketing","Merchant processing fees"],
@@ -43,7 +53,19 @@ function loadModel():EditableModel{
     const saved=localStorage.getItem(storageKey);
     if(saved){
       const parsed=JSON.parse(saved) as EditableModel;
-      if(parsed.segments?.length===3&&Array.isArray(parsed.overhead))return parsed;
+      if(parsed.segments?.length===3&&Array.isArray(parsed.overhead)){
+        const aliases:Record<string,string>={
+          "PT":"Physical Therapy","PT hours":"Physical Therapy",
+          "OT – General":"Occupational Therapy","OT hours":"Occupational Therapy",
+          "OT – Feeding":"Feeding Therapy Services",
+          "Speech":"Speech Therapy","Speech hours":"Speech Therapy",
+          "DMI / Intensives":"Dynamic Movement Intervention",
+        };
+        return {...parsed,segments:parsed.segments.map(segment=>{
+          const migrated=segment.services.map(service=>aliases[service]??service);
+          return {...segment,services:[...new Set([...migrated,...requiredServices])]};
+        })};
+      }
     }
   }catch{/* Use the approved defaults if browser storage is unavailable or invalid. */}
   return defaultModel;
