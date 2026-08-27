@@ -168,3 +168,34 @@
 .tree-legend .revenue-key:before{background:#358154}
 .tree-legend .expense-key:before{background:#c55345}
 .tree-legend .overhead-key:before{background:#d59a20}
+
+/* Saturated primary palette — no pastel field colors. */
+.tree-card{border-color:#0877a5}
+.tree-card .tree-card-header{color:#fff;background:#0877a5}
+.tree-card .tree-card-header svg{color:#fff}
+.tree-card.orange{border-color:#6047a5}
+.tree-card.orange .tree-card-header{color:#fff;background:#6047a5}
+.tree-card.orange .tree-card-header svg{color:#fff}
+.tree-card.green{border-color:#138557}
+.tree-card.green .tree-card-header{color:#fff;background:#138557}
+.tree-card.green .tree-card-header svg{color:#fff}
+
+.tree-row.service{color:#fff;background:#087bea;border-left-color:#005fc0}
+.tree-row.service .section-type{color:#fff}
+.tree-row.service .tree-tags span{color:#17242b;border-color:#fff;background:#fff}
+.tree-row.revenue-source,.orange .tree-row.revenue-source,.green .tree-row.revenue-source{color:#fff;background:#168a4f;border-left-color:#076c38}
+.tree-row.revenue-source .section-type{color:#fff}
+.tree-row.revenue-source .tree-tags span{color:#17242b;border-color:#fff;background:#fff}
+.tree-row.cost{color:#fff;background:#cf4338;border-left-color:#a82820}
+.tree-row.cost .section-type{color:#fff}
+.tree-row.cost .tree-tags span{color:#17242b;border-color:#fff;background:#fff}
+
+.tree-row.service .cell-add,.tree-row.revenue-source .cell-add,.tree-row.cost .cell-add{color:#fff;border-color:#fff;background:rgba(0,0,0,.16)}
+.tree-row.service .cell-add:hover,.tree-row.revenue-source .cell-add:hover,.tree-row.cost .cell-add:hover{color:#17242b;background:#fff}
+.shared-costs{color:#332500;background:#f0b400;border-color:#b77f00}
+.shared-costs h2{color:#332500}
+.shared-costs .tree-tags span{color:#17242b;border-color:#fff;background:#fff}
+.shared-costs .cell-add{color:#332500;border-color:#332500;background:rgba(255,255,255,.36)}
+.tree-legend .revenue-key:before{background:#168a4f}
+.tree-legend .expense-key:before{background:#cf4338}
+.tree-legend .overhead-key:before{background:#f0b400}
