@@ -128,3 +128,15 @@
 .overhead-cell,.shared-costs .overhead-cell .tree-tags{display:contents}
 .shared-costs .editable-chip{flex:0 1 auto}
 @media(max-width:800px){.overhead-columns{display:flex;flex-wrap:wrap;justify-content:flex-start;padding:38px 14px 18px}.overhead-cell,.shared-costs .overhead-cell .tree-tags{display:contents}}
+
+/* Compact map title and legend into one toolbar so the report starts higher. */
+.tree-canvas{grid-template-rows:44px auto auto}
+.tree-top{display:flex;align-items:center;justify-content:space-between;padding:0 2px}
+.tree-top .tree-root{align-self:center;justify-self:auto;padding:8px 20px;font-size:15px;box-shadow:none}
+.tree-legend{position:static;margin:0;justify-self:auto}
+.tree-columns{margin-top:4px}
+@media(max-width:800px){
+  .tree-top{flex-direction:row;align-items:center;padding:0 2px;margin-bottom:8px}
+  .tree-top .tree-root{width:auto;margin:0;padding:8px 14px;font-size:14px}
+  .tree-legend{margin:0;justify-content:flex-end}
+}
