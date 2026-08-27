@@ -61,9 +61,10 @@ function loadModel():EditableModel{
           "Speech":"Speech Therapy","Speech hours":"Speech Therapy",
           "DMI / Intensives":"Dynamic Movement Intervention",
         };
-        return {...parsed,segments:parsed.segments.map(segment=>{
-          const migrated=segment.services.map(service=>aliases[service]??service);
-          return {...segment,services:[...new Set([...migrated,...requiredServices])]};
+        const clean=(items:string[])=>items.map(item=>item==="New item"?"":item);
+        return {...parsed,overhead:clean(parsed.overhead),segments:parsed.segments.map(segment=>{
+          const migrated=clean(segment.services).map(service=>aliases[service]??service);
+          return {...segment,services:[...new Set([...migrated,...requiredServices])],revenue:clean(segment.revenue),labor:clean(segment.labor),expenses:clean(segment.expenses)};
         })};
       }
     }
@@ -72,12 +73,15 @@ function loadModel():EditableModel{
 }
 function EditableTags({items,onChange,label}:{items:string[];onChange:(items:string[])=>void;label:string}){
   return <div className="tree-tags editable-tags">{items.map((item,index)=><span className="editable-chip" key={index}>
-    <input aria-label={`Edit ${label} item ${index+1}`} value={item} size={Math.max(6,item.length)} onChange={event=>onChange(items.map((value,itemIndex)=>itemIndex===index?event.target.value:value))}/>
+    <input aria-label={`Edit ${label} item ${index+1}`} value={item} placeholder="New item" autoFocus={item===""&&index===items.length-1} size={Math.max(8,item.length||8)}
+      onChange={event=>onChange(items.map((value,itemIndex)=>itemIndex===index?event.target.value:value))}
+      onKeyDown={event=>{if(event.key==="Enter"){event.preventDefault();event.currentTarget.blur()}}}
+      onBlur={event=>{const value=event.currentTarget.value.trim();if(!value)onChange(items.filter((_,itemIndex)=>itemIndex!==index));else if(value!==item)onChange(items.map((current,itemIndex)=>itemIndex===index?value:current))}}/>
     <button type="button" aria-label={`Delete ${item||label} item`} title="Delete item" onClick={()=>onChange(items.filter((_,itemIndex)=>itemIndex!==index))}>×</button>
   </span>)}</div>
 }
 function EditableRow({label,items,tone,onChange}:{label:string;items:string[];tone:string;onChange:(items:string[])=>void}){
-  return <section className={`tree-row ${tone}`}><span className="section-type">{label}</span><EditableTags items={items} onChange={onChange} label={label}/><button className="cell-add" type="button" onClick={()=>onChange([...items,"New item"])}>+ Add</button></section>
+  return <section className={`tree-row ${tone}`}><span className="section-type">{label}</span><EditableTags items={items} onChange={onChange} label={label}/><button className="cell-add" type="button" onClick={()=>onChange([...items,""])}>+ Add</button></section>
 }
 export function PublicHome(){return <main className="public-home"><Link to="/cheshire" className="public-brand" aria-label="Thrivoli"><Mark/><span>thrivoli</span></Link></main>}
 
@@ -100,6 +104,6 @@ export function CheshireProject(){
       <EditableRow label="Expense · Labor" tone="cost" items={content.labor} onChange={items=>updateSegment(index,"labor",items)}/>
       <EditableRow label="Expense · Operations" tone="cost" items={content.expenses} onChange={items=>updateSegment(index,"expenses",items)}/>
     </article>})}</div>
-    <section className="tree-bottom"><div className="shared-costs"><h2>Overhead</h2><EditableTags items={model.overhead} onChange={items=>setModel(current=>({...current,overhead:items}))} label="Overhead"/><button className="cell-add" type="button" onClick={()=>setModel(current=>({...current,overhead:[...current.overhead,"New item"]}))}>+ Add</button></div></section>
+    <section className="tree-bottom"><div className="shared-costs"><h2>Overhead</h2><EditableTags items={model.overhead} onChange={items=>setModel(current=>({...current,overhead:items}))} label="Overhead"/><button className="cell-add" type="button" onClick={()=>setModel(current=>({...current,overhead:[...current.overhead,""]}))}>+ Add</button></div></section>
   </section></main>
 }
