@@ -3,6 +3,7 @@ import { useState } from "react";
 import { Link } from "react-router-dom";
 import "./cheshire-project.css";
 import "./cheshire-workflow.css";
+import "./cheshire-layout-fix.css";
 
 const segments = [
   { number:"1", name:"Clinics", icon:Building2, tone:"blue", unit:["Clinic location"], services:["PT","OT","Feeding","Speech"], revenue:["Medicaid","Commercial insurance","Patient responsibility","Self-pay"], labor:["Therapist wages","Payroll taxes","Benefits","Contract labor","PTO / nonproductive time"], expenses:["Rent","Utilities","Cleaning","Dumpster","Supplies","Local repairs"] },
@@ -23,7 +24,6 @@ export function CheshireProject(){
         <span className="assignment">Assignment</span><span className="revenue-key">Revenue</span><span className="expense-key">Expenses</span><span className="overhead-key">Overhead</span><span className="profit-key">Profitability</span>
       </div>
     </div>
-    <div className="tree-connector" aria-hidden="true"/>
     <div className="tree-columns">{segments.map(segment=><article className={`tree-card ${segment.tone} ${active&&active!==segment.name?"is-muted":""} ${active===segment.name?"is-active":""}`} key={segment.name}>
       <button className="tree-card-header" type="button" aria-pressed={active===segment.name} onClick={()=>setActive(active===segment.name?null:segment.name)}><span className="tree-number">{segment.number}</span><segment.icon size={21} aria-hidden="true"/><h2>{segment.name}</h2><span className="focus-hint">{active===segment.name?"Show all":"Focus"}</span></button>
       <section className="tree-row unit"><h3><b>1</b> Assign to</h3><Tags items={segment.unit}/></section>
