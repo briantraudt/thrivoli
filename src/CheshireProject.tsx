@@ -69,6 +69,6 @@ export function CheshireProject(){
       <section className="tree-row cost"><h3><b>2A</b> Direct labor</h3><span className="section-type expense-type">Expense · Labor</span><GroupedTags groups={segment.labor}/></section>
       <section className="tree-row cost"><h3><b>2B</b> Direct operating</h3><span className="section-type expense-type">Expense · Operations</span><Tags items={segment.expenses}/></section>
     </article>)}</div>
-    <section className="tree-bottom"><div className="shared-costs"><h2><b>3</b> Allocate shared overhead <small>direct trace first; allocate only truly shared costs</small></h2><Tags items={["Administrative labor","Management leadership","QuickBooks / ADP","Insurance & professional fees","Corporate G&A"]}/></div><div className="profit-output"><span><b>4</b> Profitability dashboard</span><strong>Business-line P&amp;L · Provider contribution</strong><small>Net revenue · Loaded labor · Contribution margin · Operating profit · Cash / A/R</small></div></section>
+    <section className="tree-bottom"><div className="shared-costs"><h2><b>3</b> Allocate shared overhead <small>direct trace first; allocate only truly shared costs</small></h2><Tags items={["Administrative labor","Management leadership","QuickBooks / ADP","Insurance & professional fees","Corporate G&A"]}/></div></section>
   </section></main>
 }
