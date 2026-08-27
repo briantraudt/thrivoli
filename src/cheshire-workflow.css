@@ -1,15 +1,29 @@
-/* Assignment → revenue → expense → overhead → dashboard */
+/* Restrained financial workflow palette */
+.tree-card,.tree-card.orange,.tree-card.green{border-top-color:#43645c}
+.tree-card-header,.orange .tree-card-header,.green .tree-card-header{background:#edf1ee}
+.tree-card-header svg,.orange .tree-card-header svg,.green .tree-card-header svg{color:#43645c}
 .tree-row h3{display:flex;align-items:center;gap:6px}
-.tree-row h3 b{display:inline-grid;place-items:center;min-width:24px;height:17px;padding:0 4px;border-radius:3px;color:#fff;background:#82908e;font-size:8px;letter-spacing:0}
-.tree-row.revenue,.tree-row.revenue-source,.orange .tree-row.revenue,.orange .tree-row.revenue-source,.green .tree-row.revenue,.green .tree-row.revenue-source{border-left-color:var(--blue);background:#f1f8ff}
-.tree-row.revenue h3,.tree-row.revenue-source h3{color:#236cae}
-.tree-row.revenue h3 b,.tree-row.revenue-source h3 b{background:var(--blue)}
-.tree-row.cost{border-left-color:var(--pink);background:#fff5fa}
-.tree-row.cost h3{color:#a53e70}
-.tree-row.cost h3 b{background:var(--pink)}
-.shared-costs{background:#80551d;border-left:5px solid #e4a13e}
+.tree-row h3 b{display:inline-grid;place-items:center;min-width:24px;height:17px;padding:0 4px;border-radius:2px;color:#fff;background:#7c8985;font-size:8px;letter-spacing:0}
+
+/* Revenue */
+.tree-row.revenue,.tree-row.revenue-source,.orange .tree-row.revenue,.orange .tree-row.revenue-source,.green .tree-row.revenue,.green .tree-row.revenue-source{border-left-color:#4f7b5d;background:#f2f7f3}
+.tree-row.revenue h3,.tree-row.revenue-source h3{color:#3f674c}
+.tree-row.revenue h3 b,.tree-row.revenue-source h3 b{background:#4f7b5d}
+.tree-row.revenue .tree-tags span,.tree-row.revenue-source .tree-tags span{border-color:#cad9ce;background:#fbfdfb}
+
+/* Expenses */
+.tree-row.cost{border-left-color:#a85045;background:#faf3f1}
+.tree-row.cost h3{color:#8d4037}
+.tree-row.cost h3 b{background:#a85045}
+.tree-row.cost .tree-tags span{border-color:#decac6;background:#fffdfc}
+
+/* Shared overhead */
+.shared-costs{background:#6e6253;border-left:5px solid #a69783}
 .shared-costs h2{display:flex;align-items:center}
-.shared-costs h2>b,.profit-output span>b{display:inline-grid;place-items:center;width:22px;height:22px;margin-right:8px;border-radius:50%;color:#80551d;background:#ffd28e;font-size:10px;flex:none}
-.profit-output{background:var(--navy);border-left:5px solid #68c594}
-.profit-output span{display:flex;align-items:center;color:#a8d5ca}
-.profit-output span>b{color:var(--navy);background:#aee1d4}
+.shared-costs h2>b,.profit-output span>b{display:inline-grid;place-items:center;width:22px;height:22px;margin-right:8px;border-radius:50%;color:#51483d;background:#ded5c7;font-size:10px;flex:none}
+.shared-costs .tree-tags span{border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.08)}
+
+/* Profitability output */
+.profit-output{background:#183f37;border-left:5px solid #769b86}
+.profit-output span{display:flex;align-items:center;color:#b7cdc3}
+.profit-output span>b{color:#183f37;background:#c5d8cf}
