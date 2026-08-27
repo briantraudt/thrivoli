@@ -90,3 +90,9 @@
 .cell-add:hover,.cell-add:focus-visible{background:#fff;box-shadow:0 3px 8px rgba(20,40,40,.1)}
 .tree-row.service .cell-add{color:#356d92}.tree-row.revenue-source .cell-add{color:#3f674c}.tree-row.cost .cell-add{color:#a85045}.shared-costs .cell-add{color:#8a6217}
 @media(max-height:800px) and (min-width:801px){.tree-row{padding-bottom:7px}.cell-add{top:6px;right:8px;bottom:auto;padding:3px 6px;font-size:8px}.editable-chip input{padding:3px 23px 3px 4px}}
+
+/* Preserve clear space beneath editable content, including wrapped additions. */
+.tree-card{grid-template-rows:48px 110px 150px 160px 180px}
+.tree-row{padding-bottom:18px}
+.shared-costs{padding-bottom:18px}
+@media(max-height:800px) and (min-width:801px){.tree-card{grid-template-rows:42px 100px 135px 145px 165px}.tree-row{padding-bottom:14px}.shared-costs{padding-bottom:14px}}
