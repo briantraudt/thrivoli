@@ -52,3 +52,12 @@
 .section-type{left:14px;right:auto}
 .tree-row>.tree-tags{margin-top:25px}
 @media(max-height:800px) and (min-width:801px){.section-type{left:10px;right:auto}.tree-row>.tree-tags{margin-top:20px}}
+
+/* Financial classification palette: service, revenue, expense, overhead. */
+.tree-row.service{background:#eef5fa}
+.tree-row.service .section-type{color:#356d92}
+.tree-row.service .tree-tags span{border-color:#bfd2df;background:#fbfdff}
+.tree-row.revenue-source,.orange .tree-row.revenue-source,.green .tree-row.revenue-source{background:#f2f7f3}
+.tree-row.revenue-source .section-type{color:#3f674c}
+.tree-row.cost{background:#faf3f1}
+.shared-costs{background:#b98524}
