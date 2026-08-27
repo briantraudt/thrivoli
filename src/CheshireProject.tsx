@@ -17,7 +17,12 @@ export function PublicHome(){return <main className="public-home"><Link to="/che
 export function CheshireProject(){
   const [active,setActive]=useState<string|null>(null);
   return <main className="tree-page"><section className="tree-canvas" aria-label="Cheshire profitability model">
-    <div className="tree-root"><strong>Profitability Map</strong></div>
+    <div className="tree-top">
+      <div className="tree-root"><strong>Profitability Map</strong></div>
+      <div className="tree-legend" aria-label="Color legend">
+        <span className="assignment">Assignment</span><span className="revenue-key">Revenue</span><span className="expense-key">Expenses</span><span className="overhead-key">Overhead</span><span className="profit-key">Profitability</span>
+      </div>
+    </div>
     <div className="tree-connector" aria-hidden="true"/>
     <div className="tree-columns">{segments.map(segment=><article className={`tree-card ${segment.tone} ${active&&active!==segment.name?"is-muted":""} ${active===segment.name?"is-active":""}`} key={segment.name}>
       <button className="tree-card-header" type="button" aria-pressed={active===segment.name} onClick={()=>setActive(active===segment.name?null:segment.name)}><span className="tree-number">{segment.number}</span><segment.icon size={21} aria-hidden="true"/><h2>{segment.name}</h2><span className="focus-hint">{active===segment.name?"Show all":"Focus"}</span></button>

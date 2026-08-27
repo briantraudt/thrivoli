@@ -18,9 +18,9 @@
 .tree-row.cost .tree-tags span{border-color:#decac6;background:#fffdfc}
 
 /* Shared overhead */
-.shared-costs{background:#6e6253;border-left:5px solid #a69783}
+.shared-costs{background:#9a6b1f;border-left:5px solid #d2a349}
 .shared-costs h2{display:flex;align-items:center}
-.shared-costs h2>b,.profit-output span>b{display:inline-grid;place-items:center;width:22px;height:22px;margin-right:8px;border-radius:50%;color:#51483d;background:#ded5c7;font-size:10px;flex:none}
+.shared-costs h2>b,.profit-output span>b{display:inline-grid;place-items:center;width:22px;height:22px;margin-right:8px;border-radius:50%;color:#6c4710;background:#f0d18c;font-size:10px;flex:none}
 .shared-costs .tree-tags span{border-color:rgba(255,255,255,.22);background:rgba(255,255,255,.08)}
 
 /* Profitability output */
@@ -30,5 +30,4 @@
 
 /* The three business columns stand on their own; no decorative connector. */
 .tree-connector{display:none}
-.tree-canvas{grid-template-rows:72px 0 minmax(0,1fr) 98px}
-@media(max-height:760px) and (min-width:801px){.tree-canvas{grid-template-rows:58px 0 minmax(0,1fr) 80px}}
+.tree-canvas{grid-template-rows:78px 0 minmax(0,1fr) 98px}.tree-top{position:relative;display:grid;place-items:end center}.tree-top .tree-root{align-self:end}.tree-legend{position:absolute;right:0;bottom:12px;display:flex;align-items:center;gap:13px;color:#56645f;font-size:9px;font-weight:800;text-transform:uppercase;letter-spacing:.05em}.tree-legend span{display:inline-flex;align-items:center;gap:5px}.tree-legend span:before{content:"";width:10px;height:10px;border-radius:2px;background:#7c8985}.tree-legend .revenue-key:before{background:#4f7b5d}.tree-legend .expense-key:before{background:#a85045}.tree-legend .overhead-key:before{background:#b8862f}.tree-legend .profit-key:before{background:#183f37}@media(max-height:760px) and (min-width:801px){.tree-canvas{grid-template-rows:64px 0 minmax(0,1fr) 80px}.tree-legend{bottom:8px;gap:9px;font-size:8px}}@media(max-width:1050px){.tree-legend{position:static;justify-self:center;margin-top:7px}.tree-top{align-content:center}.tree-top .tree-root{align-self:center}}@media(max-width:800px){.tree-top{display:flex;flex-direction:column;align-items:center}.tree-legend{flex-wrap:wrap;justify-content:center}.tree-top .tree-root{margin-bottom:5px}}
