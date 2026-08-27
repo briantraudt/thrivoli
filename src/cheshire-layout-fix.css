@@ -64,3 +64,7 @@
 .shared-costs h2{color:#8a6217}
 .shared-costs h2 small{color:#7b6a46}
 .shared-costs .tree-tags span{color:#342d20;background:#fff;border-color:#dfc98f}
+
+/* Join shared overhead to the business-unit grid as one report surface. */
+.tree-bottom{padding-top:0;margin-top:-2px}
+.shared-costs{border-top-width:2px}
