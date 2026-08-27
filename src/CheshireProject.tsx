@@ -63,13 +63,13 @@ export function CheshireProject(){
       <div className="tree-legend" aria-label="Color legend"><span className="revenue-key">Revenue</span><span className="expense-key">Expenses</span><span className="overhead-key">Overhead</span></div>
     </div>
     <section className="hierarchy-bar" aria-label="Profitability structure">
-      <strong>Business hierarchy</strong><div><span>Cheshire</span><i>→</i><span>Business line</span><i>→</i><span>Operating unit <small>location · contract · program</small></span></div>
-      <strong>Analyze by</strong><div><span>Provider</span><span>Service line</span></div>
+      <strong>Business hierarchy</strong><div><span>Cheshire</span><i>→</i><span>Business unit</span><i>→</i><span>Profit center <small>location · contract · program</small></span></div>
+      <strong>Analyze by</strong><div><span>Provider</span><span>Product line</span></div>
       <em>Profit basis: earned revenue; cash and A/R tracked separately</em>
     </section>
     <div className="tree-columns">{segments.map(segment=><article className={`tree-card ${segment.tone} ${active&&active!==segment.name?"is-muted":""} ${active===segment.name?"is-active":""}`} key={segment.name}>
-      <button className="tree-card-header" type="button" aria-pressed={active===segment.name} onClick={()=>setActive(active===segment.name?null:segment.name)}><segment.icon size={21} aria-hidden="true"/><div className="segment-title"><small>Business line {segment.number}</small><h2>{segment.name}</h2></div><span className="focus-hint">{active===segment.name?"Show all":"Focus"}</span></button>
-      <section className="tree-row revenue"><h3><b>1A</b> Revenue · What we sell</h3><Tags items={segment.services}/></section>
+      <button className="tree-card-header" type="button" aria-pressed={active===segment.name} onClick={()=>setActive(active===segment.name?null:segment.name)}><segment.icon size={21} aria-hidden="true"/><div className="segment-title"><small>Business unit {segment.number}</small><h2>{segment.name}</h2></div><span className="focus-hint">{active===segment.name?"Show all":"Focus"}</span></button>
+      <section className="tree-row revenue"><h3><b>1A</b> Revenue · Product line</h3><Tags items={segment.services}/></section>
       <section className="tree-row revenue-source"><h3><b>1B</b> Revenue · How we earn it</h3><GroupedTags groups={segment.revenue}/></section>
       <section className="tree-row cost"><h3><b>2A</b> Expense · Direct labor</h3><GroupedTags groups={segment.labor}/></section>
       <section className="tree-row cost"><h3><b>2B</b> Expense · Direct operating</h3><Tags items={segment.expenses}/></section>
