@@ -37,3 +37,8 @@
 .tree-card{grid-template-rows:48px 88px 128px 128px 146px}
 .tree-bottom{padding-top:8px}
 @media(max-height:800px) and (min-width:801px){.tree-canvas{height:auto;grid-template-rows:52px auto auto}.tree-card{grid-template-rows:42px 76px 112px 112px 126px}}
+
+/* Distinct business-unit identities and complete outer borders. */
+.tree-card{border:2px solid #567681;border-top-width:4px}
+.tree-card.orange{border-color:#746b8f}.tree-card.orange .tree-card-header{background:#eeecf3}.tree-card.orange .tree-card-header svg{color:#746b8f}
+.tree-card.green{border-color:#5d7d67}
