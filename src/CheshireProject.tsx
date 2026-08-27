@@ -25,13 +25,13 @@ export function CheshireProject(){
       </div>
     </div>
     <div className="tree-columns">{segments.map(segment=><article className={`tree-card ${segment.tone} ${active&&active!==segment.name?"is-muted":""} ${active===segment.name?"is-active":""}`} key={segment.name}>
-      <button className="tree-card-header" type="button" aria-pressed={active===segment.name} onClick={()=>setActive(active===segment.name?null:segment.name)}><span className="tree-number">{segment.number}</span><segment.icon size={21} aria-hidden="true"/><h2>{segment.name}</h2><span className="focus-hint">{active===segment.name?"Show all":"Focus"}</span></button>
-      <section className="tree-row unit"><h3><b>1</b> Assign to</h3><div className="assignment-groups"><div><small>Profit center</small><Tags items={segment.profitCenter}/></div><div><small>Provider</small><Tags items={segment.provider}/></div></div></section>
-      <section className="tree-row revenue"><h3><b>2A</b> Revenue · Service line</h3><Tags items={segment.services}/></section>
-      <section className="tree-row revenue-source"><h3><b>2B</b> Revenue · Model / source</h3><Tags items={segment.revenue}/></section>
-      <section className="tree-row cost"><h3><b>3A</b> Expense · Direct labor</h3><Tags items={segment.labor}/></section>
-      <section className="tree-row cost"><h3><b>3B</b> Expense · Direct operating</h3><Tags items={segment.expenses}/></section>
+      <button className="tree-card-header" type="button" aria-pressed={active===segment.name} onClick={()=>setActive(active===segment.name?null:segment.name)}><segment.icon size={21} aria-hidden="true"/><div className="segment-title"><small>Business line {segment.number}</small><h2>{segment.name}</h2></div><span className="focus-hint">{active===segment.name?"Show all":"Focus"}</span></button>
+      <section className="tree-row unit"><h3>Reporting dimensions</h3><div className="assignment-groups"><div><small>Operating unit</small><Tags items={segment.profitCenter}/></div><div><small>Provider</small><Tags items={segment.provider}/></div></div></section>
+      <section className="tree-row revenue"><h3><b>1A</b> Revenue · Service line</h3><Tags items={segment.services}/></section>
+      <section className="tree-row revenue-source"><h3><b>1B</b> Revenue · Model / source</h3><Tags items={segment.revenue}/></section>
+      <section className="tree-row cost"><h3><b>2A</b> Expense · Direct labor</h3><Tags items={segment.labor}/></section>
+      <section className="tree-row cost"><h3><b>2B</b> Expense · Direct operating</h3><Tags items={segment.expenses}/></section>
     </article>)}</div>
-    <section className="tree-bottom"><div className="shared-costs"><h2><b>4</b> Allocate shared overhead <small>using a documented driver</small></h2><Tags items={["Administrative labor","Billing & software","Insurance & professional fees","Corporate G&A"]}/></div><div className="profit-output"><span><b>5</b> Profitability dashboard</span><strong>Location · Contract · Therapist · Service line</strong><small>Revenue · Contribution margin · Operating profit · Utilization · Break-even</small></div></section>
+    <section className="tree-bottom"><div className="shared-costs"><h2><b>3</b> Allocate shared overhead <small>using a documented driver</small></h2><Tags items={["Administrative labor","Billing & software","Insurance & professional fees","Corporate G&A"]}/></div><div className="profit-output"><span><b>4</b> Profitability dashboard</span><strong>Location · Contract · Therapist · Service line</strong><small>Revenue · Contribution margin · Operating profit · Utilization · Break-even</small></div></section>
   </section></main>
 }
