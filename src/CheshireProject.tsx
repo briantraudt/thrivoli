@@ -1,71 +1,83 @@
 import { Building2, GraduationCap, Waves } from "lucide-react";
-import { useState } from "react";
+import { useEffect, useState } from "react";
 import { Link } from "react-router-dom";
 import "./cheshire-project.css";
 import "./cheshire-workflow.css";
 import "./cheshire-layout-fix.css";
 
-type DetailGroup = { label: string; items: string[] };
-const segments = [
-  {
-    number:"1", name:"Clinics", icon:Building2, tone:"blue",
-    services:["PT","OT – General","OT – Feeding","Speech"],
-    revenue:[
-      {label:"Third-party",items:["Commercial insurers","Medicaid"]},
-      {label:"Patient / family",items:["Copay / coinsurance","Deductible","Self-pay"]},
-    ],
-    labor:[
-      {label:"Cost components",items:["Wages / salary","Payroll taxes","Benefits","Contract labor"]},
-      {label:"Time allocation",items:["Treatment time","Documentation / prep","PTO / nonproductive"]},
-    ],
-    expenses:["Rent","Utilities","Cleaning / waste","Clinical supplies","Practice Pro / ClaimMD","Equipment / depreciation","Repairs & maintenance"],
-  },
-  {
-    number:"2", name:"Schools", icon:GraduationCap, tone:"orange",
-    services:["PT hours","OT hours","Speech hours"],
-    revenue:[
-      {label:"Contract payer",items:["School district / LEA","Individual school","Other education organization"]},
-    ],
-    labor:[
-      {label:"Cost components",items:["Wages / salary","Payroll taxes","Benefits","Contract labor"]},
-      {label:"Time allocation",items:["Service hours","Travel time","Documentation / prep"]},
-    ],
-    expenses:["Mileage / travel","School supplies","Contract-specific costs","District fees"],
-  },
-  {
-    number:"3", name:"Private Programs", icon:Waves, tone:"green",
-    services:["Swim lessons","DMI / Intensives","Other programs"],
-    revenue:[
-      {label:"Customer",items:["Patient / family","Program participant"]},
-      {label:"Other payer",items:["Third-party sponsor · if applicable"]},
-    ],
-    labor:[
-      {label:"Cost components",items:["Wages / salary","Payroll taxes","Benefits","Contract instructors"]},
-      {label:"Time allocation",items:["Program delivery","Setup / prep"]},
-    ],
-    expenses:["Program supplies","Pool / facility cost","Equipment / depreciation","Program marketing","Merchant processing fees"],
-  },
+type SegmentContent={services:string[];revenue:string[];labor:string[];expenses:string[]};
+type EditableModel={segments:SegmentContent[];overhead:string[]};
+const segmentMeta=[
+  {name:"Clinics",icon:Building2,tone:"blue"},
+  {name:"Schools",icon:GraduationCap,tone:"orange"},
+  {name:"Private Programs",icon:Waves,tone:"green"},
 ];
+const defaultModel:EditableModel={
+  segments:[
+    {
+      services:["PT","OT – General","OT – Feeding","Speech"],
+      revenue:["Commercial insurers","Medicaid","Copay / coinsurance","Deductible","Self-pay"],
+      labor:["Wages / salary","Payroll taxes","Benefits","Contract labor","Treatment time","Documentation / prep","PTO / nonproductive"],
+      expenses:["Rent","Utilities","Cleaning / waste","Clinical supplies","Practice Pro / ClaimMD","Equipment / depreciation","Repairs & maintenance"],
+    },
+    {
+      services:["PT hours","OT hours","Speech hours"],
+      revenue:["School district / LEA","Individual school","Other education organization"],
+      labor:["Wages / salary","Payroll taxes","Benefits","Contract labor","Service hours","Travel time","Documentation / prep"],
+      expenses:["Mileage / travel","School supplies","Contract-specific costs","District fees"],
+    },
+    {
+      services:["Swim lessons","DMI / Intensives","Other programs"],
+      revenue:["Patient / family","Program participant","Third-party sponsor · if applicable"],
+      labor:["Wages / salary","Payroll taxes","Benefits","Contract instructors","Program delivery","Setup / prep"],
+      expenses:["Program supplies","Pool / facility cost","Equipment / depreciation","Program marketing","Merchant processing fees"],
+    },
+  ],
+  overhead:["Administrative labor","Management leadership","QuickBooks / ADP","Insurance & professional fees","Corporate G&A"],
+};
+const storageKey="cheshire-profitability-map-v1";
 
 function Mark(){return <span className="thrivoli-mark" aria-hidden="true">t</span>}
-function Tags({items}:{items:string[]}){return <div className="tree-tags">{items.map(item=><span key={item}>{item}</span>)}</div>}
-function GroupedTags({groups}:{groups:DetailGroup[]}){return <Tags items={groups.flatMap(group=>group.items)}/>}
+function loadModel():EditableModel{
+  try{
+    const saved=localStorage.getItem(storageKey);
+    if(saved){
+      const parsed=JSON.parse(saved) as EditableModel;
+      if(parsed.segments?.length===3&&Array.isArray(parsed.overhead))return parsed;
+    }
+  }catch{/* Use the approved defaults if browser storage is unavailable or invalid. */}
+  return defaultModel;
+}
+function EditableTags({items,onChange,label}:{items:string[];onChange:(items:string[])=>void;label:string}){
+  return <div className="tree-tags editable-tags">{items.map((item,index)=><span className="editable-chip" key={index}>
+    <input aria-label={`Edit ${label} item ${index+1}`} value={item} size={Math.max(6,item.length)} onChange={event=>onChange(items.map((value,itemIndex)=>itemIndex===index?event.target.value:value))}/>
+    <button type="button" aria-label={`Delete ${item||label} item`} title="Delete item" onClick={()=>onChange(items.filter((_,itemIndex)=>itemIndex!==index))}>×</button>
+  </span>)}</div>
+}
+function EditableRow({label,items,tone,onChange}:{label:string;items:string[];tone:string;onChange:(items:string[])=>void}){
+  return <section className={`tree-row ${tone}`}><span className="section-type">{label}</span><EditableTags items={items} onChange={onChange} label={label}/><button className="cell-add" type="button" onClick={()=>onChange([...items,"New item"])}>+ Add</button></section>
+}
 export function PublicHome(){return <main className="public-home"><Link to="/cheshire" className="public-brand" aria-label="Thrivoli"><Mark/><span>thrivoli</span></Link></main>}
 
 export function CheshireProject(){
   const [active,setActive]=useState<string|null>(null);
+  const [model,setModel]=useState<EditableModel>(loadModel);
+  useEffect(()=>{try{localStorage.setItem(storageKey,JSON.stringify(model))}catch{/* Editing still works for this session. */}},[model]);
+  const updateSegment=(segmentIndex:number,key:keyof SegmentContent,items:string[])=>setModel(current=>({
+    ...current,segments:current.segments.map((segment,index)=>index===segmentIndex?{...segment,[key]:items}:segment),
+  }));
   return <main className="tree-page"><section className="tree-canvas" aria-label="Cheshire profitability model">
     <div className="tree-top">
       <div className="tree-root"><strong>Profitability Map</strong></div>
       <div className="tree-legend" aria-label="Color legend"><span className="revenue-key">Revenue</span><span className="expense-key">Expenses</span><span className="overhead-key">Overhead</span></div>
     </div>
-    <div className="tree-columns">{segments.map(segment=><article className={`tree-card ${segment.tone} ${active&&active!==segment.name?"is-muted":""} ${active===segment.name?"is-active":""}`} key={segment.name}>
+    <div className="tree-columns">{segmentMeta.map((segment,index)=>{const content=model.segments[index];return <article className={`tree-card ${segment.tone} ${active&&active!==segment.name?"is-muted":""} ${active===segment.name?"is-active":""}`} key={segment.name}>
       <button className="tree-card-header" type="button" aria-pressed={active===segment.name} onClick={()=>setActive(active===segment.name?null:segment.name)}><segment.icon size={21} aria-hidden="true"/><div className="segment-title"><h2>{segment.name}</h2></div></button>
-      <section className="tree-row service"><span className="section-type">Service</span><Tags items={segment.services}/></section>
-      <section className="tree-row revenue-source"><span className="section-type">Payer</span><GroupedTags groups={segment.revenue}/></section>
-      <section className="tree-row cost"><span className="section-type expense-type">Expense · Labor</span><GroupedTags groups={segment.labor}/></section>
-      <section className="tree-row cost"><span className="section-type expense-type">Expense · Operations</span><Tags items={segment.expenses}/></section>
-    </article>)}</div>
-    <section className="tree-bottom"><div className="shared-costs"><h2>Overhead</h2><Tags items={["Administrative labor","Management leadership","QuickBooks / ADP","Insurance & professional fees","Corporate G&A"]}/></div></section>
+      <EditableRow label="Service" tone="service" items={content.services} onChange={items=>updateSegment(index,"services",items)}/>
+      <EditableRow label="Payer" tone="revenue-source" items={content.revenue} onChange={items=>updateSegment(index,"revenue",items)}/>
+      <EditableRow label="Expense · Labor" tone="cost" items={content.labor} onChange={items=>updateSegment(index,"labor",items)}/>
+      <EditableRow label="Expense · Operations" tone="cost" items={content.expenses} onChange={items=>updateSegment(index,"expenses",items)}/>
+    </article>})}</div>
+    <section className="tree-bottom"><div className="shared-costs"><h2>Overhead</h2><EditableTags items={model.overhead} onChange={items=>setModel(current=>({...current,overhead:items}))} label="Overhead"/><button className="cell-add" type="button" onClick={()=>setModel(current=>({...current,overhead:[...current.overhead,"New item"]}))}>+ Add</button></div></section>
   </section></main>
 }
