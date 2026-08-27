@@ -60,4 +60,7 @@
 .tree-row.revenue-source,.orange .tree-row.revenue-source,.green .tree-row.revenue-source{background:#f2f7f3}
 .tree-row.revenue-source .section-type{color:#3f674c}
 .tree-row.cost{background:#faf3f1}
-.shared-costs{background:#b98524}
+.shared-costs{color:#5f4613;background:#fbf6e8;border:2px solid #b98524}
+.shared-costs h2{color:#8a6217}
+.shared-costs h2 small{color:#7b6a46}
+.shared-costs .tree-tags span{color:#342d20;background:#fff;border-color:#dfc98f}

@@ -60,7 +60,7 @@ export function CheshireProject(){
       <div className="tree-legend" aria-label="Color legend"><span className="revenue-key">Revenue</span><span className="expense-key">Expenses</span><span className="overhead-key">Overhead</span></div>
     </div>
     <div className="tree-columns">{segments.map(segment=><article className={`tree-card ${segment.tone} ${active&&active!==segment.name?"is-muted":""} ${active===segment.name?"is-active":""}`} key={segment.name}>
-      <button className="tree-card-header" type="button" aria-pressed={active===segment.name} onClick={()=>setActive(active===segment.name?null:segment.name)}><segment.icon size={21} aria-hidden="true"/><div className="segment-title"><h2>{segment.name}</h2></div><span className="focus-hint">{active===segment.name?"Show all":"Focus"}</span></button>
+      <button className="tree-card-header" type="button" aria-pressed={active===segment.name} onClick={()=>setActive(active===segment.name?null:segment.name)}><segment.icon size={21} aria-hidden="true"/><div className="segment-title"><h2>{segment.name}</h2></div></button>
       <section className="tree-row service"><span className="section-type">Service</span><Tags items={segment.services}/></section>
       <section className="tree-row revenue-source"><span className="section-type">Payer</span><GroupedTags groups={segment.revenue}/></section>
       <section className="tree-row cost"><span className="section-type expense-type">Expense · Labor</span><GroupedTags groups={segment.labor}/></section>
