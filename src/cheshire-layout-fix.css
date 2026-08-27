@@ -42,3 +42,10 @@
 .tree-card{border:2px solid #567681;border-top-width:4px}
 .tree-card.orange{border-color:#746b8f}.tree-card.orange .tree-card-header{background:#eeecf3}.tree-card.orange .tree-card-header svg{color:#746b8f}
 .tree-card.green{border-color:#5d7d67}
+
+/* Keep the business-unit outline continuous; section colors live in their fills. */
+.tree-card{overflow:hidden}
+.tree-card-header{box-sizing:border-box}
+.tree-card .tree-row{border-left:0}
+.tree-card-header{position:relative;justify-content:center;text-align:center}
+.tree-card-header .focus-hint{position:absolute;right:14px;margin-left:0}
