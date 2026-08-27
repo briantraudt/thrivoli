@@ -1,0 +1,15 @@
+/* Assignment → revenue → expense → overhead → dashboard */
+.tree-row h3{display:flex;align-items:center;gap:6px}
+.tree-row h3 b{display:inline-grid;place-items:center;min-width:24px;height:17px;padding:0 4px;border-radius:3px;color:#fff;background:#82908e;font-size:8px;letter-spacing:0}
+.tree-row.revenue,.tree-row.revenue-source,.orange .tree-row.revenue,.orange .tree-row.revenue-source,.green .tree-row.revenue,.green .tree-row.revenue-source{border-left-color:var(--blue);background:#f1f8ff}
+.tree-row.revenue h3,.tree-row.revenue-source h3{color:#236cae}
+.tree-row.revenue h3 b,.tree-row.revenue-source h3 b{background:var(--blue)}
+.tree-row.cost{border-left-color:var(--pink);background:#fff5fa}
+.tree-row.cost h3{color:#a53e70}
+.tree-row.cost h3 b{background:var(--pink)}
+.shared-costs{background:#80551d;border-left:5px solid #e4a13e}
+.shared-costs h2{display:flex;align-items:center}
+.shared-costs h2>b,.profit-output span>b{display:inline-grid;place-items:center;width:22px;height:22px;margin-right:8px;border-radius:50%;color:#80551d;background:#ffd28e;font-size:10px;flex:none}
+.profit-output{background:var(--navy);border-left:5px solid #68c594}
+.profit-output span{display:flex;align-items:center;color:#a8d5ca}
+.profit-output span>b{color:var(--navy);background:#aee1d4}
