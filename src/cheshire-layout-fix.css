@@ -1,3 +1,4 @@
 .tree-canvas{grid-template-rows:78px minmax(0,1fr) 98px}
 @media(max-height:760px) and (min-width:801px){.tree-canvas{grid-template-rows:64px minmax(0,1fr) 80px}}
 @media(max-width:800px){.tree-canvas{display:block;height:auto}}
+.assignment-groups{display:flex;flex-wrap:wrap;gap:8px 18px}.assignment-groups>div{min-width:0}.assignment-groups small{display:block;margin-bottom:5px;color:#7b8884;font-size:8px;font-weight:800;letter-spacing:.08em;text-transform:uppercase}
