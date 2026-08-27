@@ -73,3 +73,5 @@
 .shared-costs .tree-tags{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 14px}
 .shared-costs .tree-tags span{width:max-content;max-width:100%;box-sizing:border-box}
 @media(max-width:800px){.shared-costs{background-image:none}.shared-costs .tree-tags{display:flex}}
+.shared-costs{border-top:2px solid #b98524}
+.tree-columns{margin-top:12px}
