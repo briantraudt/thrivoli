@@ -27,3 +27,8 @@
 .profit-output{background:#183f37;border-left:5px solid #769b86}
 .profit-output span{display:flex;align-items:center;color:#b7cdc3}
 .profit-output span>b{color:#183f37;background:#c5d8cf}
+
+/* The three business columns stand on their own; no decorative connector. */
+.tree-connector{display:none}
+.tree-canvas{grid-template-rows:72px 0 minmax(0,1fr) 98px}
+@media(max-height:760px) and (min-width:801px){.tree-canvas{grid-template-rows:58px 0 minmax(0,1fr) 80px}}
