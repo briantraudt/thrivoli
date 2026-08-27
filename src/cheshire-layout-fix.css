@@ -122,3 +122,9 @@
 .shared-costs{border-left:2px solid #b98524;border-right:2px solid #b98524}
 .overhead-cell,.overhead-cell-1,.overhead-cell-2,.overhead-cell-3{border-left:0;border-right:0}
 @media(max-width:800px){.overhead-cell{border-left:0;border-right:0}}
+
+/* Distribute shared overhead items evenly across the full-width cell. */
+.overhead-columns{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:38px 18px 18px}
+.overhead-cell,.shared-costs .overhead-cell .tree-tags{display:contents}
+.shared-costs .editable-chip{flex:0 1 auto}
+@media(max-width:800px){.overhead-columns{display:flex;flex-wrap:wrap;justify-content:flex-start;padding:38px 14px 18px}.overhead-cell,.shared-costs .overhead-cell .tree-tags{display:contents}}
