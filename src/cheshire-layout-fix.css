@@ -117,3 +117,8 @@
 .overhead-cell-3{border-left:2px solid #5d7d67;border-right:2px solid #5d7d67}
 .shared-costs .tree-tags{display:flex;grid-template-columns:none;gap:6px}
 @media(max-width:800px){.overhead-columns{display:block}.overhead-cell{min-height:70px;border-right:2px solid #b98524;border-left:2px solid #b98524}.overhead-cell+.overhead-cell{border-top:1px solid #dfc98f}}
+
+/* Overhead is one shared pool: keep only its continuous outside border. */
+.shared-costs{border-left:2px solid #b98524;border-right:2px solid #b98524}
+.overhead-cell,.overhead-cell-1,.overhead-cell-2,.overhead-cell-3{border-left:0;border-right:0}
+@media(max-width:800px){.overhead-cell{border-left:0;border-right:0}}
