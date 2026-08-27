@@ -69,4 +69,7 @@
 .tree-bottom{padding-top:0;margin-top:-2px}
 .shared-costs{border-top:0}
 .shared-costs h2{font-size:8px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}
-.shared-costs{background-color:#fbf6e8;background-image:linear-gradient(#746b8f,#746b8f),linear-gradient(#5d7d67,#5d7d67);background-repeat:no-repeat;background-position:33.333% 0,66.666% 0;background-size:2px 100%}
+.shared-costs{background-color:#fbf6e8;background-image:linear-gradient(#567681,#567681),linear-gradient(#746b8f,#746b8f),linear-gradient(#746b8f,#746b8f),linear-gradient(#5d7d67,#5d7d67);background-repeat:no-repeat;background-position:calc(33.333% - 9.333px) 0,calc(33.333% + 4.667px) 0,calc(66.667% - 4.667px) 0,calc(66.667% + 9.333px) 0;background-size:2px 100%}
+.shared-costs .tree-tags{display:grid;grid-template-columns:repeat(3,minmax(0,1fr));gap:6px 14px}
+.shared-costs .tree-tags span{width:max-content;max-width:100%;box-sizing:border-box}
+@media(max-width:800px){.shared-costs{background-image:none}.shared-costs .tree-tags{display:flex}}
