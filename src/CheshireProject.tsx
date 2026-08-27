@@ -11,9 +11,8 @@ const segments = [
     number:"1", name:"Clinics", icon:Building2, tone:"blue",
     services:["PT","OT – General","OT – Feeding","Speech"],
     revenue:[
-      {label:"Reimbursement",items:["Fee-for-service · timed units","Capitated visit rate"]},
-      {label:"Payer",items:["Commercial insurance","Medicaid","Patient responsibility","Self-pay"]},
-      {label:"Contra revenue",items:["Contractual adjustments","Denials / write-offs","Refunds"]},
+      {label:"Third-party",items:["Commercial insurers","Medicaid"]},
+      {label:"Patient / family",items:["Copay / coinsurance","Deductible","Self-pay"]},
     ],
     labor:[
       {label:"Cost components",items:["Wages / salary","Payroll taxes","Benefits","Contract labor"]},
@@ -25,8 +24,7 @@ const segments = [
     number:"2", name:"Schools", icon:GraduationCap, tone:"orange",
     services:["PT hours","OT hours","Speech hours"],
     revenue:[
-      {label:"Contract model",items:["Hourly contract","Fixed contract","Other contract rate"]},
-      {label:"Revenue status",items:["Earned / unbilled","Invoiced","Collected","Outstanding A/R"]},
+      {label:"Contract payer",items:["School district / LEA","Individual school","Other education organization"]},
     ],
     labor:[
       {label:"Cost components",items:["Wages / salary","Payroll taxes","Benefits","Contract labor"]},
@@ -38,9 +36,8 @@ const segments = [
     number:"3", name:"Private Programs", icon:Waves, tone:"green",
     services:["Swim lessons","DMI / Intensives","Other programs"],
     revenue:[
-      {label:"Sales model",items:["Single sessions","Packages"]},
-      {label:"Payment",items:["Cash","Card"]},
-      {label:"Contra revenue",items:["Discounts","Refunds"]},
+      {label:"Customer",items:["Patient / family","Program participant"]},
+      {label:"Other payer",items:["Third-party sponsor · if applicable"]},
     ],
     labor:[
       {label:"Cost components",items:["Wages / salary","Payroll taxes","Benefits","Contract instructors"]},
@@ -65,7 +62,7 @@ export function CheshireProject(){
     <div className="tree-columns">{segments.map(segment=><article className={`tree-card ${segment.tone} ${active&&active!==segment.name?"is-muted":""} ${active===segment.name?"is-active":""}`} key={segment.name}>
       <button className="tree-card-header" type="button" aria-pressed={active===segment.name} onClick={()=>setActive(active===segment.name?null:segment.name)}><segment.icon size={21} aria-hidden="true"/><div className="segment-title"><h2>{segment.name}</h2></div><div className="header-meta"><span className="unit-label">Business unit {segment.number}</span><span className="focus-hint">{active===segment.name?"Show all":"Focus"}</span></div></button>
       <section className="tree-row revenue"><h3><b>1A</b></h3><span className="section-type">Service</span><Tags items={segment.services}/></section>
-      <section className="tree-row revenue-source"><h3><b>1B</b> How we earn it</h3><span className="section-type">Revenue</span><GroupedTags groups={segment.revenue}/></section>
+      <section className="tree-row revenue-source"><h3><b>1B</b></h3><span className="section-type">Payer</span><GroupedTags groups={segment.revenue}/></section>
       <section className="tree-row cost"><h3><b>2A</b> Direct labor</h3><span className="section-type expense-type">Expense · Labor</span><GroupedTags groups={segment.labor}/></section>
       <section className="tree-row cost"><h3><b>2B</b> Direct operating</h3><span className="section-type expense-type">Expense · Operations</span><Tags items={segment.expenses}/></section>
     </article>)}</div>
