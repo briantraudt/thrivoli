@@ -62,17 +62,12 @@ export function CheshireProject(){
       <div className="tree-root"><strong>Profitability Map</strong></div>
       <div className="tree-legend" aria-label="Color legend"><span className="revenue-key">Revenue</span><span className="expense-key">Expenses</span><span className="overhead-key">Overhead</span></div>
     </div>
-    <section className="hierarchy-bar" aria-label="Profitability structure">
-      <strong>Business hierarchy</strong><div><span>Cheshire</span><i>→</i><span>Business unit</span><i>→</i><span>Profit center <small>location · contract · program</small></span></div>
-      <strong>Analyze by</strong><div><span>Provider</span><span>Product line</span></div>
-      <em>Profit basis: earned revenue; cash and A/R tracked separately</em>
-    </section>
     <div className="tree-columns">{segments.map(segment=><article className={`tree-card ${segment.tone} ${active&&active!==segment.name?"is-muted":""} ${active===segment.name?"is-active":""}`} key={segment.name}>
-      <button className="tree-card-header" type="button" aria-pressed={active===segment.name} onClick={()=>setActive(active===segment.name?null:segment.name)}><segment.icon size={21} aria-hidden="true"/><div className="segment-title"><small>Business unit {segment.number}</small><h2>{segment.name}</h2></div><span className="focus-hint">{active===segment.name?"Show all":"Focus"}</span></button>
-      <section className="tree-row revenue"><h3><b>1A</b> Revenue · Product line</h3><Tags items={segment.services}/></section>
-      <section className="tree-row revenue-source"><h3><b>1B</b> Revenue · How we earn it</h3><GroupedTags groups={segment.revenue}/></section>
-      <section className="tree-row cost"><h3><b>2A</b> Expense · Direct labor</h3><GroupedTags groups={segment.labor}/></section>
-      <section className="tree-row cost"><h3><b>2B</b> Expense · Direct operating</h3><Tags items={segment.expenses}/></section>
+      <button className="tree-card-header" type="button" aria-pressed={active===segment.name} onClick={()=>setActive(active===segment.name?null:segment.name)}><segment.icon size={21} aria-hidden="true"/><div className="segment-title"><h2>{segment.name}</h2></div><div className="header-meta"><span className="unit-label">Business unit {segment.number}</span><span className="focus-hint">{active===segment.name?"Show all":"Focus"}</span></div></button>
+      <section className="tree-row revenue"><h3><b>1A</b> Product line</h3><span className="section-type">Revenue</span><Tags items={segment.services}/></section>
+      <section className="tree-row revenue-source"><h3><b>1B</b> How we earn it</h3><span className="section-type">Revenue</span><GroupedTags groups={segment.revenue}/></section>
+      <section className="tree-row cost"><h3><b>2A</b> Direct labor</h3><span className="section-type expense-type">Expense · Labor</span><GroupedTags groups={segment.labor}/></section>
+      <section className="tree-row cost"><h3><b>2B</b> Direct operating</h3><span className="section-type expense-type">Expense · Operations</span><Tags items={segment.expenses}/></section>
     </article>)}</div>
     <section className="tree-bottom"><div className="shared-costs"><h2><b>3</b> Allocate shared overhead <small>direct trace first; allocate only truly shared costs</small></h2><Tags items={["Administrative labor","Management leadership","QuickBooks / ADP","Insurance & professional fees","Corporate G&A"]}/></div><div className="profit-output"><span><b>4</b> Profitability dashboard</span><strong>Business-line P&amp;L · Provider contribution</strong><small>Net revenue · Loaded labor · Contribution margin · Operating profit · Cash / A/R</small></div></section>
   </section></main>

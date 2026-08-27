@@ -20,3 +20,11 @@
 .shared-costs,.profit-output{padding:9px 13px}
 .shared-costs h2{margin-bottom:6px}
 @media(max-height:800px) and (min-width:801px){.tree-canvas{grid-template-rows:52px 35px minmax(0,1fr) 76px}.tree-card{grid-template-rows:42px 74px 152px 145px minmax(105px,1fr)}.tree-row{padding:5px 9px}.tree-tags span{padding:3px 6px;font-size:9px}.grouped-tags{gap:3px}.tree-bottom{padding-top:6px}.shared-costs,.profit-output{padding:7px 10px}}
+
+/* Hierarchy strip removed: columns follow the title directly. */
+.tree-canvas{grid-template-rows:62px minmax(0,1fr) 86px}
+@media(max-height:800px) and (min-width:801px){.tree-canvas{grid-template-rows:52px minmax(0,1fr) 76px}}
+.header-meta{margin-left:auto;display:flex;flex-direction:column;align-items:flex-end;gap:2px}.unit-label{color:#667873;font-size:8px;font-weight:800;letter-spacing:.09em;text-transform:uppercase}.header-meta .focus-hint{margin-left:0;font-size:7px}
+.tree-row{position:relative}.section-type{position:absolute;top:9px;right:12px;color:#4f7b5d;font-size:8px;font-weight:900;letter-spacing:.1em;text-transform:uppercase}@media(max-height:800px) and (min-width:801px){.section-type{top:6px;right:9px;font-size:7px}}
+.section-type.expense-type{color:#a85045}
+.tree-row{padding:10px 14px}.tree-tags{gap:7px 8px}.grouped-tags{gap:9px}.grouped-tags>div{gap:10px}.grouped-tags small{width:90px;line-height:1.25}.tree-row h3{margin-bottom:9px}@media(max-height:800px) and (min-width:801px){.tree-row{padding:7px 10px}.tree-tags{gap:5px 6px}.grouped-tags{gap:5px}.grouped-tags>div{gap:7px}.grouped-tags small{width:76px}.tree-row h3{margin-bottom:6px}}
