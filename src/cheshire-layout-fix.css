@@ -49,3 +49,6 @@
 .tree-card .tree-row{border-left:0}
 .tree-card-header{position:relative;justify-content:center;text-align:center}
 .tree-card-header .focus-hint{position:absolute;right:14px;margin-left:0}
+.section-type{left:14px;right:auto}
+.tree-row>.tree-tags{margin-top:25px}
+@media(max-height:800px) and (min-width:801px){.section-type{left:10px;right:auto}.tree-row>.tree-tags{margin-top:20px}}

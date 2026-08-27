@@ -63,8 +63,8 @@ export function CheshireProject(){
       <button className="tree-card-header" type="button" aria-pressed={active===segment.name} onClick={()=>setActive(active===segment.name?null:segment.name)}><segment.icon size={21} aria-hidden="true"/><div className="segment-title"><h2>{segment.name}</h2></div><span className="focus-hint">{active===segment.name?"Show all":"Focus"}</span></button>
       <section className="tree-row revenue"><span className="section-type">Service</span><Tags items={segment.services}/></section>
       <section className="tree-row revenue-source"><span className="section-type">Payer</span><GroupedTags groups={segment.revenue}/></section>
-      <section className="tree-row cost"><h3>Direct labor</h3><span className="section-type expense-type">Expense · Labor</span><GroupedTags groups={segment.labor}/></section>
-      <section className="tree-row cost"><h3>Direct operating</h3><span className="section-type expense-type">Expense · Operations</span><Tags items={segment.expenses}/></section>
+      <section className="tree-row cost"><span className="section-type expense-type">Expense · Labor</span><GroupedTags groups={segment.labor}/></section>
+      <section className="tree-row cost"><span className="section-type expense-type">Expense · Operations</span><Tags items={segment.expenses}/></section>
     </article>)}</div>
     <section className="tree-bottom"><div className="shared-costs"><h2>Allocate shared overhead <small>direct trace first; allocate only truly shared costs</small></h2><Tags items={["Administrative labor","Management leadership","QuickBooks / ADP","Insurance & professional fees","Corporate G&A"]}/></div></section>
   </section></main>
