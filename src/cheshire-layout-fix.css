@@ -283,3 +283,18 @@
 .tree-row.revenue-source .cell-add{color:#fff;background:#356f50}
 .tree-row.cost .cell-add{color:#fff;background:#91443d}
 .shared-costs .cell-add{color:#fff;background:#80601e}
+
+/* Softer high-contrast controls: rich muted tones instead of heavy dark blocks. */
+.tree-row.service .tree-tags span{background:#426f8b;border-color:#426f8b}
+.tree-row.revenue-source .tree-tags span{background:#4c775d;border-color:#4c775d}
+.tree-row.cost .tree-tags span{background:#9b554d;border-color:#9b554d}
+.shared-costs .tree-tags span{background:#94722c;border-color:#94722c}
+.tree-row.service .tree-tags span:hover{background:#315d78;border-color:#315d78}
+.tree-row.revenue-source .tree-tags span:hover{background:#3b654c;border-color:#3b654c}
+.tree-row.cost .tree-tags span:hover{background:#85443d;border-color:#85443d}
+.shared-costs .tree-tags span:hover{background:#7d5e20;border-color:#7d5e20}
+.editable-chip{border-radius:2px;box-shadow:inset 0 0 0 1px rgba(255,255,255,.12)}
+.tree-row.service .cell-add{background:#426f8b}
+.tree-row.revenue-source .cell-add{background:#4c775d}
+.tree-row.cost .cell-add{background:#9b554d}
+.shared-costs .cell-add{background:#94722c}
