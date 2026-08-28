@@ -398,8 +398,8 @@
 .tree-row.location-overhead .cell-add:hover{color:#fff;background:#94722c}
 
 @media(min-width:801px){
-  .tree-columns{grid-template-rows:none;align-items:start}
-  .tree-card{grid-row:auto;grid-template-rows:48px repeat(5,auto);align-self:start}
+  .tree-columns{grid-template-rows:48px repeat(5,auto);align-items:stretch}
+  .tree-card{grid-row:1 / span 6;grid-template-rows:subgrid;align-self:stretch}
   .tree-row,
   .tree-row.service,
   .tree-row.revenue-source,
