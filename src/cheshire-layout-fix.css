@@ -326,11 +326,11 @@
   .tree-card{display:grid;grid-template-rows:auto!important;width:100%;margin:0 0 14px;overflow:visible}
   .tree-card-header{height:56px;justify-content:center;padding:0 12px}
   .tree-card h2{font-size:20px}
-  .tree-row{min-height:0!important;height:auto!important;padding:12px 12px 16px;overflow:visible}
+  .tree-row{min-height:60px!important;height:auto!important;padding:12px 12px 18px;overflow:visible}
   .tree-row>.tree-tags{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:27px}
   .editable-chip{width:100%;min-width:0;box-sizing:border-box}
   .editable-chip input{width:100%;min-width:0;min-height:39px;box-sizing:border-box;padding:8px 28px 8px 9px;font-size:13px}
-  .cell-add{top:9px;right:10px;min-height:32px;padding:5px 9px;font-size:10px}
+  .cell-add{top:10px;right:12px;min-height:32px;padding:5px 9px;font-size:10px}
   .tree-bottom{display:block;margin:0;padding:0}
   .shared-costs{padding:0;overflow:visible}
   .shared-costs h2{top:12px;left:12px}
