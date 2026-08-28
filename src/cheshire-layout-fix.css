@@ -223,3 +223,46 @@
 .tree-legend .revenue-key:before{background:#984063}
 .tree-legend .expense-key:before{background:#f64668}
 .tree-legend .overhead-key:before{background:#fe9677}
+
+/* Final UX color system: neutral working surface, saturated semantic accents. */
+.tree-page{background:#f4f2ed}
+.tree-top .tree-root{color:#fff;background:#173f37;box-shadow:0 5px 14px rgba(23,63,55,.16)}
+.tree-legend{color:#53625d}
+
+.tree-card,.tree-card.orange,.tree-card.green{overflow:hidden;border:1px solid #cfd8d5;border-top:4px solid #173f37;background:#fff;box-shadow:0 5px 16px rgba(24,44,40,.07)}
+.tree-card .tree-card-header,.tree-card.orange .tree-card-header,.tree-card.green .tree-card-header{color:#fff;background:#173f37;border-bottom:0}
+.tree-card .tree-card-header svg{color:#56b6a2}
+.tree-card.orange .tree-card-header svg{color:#f0aa55}
+.tree-card.green .tree-card-header svg{color:#70c78c}
+
+.tree-row.service,.tree-row.revenue-source,.orange .tree-row.revenue-source,.green .tree-row.revenue-source,.tree-row.cost{color:#17242b;background:#fff;border-left-width:5px}
+.tree-row.service{border-left-color:#2474b5}
+.tree-row.service .section-type{color:#1d659d}
+.tree-row.revenue-source,.orange .tree-row.revenue-source,.green .tree-row.revenue-source{border-left-color:#2f855a}
+.tree-row.revenue-source .section-type{color:#276d4b}
+.tree-row.cost{border-left-color:#c44d43}
+.tree-row.cost .section-type{color:#a63d35}
+
+.tree-row.service .tree-tags span,.tree-row.revenue-source .tree-tags span,.tree-row.cost .tree-tags span{color:#17242b;background:#f8faf9;border-color:#cbd5d2}
+.tree-row.service .tree-tags span:hover{border-color:#2474b5;background:#f5fbff}
+.tree-row.revenue-source .tree-tags span:hover{border-color:#2f855a;background:#f6fcf8}
+.tree-row.cost .tree-tags span:hover{border-color:#c44d43;background:#fff8f7}
+
+.tree-row.service .cell-add{color:#1d659d;border-color:#2474b5;background:#fff}
+.tree-row.revenue-source .cell-add{color:#276d4b;border-color:#2f855a;background:#fff}
+.tree-row.cost .cell-add{color:#a63d35;border-color:#c44d43;background:#fff}
+.tree-row.service .cell-add:hover{color:#fff;background:#2474b5}
+.tree-row.revenue-source .cell-add:hover{color:#fff;background:#2f855a}
+.tree-row.cost .cell-add:hover{color:#fff;background:#c44d43}
+
+.shared-costs{color:#17242b;background:#fff;border-color:#c28a22;border-top:4px solid #c28a22;box-shadow:0 5px 16px rgba(24,44,40,.06)}
+.shared-costs h2{color:#8a6118}
+.shared-costs .tree-tags span{color:#17242b;background:#fffaf0;border-color:#d8b66d}
+.shared-costs .tree-tags span:hover{border-color:#c28a22;background:#fff6df}
+.shared-costs .cell-add{color:#805a16;border-color:#c28a22;background:#fff}
+.shared-costs .cell-add:hover{color:#fff;background:#a97418}
+
+.tree-legend .revenue-key:before{background:#2f855a}
+.tree-legend .expense-key:before{background:#c44d43}
+.tree-legend .overhead-key:before{background:#c28a22}
+.editable-chip input:focus{background:#fff;box-shadow:inset 0 0 0 2px #2474b5}
