@@ -349,7 +349,10 @@
 
 /* Keep a clear touch-safe gap below mobile Add controls. */
 @media(max-width:800px){
-  .tree-row>.tree-tags{margin-top:42px}
+  .tree-row.service>.tree-tags,
+  .tree-row.revenue-source>.tree-tags,
+  .tree-row.cost>.tree-tags,
+  .tree-row.location-overhead>.tree-tags{margin-top:42px}
   .overhead-columns{padding-top:52px}
 }
 
