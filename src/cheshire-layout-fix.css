@@ -298,3 +298,19 @@
 .tree-row.revenue-source .cell-add{background:#4c775d}
 .tree-row.cost .cell-add{background:#9b554d}
 .shared-costs .cell-add{background:#94722c}
+
+/* Reverse chips for lower visual strain: white fill, semantic border and text. */
+.tree-row.service .tree-tags span{color:#315f7d;background:#fff;border:1.5px solid #426f8b}
+.tree-row.revenue-source .tree-tags span{color:#365f48;background:#fff;border:1.5px solid #4c775d}
+.tree-row.cost .tree-tags span{color:#82443e;background:#fff;border:1.5px solid #9b554d}
+.shared-costs .tree-tags span{color:#76591d;background:#fff;border:1.5px solid #94722c}
+.tree-row.service .tree-tags span:hover{color:#244d68;background:#f4f8fb;border-color:#315f7d}
+.tree-row.revenue-source .tree-tags span:hover{color:#294d39;background:#f5f9f6;border-color:#365f48}
+.tree-row.cost .tree-tags span:hover{color:#6f3732;background:#fcf6f5;border-color:#82443e}
+.shared-costs .tree-tags span:hover{color:#644913;background:#fcf9f1;border-color:#76591d}
+.editable-chip{box-shadow:none}
+.editable-chip input::placeholder{color:#7d8985}
+.tree-row.service .cell-add{color:#315f7d;background:#fff;border-color:#426f8b}
+.tree-row.revenue-source .cell-add{color:#365f48;background:#fff;border-color:#4c775d}
+.tree-row.cost .cell-add{color:#82443e;background:#fff;border-color:#9b554d}
+.shared-costs .cell-add{color:#76591d;background:#fff;border-color:#94722c}
