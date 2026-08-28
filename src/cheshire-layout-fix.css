@@ -377,7 +377,7 @@
 .tree-row.location-overhead{
   color:#17242b;
   background:#fffdf7;
-  border-left:5px solid #b98524;
+  border-left:0;
 }
 .tree-row.location-overhead .section-type{color:#805a16}
 .tree-row.location-overhead .tree-tags span{
@@ -398,7 +398,11 @@
 .tree-row.location-overhead .cell-add:hover{color:#fff;background:#94722c}
 
 @media(min-width:801px){
-  .tree-columns{grid-template-rows:48px repeat(5,auto)}
-  .tree-card{grid-row:1 / span 6;grid-template-rows:subgrid}
-  .tree-row.location-overhead{min-height:104px}
+  .tree-columns{grid-template-rows:none;align-items:start}
+  .tree-card{grid-row:auto;grid-template-rows:48px repeat(5,auto);align-self:start}
+  .tree-row,
+  .tree-row.service,
+  .tree-row.revenue-source,
+  .tree-row.cost,
+  .tree-row.location-overhead{min-height:0;padding-bottom:14px}
 }
