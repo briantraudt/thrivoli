@@ -356,3 +356,8 @@
   .tree-row>.tree-tags{margin-top:42px}
   .overhead-columns{padding-top:52px}
 }
+
+/* One continuous border treatment around the complete overhead box. */
+.tree-bottom{border:0}
+.shared-costs{border:1px solid #94722c!important;box-shadow:none}
+.overhead-columns,.overhead-cell,.overhead-cell-1,.overhead-cell-2,.overhead-cell-3{border:0!important}
