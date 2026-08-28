@@ -346,3 +346,7 @@
   .tree-card-header{height:54px}
   .tree-card h2{font-size:19px}
 }
+
+/* Overhead uses the same border weight as the app with no internal dividers. */
+.shared-costs{border:1px solid #c28a22;border-top-width:1px;border-bottom-width:1px}
+.overhead-cell,.overhead-cell-1,.overhead-cell-2,.overhead-cell-3{border:0}
