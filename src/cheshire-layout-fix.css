@@ -314,3 +314,35 @@
 .tree-row.revenue-source .cell-add{color:#365f48;background:#fff;border-color:#4c775d}
 .tree-row.cost .cell-add{color:#82443e;background:#fff;border-color:#9b554d}
 .shared-costs .cell-add{color:#76591d;background:#fff;border-color:#94722c}
+
+/* Purpose-built mobile layout: content-driven rows, touch targets, no clipping. */
+@media(max-width:800px){
+  .tree-page{padding:10px 10px 18px;overflow-x:hidden}
+  .tree-canvas{display:block;width:100%;height:auto;min-height:0}
+  .tree-top{display:flex;flex-wrap:wrap;gap:9px;margin:0 0 10px;padding:0}
+  .tree-top .tree-root{margin:0;padding:9px 14px;font-size:16px}
+  .tree-legend{gap:10px;font-size:8px}
+  .tree-columns{display:block;margin-top:0}
+  .tree-card{display:grid;grid-template-rows:auto!important;width:100%;margin:0 0 14px;overflow:visible}
+  .tree-card-header{height:56px;justify-content:center;padding:0 12px}
+  .tree-card h2{font-size:20px}
+  .tree-row{min-height:0!important;height:auto!important;padding:12px 12px 16px;overflow:visible}
+  .tree-row>.tree-tags{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;margin-top:27px}
+  .editable-chip{width:100%;min-width:0;box-sizing:border-box}
+  .editable-chip input{width:100%;min-width:0;min-height:39px;box-sizing:border-box;padding:8px 28px 8px 9px;font-size:13px}
+  .cell-add{top:9px;right:10px;min-height:32px;padding:5px 9px;font-size:10px}
+  .tree-bottom{display:block;margin:0;padding:0}
+  .shared-costs{padding:0;overflow:visible}
+  .shared-costs h2{top:12px;left:12px}
+  .overhead-columns{display:grid;grid-template-columns:repeat(2,minmax(0,1fr));gap:7px;padding:40px 12px 16px}
+  .overhead-cell,.shared-costs .overhead-cell .tree-tags{display:contents}
+  .shared-costs .editable-chip{width:100%}
+}
+@media(max-width:520px){
+  .tree-top{flex-direction:column;align-items:stretch}
+  .tree-top .tree-root{width:auto;text-align:center}
+  .tree-legend{width:100%;justify-content:space-between;box-sizing:border-box;padding:0 4px}
+  .tree-row>.tree-tags,.overhead-columns{grid-template-columns:1fr}
+  .tree-card-header{height:54px}
+  .tree-card h2{font-size:19px}
+}
