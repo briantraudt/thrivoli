@@ -406,3 +406,12 @@
   .tree-row.cost,
   .tree-row.location-overhead{min-height:0;padding-bottom:14px}
 }
+
+/* Soft semantic fields make each cell distinct without overpowering the content. */
+.tree-row.service{background:#f2f7fb}
+.tree-row.revenue-source,
+.orange .tree-row.revenue-source,
+.green .tree-row.revenue-source{background:#f2f8f4}
+.tree-row.cost{background:#fcf5f4}
+.tree-row.location-overhead,
+.shared-costs{background:#fffaf0}
