@@ -5,7 +5,7 @@ import "./cheshire-project.css";
 import "./cheshire-workflow.css";
 import "./cheshire-layout-fix.css";
 
-type SegmentContent={services:string[];activity:string[];revenue:string[];revenueFlow:string[];labor:string[];expenses:string[];locationOverhead:string[]};
+type SegmentContent={services:string[];revenue:string[];labor:string[];expenses:string[];locationOverhead:string[]};
 type EditableModel={segments:SegmentContent[];overhead:string[]};
 const segmentMeta=[
   {name:"Clinics",icon:Building2,tone:"blue"},
@@ -26,27 +26,21 @@ const defaultModel:EditableModel={
   segments:[
     {
       services:requiredServices,
-      activity:["Scheduled visits","Completed visits","Cancellations","No-shows","Evaluations","Follow-ups","Billable units","Productive hours","Available visit slots"],
       revenue:["Commercial insurers","Medicaid","Patient / family","Self-pay"],
-      revenueFlow:["Gross charges","Contractual adjustments","Expected reimbursement","Patient responsibility","Net revenue","Cash collected","Outstanding A/R","Denials / write-offs","Refunds / credit balances"],
       labor:["Clinician wages / salary","Payroll taxes","Benefits","Contract / traveler labor","Treatment time","Documentation / prep","PTO / nonproductive","Overtime / differentials"],
       expenses:["Clinical supplies","Equipment rental / maintenance","Laundry / PPE","Merchant processing fees","Outsourced clinical services"],
       locationOverhead:["Rent / lease","CAM / property taxes","Utilities","Cleaning / waste","Front-desk / site administration","Local management","Local marketing","Telecom / internet","Security","Facility repairs","Leasehold amortization"],
     },
     {
       services:requiredServices,
-      activity:["Contracted hours","Scheduled hours","Delivered hours","Unfilled hours","Travel hours","Documentation / prep hours"],
       revenue:["School district / LEA","Individual school","Other education organization"],
-      revenueFlow:["Earned revenue","Unbilled revenue","Invoiced","Cash collected","Outstanding A/R","Deferred / unearned revenue","Credits / adjustments"],
       labor:["Clinician wages / salary","Payroll taxes","Benefits","Contract labor","Service hours","Travel time","Documentation / prep","PTO / nonproductive","Overtime / differentials"],
       expenses:["Mileage / travel reimbursement","School supplies","Contract-specific costs","District fees","Background checks / credentialing"],
       locationOverhead:["Contract administration","Scheduling / coordination","Local management","Telecom / IT","Local recruiting"],
     },
     {
       services:[...requiredServices,"Swim lessons","Other programs"],
-      activity:["Available spots","Enrolled participants","Scheduled sessions","Completed sessions","Cancellations / no-shows","Package redemptions","Pool / facility hours"],
       revenue:["Patient / family","School / community sponsor","Grant / scholarship fund"],
-      revenueFlow:["Single-session sales","Package sales","Earned / redeemed revenue","Cash collected","Outstanding balances","Discounts","Refunds","Deferred / unearned revenue"],
       labor:["Instructor / clinician wages","Payroll taxes","Benefits","Contract instructors","Program delivery","Setup / prep","PTO / nonproductive","Overtime / differentials"],
       expenses:["Program supplies","Pool / facility rental","Equipment rental / maintenance","Merchant processing fees","Program-specific vendors"],
       locationOverhead:["Program administration","Local management","Local marketing","Telecom / IT","Facility occupancy","Utilities / cleaning","Leasehold amortization"],
@@ -74,17 +68,13 @@ function loadModel():EditableModel{
         return {...parsed,overhead:clean(parsed.overhead),segments:parsed.segments.map((segment,index)=>{
           const migrated=clean(segment.services).map(service=>aliases[service]??service);
           const locationOverhead=Array.isArray(segment.locationOverhead)?clean(segment.locationOverhead):defaultModel.segments[index].locationOverhead;
-          const isLegacy=!Array.isArray(segment.activity)||!Array.isArray(segment.revenueFlow);
-          const merge=(current:string[]|undefined,recommended:string[])=>[...new Set([...(current?clean(current):[]),...(isLegacy?recommended:[])])];
           return {
             ...segment,
             services:[...new Set([...migrated,...requiredServices])],
-            activity:merge(segment.activity,defaultModel.segments[index].activity),
-            revenue:merge(segment.revenue,defaultModel.segments[index].revenue),
-            revenueFlow:merge(segment.revenueFlow,defaultModel.segments[index].revenueFlow),
-            labor:merge(segment.labor,defaultModel.segments[index].labor),
-            expenses:merge(segment.expenses,defaultModel.segments[index].expenses),
-            locationOverhead:merge(locationOverhead,defaultModel.segments[index].locationOverhead),
+            revenue:clean(segment.revenue),
+            labor:clean(segment.labor),
+            expenses:clean(segment.expenses),
+            locationOverhead,
           };
         })};
       }
@@ -130,9 +120,7 @@ export function CheshireProject(){
     <div className="map-frame"><div className="tree-columns">{segmentMeta.map((segment,index)=>{const content=model.segments[index];return <article className={`tree-card ${segment.tone} ${active&&active!==segment.name?"is-muted":""} ${active===segment.name?"is-active":""}`} key={segment.name}>
       <button className="tree-card-header" type="button" aria-pressed={active===segment.name} onClick={()=>setActive(active===segment.name?null:segment.name)}><segment.icon size={21} aria-hidden="true"/><div className="segment-title"><h2>{segment.name}</h2></div></button>
       <EditableRow label="Service" tone="service" items={content.services} onChange={items=>updateSegment(index,"services",items)}/>
-      <EditableRow label="Volume & Capacity" tone="activity" items={content.activity} onChange={items=>updateSegment(index,"activity",items)}/>
       <EditableRow label="Payer" tone="revenue-source" items={content.revenue} onChange={items=>updateSegment(index,"revenue",items)}/>
-      <EditableRow label="Revenue Flow" tone="revenue-flow" items={content.revenueFlow} onChange={items=>updateSegment(index,"revenueFlow",items)}/>
       <EditableRow label="Expense · Labor" tone="cost" items={content.labor} onChange={items=>updateSegment(index,"labor",items)}/>
       <EditableRow label="Expense · Operations" tone="cost" items={content.expenses} onChange={items=>updateSegment(index,"expenses",items)}/>
       <EditableRow label="Location Overhead" tone="location-overhead" items={content.locationOverhead} onChange={items=>updateSegment(index,"locationOverhead",items)}/>

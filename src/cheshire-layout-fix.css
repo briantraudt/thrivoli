@@ -311,9 +311,7 @@
 .editable-chip{box-shadow:none}
 .editable-chip input::placeholder{color:#7d8985}
 .tree-row.service .cell-add{color:#315f7d;background:#fff;border-color:#426f8b}
-.tree-row.activity .cell-add{color:#315f7d;background:#fff;border-color:#426f8b}
 .tree-row.revenue-source .cell-add{color:#365f48;background:#fff;border-color:#4c775d}
-.tree-row.revenue-flow .cell-add{color:#365f48;background:#fff;border-color:#4c775d}
 .tree-row.cost .cell-add{color:#82443e;background:#fff;border-color:#9b554d}
 .shared-costs .cell-add{color:#76591d;background:#fff;border-color:#94722c}
 
@@ -352,9 +350,7 @@
 /* Keep a clear touch-safe gap below mobile Add controls. */
 @media(max-width:800px){
   .tree-row.service>.tree-tags,
-  .tree-row.activity>.tree-tags,
   .tree-row.revenue-source>.tree-tags,
-  .tree-row.revenue-flow>.tree-tags,
   .tree-row.cost>.tree-tags,
   .tree-row.location-overhead>.tree-tags{margin-top:42px}
   .overhead-columns{padding-top:52px}
@@ -405,30 +401,20 @@
 .tree-row.location-overhead .cell-add:hover{color:#fff;background:#94722c}
 
 @media(min-width:801px){
-  .tree-columns{grid-template-rows:48px repeat(7,auto);align-items:stretch}
-  .tree-card{grid-row:1 / span 8;grid-template-rows:subgrid;align-self:stretch}
+  .tree-columns{grid-template-rows:48px repeat(5,auto);align-items:stretch}
+  .tree-card{grid-row:1 / span 6;grid-template-rows:subgrid;align-self:stretch}
   .tree-row,
   .tree-row.service,
-  .tree-row.activity,
   .tree-row.revenue-source,
-  .tree-row.revenue-flow,
   .tree-row.cost,
   .tree-row.location-overhead{min-height:0;padding-bottom:14px}
 }
 
 /* Soft semantic fields make each cell distinct without overpowering the content. */
 .tree-row.service{background:#f2f7fb}
-.tree-row.activity{background:#f2f7fb}
 .tree-row.revenue-source,
-.tree-row.revenue-flow,
 .orange .tree-row.revenue-source,
-.orange .tree-row.revenue-flow,
-.green .tree-row.revenue-source,
-.green .tree-row.revenue-flow{background:#f2f8f4}
-.tree-row.activity .section-type{color:#315f7d}
-.tree-row.activity .tree-tags span{color:#315f7d;background:#fff;border:1.5px solid #426f8b}
-.tree-row.revenue-flow .section-type{color:#365f48}
-.tree-row.revenue-flow .tree-tags span{color:#365f48;background:#fff;border:1.5px solid #4c775d}
+.green .tree-row.revenue-source{background:#f2f8f4}
 .tree-row.cost{background:#fcf5f4}
 .tree-row.location-overhead,
 .shared-costs{background:#fffaf0}
