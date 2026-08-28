@@ -372,3 +372,33 @@
 .map-frame .overhead-cell-2,
 .map-frame .overhead-cell-3{border:0!important}
 @media(max-width:800px){.map-frame{margin-top:0}}
+
+/* Separate directly traceable site overhead from centralized shared overhead. */
+.tree-row.location-overhead{
+  color:#17242b;
+  background:#fffdf7;
+  border-left:5px solid #b98524;
+}
+.tree-row.location-overhead .section-type{color:#805a16}
+.tree-row.location-overhead .tree-tags span{
+  color:#76591d;
+  background:#fff;
+  border:1.5px solid #c49a45;
+}
+.tree-row.location-overhead .tree-tags span:hover{
+  color:#644913;
+  background:#fcf9f1;
+  border-color:#94722c;
+}
+.tree-row.location-overhead .cell-add{
+  color:#76591d;
+  background:#fff;
+  border-color:#94722c;
+}
+.tree-row.location-overhead .cell-add:hover{color:#fff;background:#94722c}
+
+@media(min-width:801px){
+  .tree-columns{grid-template-rows:48px repeat(5,auto)}
+  .tree-card{grid-row:1 / span 6;grid-template-rows:subgrid}
+  .tree-row.location-overhead{min-height:104px}
+}

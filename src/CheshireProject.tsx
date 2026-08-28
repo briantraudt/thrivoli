@@ -5,7 +5,7 @@ import "./cheshire-project.css";
 import "./cheshire-workflow.css";
 import "./cheshire-layout-fix.css";
 
-type SegmentContent={services:string[];revenue:string[];labor:string[];expenses:string[]};
+type SegmentContent={services:string[];revenue:string[];labor:string[];expenses:string[];locationOverhead:string[]};
 type EditableModel={segments:SegmentContent[];overhead:string[]};
 const segmentMeta=[
   {name:"Clinics",icon:Building2,tone:"blue"},
@@ -29,18 +29,21 @@ const defaultModel:EditableModel={
       revenue:["Commercial insurers","Medicaid","Copay / coinsurance","Deductible","Self-pay"],
       labor:["Wages / salary","Payroll taxes","Benefits","Contract labor","Treatment time","Documentation / prep","PTO / nonproductive"],
       expenses:["Rent","Utilities","Cleaning / waste","Clinical supplies","Practice Pro / ClaimMD","Equipment / depreciation","Repairs & maintenance"],
+      locationOverhead:["Front-desk / site administration","Local marketing","Telecom / internet","Leasehold amortization"],
     },
     {
       services:requiredServices,
       revenue:["School district / LEA","Individual school","Other education organization"],
       labor:["Wages / salary","Payroll taxes","Benefits","Contract labor","Service hours","Travel time","Documentation / prep"],
       expenses:["Mileage / travel","School supplies","Contract-specific costs","District fees"],
+      locationOverhead:["Contract administration","Scheduling / coordination","Local management","Telecom / IT"],
     },
     {
       services:[...requiredServices,"Swim lessons","Other programs"],
       revenue:["Patient / family","Program participant","Third-party sponsor · if applicable"],
       labor:["Wages / salary","Payroll taxes","Benefits","Contract instructors","Program delivery","Setup / prep"],
       expenses:["Program supplies","Pool / facility cost","Equipment / depreciation","Program marketing","Merchant processing fees"],
+      locationOverhead:["Program administration","Local marketing","Telecom / IT","Facility overhead"],
     },
   ],
   overhead:["Administrative labor","Management leadership","QuickBooks / ADP","Insurance & professional fees","Corporate G&A"],
@@ -62,9 +65,10 @@ function loadModel():EditableModel{
           "DMI / Intensives":"Dynamic Movement Intervention",
         };
         const clean=(items:string[])=>items.map(item=>item==="New item"?"":item);
-        return {...parsed,overhead:clean(parsed.overhead),segments:parsed.segments.map(segment=>{
+        return {...parsed,overhead:clean(parsed.overhead),segments:parsed.segments.map((segment,index)=>{
           const migrated=clean(segment.services).map(service=>aliases[service]??service);
-          return {...segment,services:[...new Set([...migrated,...requiredServices])],revenue:clean(segment.revenue),labor:clean(segment.labor),expenses:clean(segment.expenses)};
+          const locationOverhead=Array.isArray(segment.locationOverhead)?clean(segment.locationOverhead):defaultModel.segments[index].locationOverhead;
+          return {...segment,services:[...new Set([...migrated,...requiredServices])],revenue:clean(segment.revenue),labor:clean(segment.labor),expenses:clean(segment.expenses),locationOverhead};
         })};
       }
     }
@@ -112,7 +116,8 @@ export function CheshireProject(){
       <EditableRow label="Payer" tone="revenue-source" items={content.revenue} onChange={items=>updateSegment(index,"revenue",items)}/>
       <EditableRow label="Expense · Labor" tone="cost" items={content.labor} onChange={items=>updateSegment(index,"labor",items)}/>
       <EditableRow label="Expense · Operations" tone="cost" items={content.expenses} onChange={items=>updateSegment(index,"expenses",items)}/>
+      <EditableRow label="Location Overhead" tone="location-overhead" items={content.locationOverhead} onChange={items=>updateSegment(index,"locationOverhead",items)}/>
     </article>})}</div>
-    <section className="tree-bottom"><div className="shared-costs"><h2>Overhead</h2><div className="overhead-columns">{overheadColumns.map((items,column)=><div className={"overhead-cell overhead-cell-"+(column+1)} key={column}><EditableTags items={items} onChange={next=>updateOverheadColumn(column,next)} label="Overhead"/></div>)}</div><button className="cell-add" type="button" onClick={()=>setModel(current=>({...current,overhead:[...current.overhead,""]}))}>+ Add</button></div></section></div>
+    <section className="tree-bottom"><div className="shared-costs"><h2>Centralized Shared Overhead</h2><div className="overhead-columns">{overheadColumns.map((items,column)=><div className={"overhead-cell overhead-cell-"+(column+1)} key={column}><EditableTags items={items} onChange={next=>updateOverheadColumn(column,next)} label="Centralized Shared Overhead"/></div>)}</div><button className="cell-add" type="button" onClick={()=>setModel(current=>({...current,overhead:[...current.overhead,""]}))}>+ Add</button></div></section></div>
   </section></main>
 }
