@@ -266,3 +266,20 @@
 .tree-legend .expense-key:before{background:#c44d43}
 .tree-legend .overhead-key:before{background:#c28a22}
 .editable-chip input:focus{background:#fff;box-shadow:inset 0 0 0 2px #2474b5}
+
+/* High-contrast data chips on a calm report surface. */
+.tree-row.service .tree-tags span{color:#fff;background:#245f87;border-color:#245f87}
+.tree-row.revenue-source .tree-tags span{color:#fff;background:#356f50;border-color:#356f50}
+.tree-row.cost .tree-tags span{color:#fff;background:#91443d;border-color:#91443d}
+.shared-costs .tree-tags span{color:#fff;background:#80601e;border-color:#80601e}
+.tree-row.service .tree-tags span:hover{background:#174b6f;border-color:#174b6f}
+.tree-row.revenue-source .tree-tags span:hover{background:#285a3f;border-color:#285a3f}
+.tree-row.cost .tree-tags span:hover{background:#75332e;border-color:#75332e}
+.shared-costs .tree-tags span:hover{background:#674b12;border-color:#674b12}
+.editable-chip input{color:inherit}
+.editable-chip input::placeholder{color:rgba(255,255,255,.72)}
+.editable-chip input:focus{color:#17242b;background:#fff;box-shadow:inset 0 0 0 2px currentColor}
+.tree-row.service .cell-add{color:#fff;background:#245f87}
+.tree-row.revenue-source .cell-add{color:#fff;background:#356f50}
+.tree-row.cost .cell-add{color:#fff;background:#91443d}
+.shared-costs .cell-add{color:#fff;background:#80601e}
