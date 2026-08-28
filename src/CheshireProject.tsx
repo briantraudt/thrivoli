@@ -106,13 +106,13 @@ export function CheshireProject(){
       <div className="tree-root"><strong>Profitability Map</strong></div>
       <div className="tree-legend" aria-label="Color legend"><span className="revenue-key">Revenue</span><span className="expense-key">Expenses</span><span className="overhead-key">Overhead</span></div>
     </div>
-    <div className="tree-columns">{segmentMeta.map((segment,index)=>{const content=model.segments[index];return <article className={`tree-card ${segment.tone} ${active&&active!==segment.name?"is-muted":""} ${active===segment.name?"is-active":""}`} key={segment.name}>
+    <div className="map-frame"><div className="tree-columns">{segmentMeta.map((segment,index)=>{const content=model.segments[index];return <article className={`tree-card ${segment.tone} ${active&&active!==segment.name?"is-muted":""} ${active===segment.name?"is-active":""}`} key={segment.name}>
       <button className="tree-card-header" type="button" aria-pressed={active===segment.name} onClick={()=>setActive(active===segment.name?null:segment.name)}><segment.icon size={21} aria-hidden="true"/><div className="segment-title"><h2>{segment.name}</h2></div></button>
       <EditableRow label="Service" tone="service" items={content.services} onChange={items=>updateSegment(index,"services",items)}/>
       <EditableRow label="Payer" tone="revenue-source" items={content.revenue} onChange={items=>updateSegment(index,"revenue",items)}/>
       <EditableRow label="Expense · Labor" tone="cost" items={content.labor} onChange={items=>updateSegment(index,"labor",items)}/>
       <EditableRow label="Expense · Operations" tone="cost" items={content.expenses} onChange={items=>updateSegment(index,"expenses",items)}/>
     </article>})}</div>
-    <section className="tree-bottom"><div className="shared-costs"><h2>Overhead</h2><div className="overhead-columns">{overheadColumns.map((items,column)=><div className={"overhead-cell overhead-cell-"+(column+1)} key={column}><EditableTags items={items} onChange={next=>updateOverheadColumn(column,next)} label="Overhead"/></div>)}</div><button className="cell-add" type="button" onClick={()=>setModel(current=>({...current,overhead:[...current.overhead,""]}))}>+ Add</button></div></section>
+    <section className="tree-bottom"><div className="shared-costs"><h2>Overhead</h2><div className="overhead-columns">{overheadColumns.map((items,column)=><div className={"overhead-cell overhead-cell-"+(column+1)} key={column}><EditableTags items={items} onChange={next=>updateOverheadColumn(column,next)} label="Overhead"/></div>)}</div><button className="cell-add" type="button" onClick={()=>setModel(current=>({...current,overhead:[...current.overhead,""]}))}>+ Add</button></div></section></div>
   </section></main>
 }

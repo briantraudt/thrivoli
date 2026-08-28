@@ -347,17 +347,28 @@
   .tree-card h2{font-size:19px}
 }
 
-/* Overhead uses the same border weight as the app with no internal dividers. */
-.shared-costs{border:1px solid #c28a22;border-top-width:1px;border-bottom-width:1px}
-.overhead-cell,.overhead-cell-1,.overhead-cell-2,.overhead-cell-3{border:0}
-
 /* Keep a clear touch-safe gap below mobile Add controls. */
 @media(max-width:800px){
   .tree-row>.tree-tags{margin-top:42px}
   .overhead-columns{padding-top:52px}
 }
 
-/* One continuous border treatment around the complete overhead box. */
-.tree-bottom{border:0}
-.shared-costs{border:1px solid #94722c!important;box-shadow:none}
-.overhead-columns,.overhead-cell,.overhead-cell-1,.overhead-cell-2,.overhead-cell-3{border:0!important}
+/* One continuous green frame around the entire profitability map. */
+.map-frame{
+  margin-top:4px;
+  border:1px solid #2f6f4e;
+  background:#fff;
+}
+.map-frame>.tree-columns{margin-top:0}
+.map-frame .tree-bottom{border:0}
+.map-frame .shared-costs{
+  border:0!important;
+  border-top:1px solid #2f6f4e!important;
+  box-shadow:none;
+}
+.map-frame .overhead-columns,
+.map-frame .overhead-cell,
+.map-frame .overhead-cell-1,
+.map-frame .overhead-cell-2,
+.map-frame .overhead-cell-3{border:0!important}
+@media(max-width:800px){.map-frame{margin-top:0}}
