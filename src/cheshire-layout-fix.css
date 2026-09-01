@@ -124,9 +124,10 @@
 @media(max-width:800px){.overhead-cell{border-left:0;border-right:0}}
 
 /* Distribute shared overhead items evenly across the full-width cell. */
-.overhead-columns{display:flex;align-items:flex-start;justify-content:space-between;gap:18px;padding:38px 18px 18px}
+.overhead-columns{display:flex;flex-wrap:wrap;align-items:flex-start;justify-content:flex-start;gap:10px 18px;padding:38px 18px 18px}
 .overhead-cell,.shared-costs .overhead-cell .tree-tags{display:contents}
-.shared-costs .editable-chip{flex:0 1 auto}
+.shared-costs .editable-chip{flex:0 0 auto;max-width:100%}
+.shared-costs .editable-chip input{box-sizing:border-box}
 @media(max-width:800px){.overhead-columns{display:flex;flex-wrap:wrap;justify-content:flex-start;padding:38px 14px 18px}.overhead-cell,.shared-costs .overhead-cell .tree-tags{display:contents}}
 
 /* Compact map title and legend into one toolbar so the report starts higher. */
