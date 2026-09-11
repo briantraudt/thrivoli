@@ -20,7 +20,7 @@ const cheshireDataSources = [
       "Clinic visits and units",
       "School hours",
       "Productivity percentage",
-      "Monthly and quarterly totals",
+      "Daily, weekly, monthly, quarterly, and annual totals",
     ],
   },
   {
@@ -80,6 +80,26 @@ const cheshireDataSources = [
       "Patient payment",
       "Adjustments and write-offs",
       "Claim balance",
+      "Financial trend period",
+      "Codes billed",
+      "Average reimbursement",
+      "Charge summary",
+    ],
+  },
+  {
+    name: "Appointment & facility reports",
+    cadence: "Weekly / monthly",
+    status: "needed",
+    fields: [
+      "Service date",
+      "Location or facility",
+      "Therapist and discipline",
+      "Appointments scheduled",
+      "Completed visits",
+      "Cancellations and no-shows",
+      "Available capacity",
+      "Facility summary",
+      "Therapist summary",
     ],
   },
   {
@@ -132,6 +152,7 @@ const cheshireDataSources = [
     status: "needed",
     fields: [
       "Therapist",
+      "Employee role or department",
       "Location allocation",
       "Salary or hourly wage",
       "FTE or paid hours",
@@ -140,6 +161,7 @@ const cheshireDataSources = [
       "Paid time off",
       "Bonuses",
       "Effective dates",
+      "Office, billing, and authorization allocation",
     ],
   },
   {
@@ -155,6 +177,9 @@ const cheshireDataSources = [
       "Direct or shared classification",
       "Allocation rule",
       "Recurring or one-time",
+      "Budget or forecast amount",
+      "Growth and scenario assumptions",
+      "Planned staffing and capacity",
     ],
   },
 ] as const;
@@ -379,9 +404,9 @@ export function CheshireShell({ children }: { children: ReactNode }) {
           <header>
             <div>
               <span id="cfz-source-title">Data sources</span>
-              <small>6 of 10 complete</small>
+              <small>6 of 11 complete</small>
             </div>
-            <b>60%</b>
+            <b>55%</b>
           </header>
           <div className="cfz-source-progress" aria-hidden="true">
             <i />
@@ -439,34 +464,42 @@ export function CheshireDashboard() {
       visits: 118,
       units: 362,
       payments: "$10,793.41",
-      share: 69.7,
     },
-    { name: "Pool", visits: 34, units: 84, payments: "$2,883.05", share: 18.6 },
+    { name: "Pool", visits: 34, units: 84, payments: "$2,883.05" },
     {
       name: "Meriden",
       visits: 37,
       units: 128,
       payments: "$1,801.09*",
-      share: 11.6,
     },
   ];
   return (
     <main className="cfz-dashboard">
       <section className="cfz-metrics">
         <article>
-          <span>Clinic payments</span>
+          <span>Clinic income</span>
           <strong>$15,477.55</strong>
           <small>Insurance + patient payments</small>
         </article>
         <article>
-          <span>Clinic visits</span>
-          <strong>189</strong>
-          <small>Across 3 reporting locations</small>
+          <span>School income</span>
+          <strong className="cfz-data-pending">Rate needed</strong>
+          <small className="pending">171.5 billed hours received</small>
         </article>
         <article>
-          <span>School hours</span>
-          <strong>171.5</strong>
-          <small className="pending">Rate confirmation pending</small>
+          <span>Location overhead</span>
+          <strong className="cfz-data-pending">Awaiting data</strong>
+          <small className="pending">Local + allocated central costs</small>
+        </article>
+        <article>
+          <span>Operating margin</span>
+          <strong className="cfz-data-pending">Awaiting costs</strong>
+          <small className="pending">Income less overhead and labor</small>
+        </article>
+        <article>
+          <span>Average reimbursement</span>
+          <strong>$81.89</strong>
+          <small>Per clinic visit</small>
         </article>
         <article>
           <span>Quarterly productivity</span>
@@ -478,8 +511,8 @@ export function CheshireDashboard() {
         <article className="cfz-panel">
           <header>
             <div>
-              <p className="cfz-eyebrow">Pilot therapist</p>
-              <h2>Revenue and activity mix</h2>
+              <p className="cfz-eyebrow">Therapist detail</p>
+              <h2>Therapist income and activity</h2>
             </div>
             <span>Karissa Laramie · OTR/L</span>
           </header>
@@ -518,6 +551,10 @@ export function CheshireDashboard() {
           </div>
           <div className="cfz-unit-strip">
             <div>
+              <span>Clinic visits</span>
+              <strong>189</strong>
+            </div>
+            <div>
               <span>Clinic units billed</span>
               <strong>574</strong>
             </div>
@@ -531,40 +568,40 @@ export function CheshireDashboard() {
             </div>
           </div>
         </article>
-      </section>
-      <section className="cfz-panel cfz-locations">
-        <header>
-          <div>
-            <p className="cfz-eyebrow">Clinic activity</p>
-            <h2>Performance by location</h2>
-          </div>
-          <span>Pilot therapist only</span>
-        </header>
-        <div className="cfz-table">
-          <div className="cfz-row head">
-            <span>Location</span>
-            <span>Visits</span>
-            <span>Units</span>
-            <span>Payments</span>
-            <span>Share of payments</span>
-          </div>
-          {locationRows.map((row) => (
-            <div className="cfz-row" key={row.name}>
-              <strong>{row.name}</strong>
-              <span>{row.visits}</span>
-              <span>{row.units}</span>
-              <span>{row.payments}</span>
-              <span>
-                <i style={{ width: `${row.share}%` }} />
-                {row.share}%
-              </span>
+        <article className="cfz-panel cfz-locations">
+          <header>
+            <div>
+              <p className="cfz-eyebrow">Location economics</p>
+              <h2>Income, overhead, and margin</h2>
             </div>
-          ))}
-        </div>
-        <p className="cfz-note">
-          *Meriden payment total is awaiting confirmation from the
-          location-level report.
-        </p>
+            <span>Mar 7 – May 23, 2026</span>
+          </header>
+          <div className="cfz-table">
+            <div className="cfz-row head">
+              <span>Location</span>
+              <span>Income</span>
+              <span>Overhead</span>
+              <span>Margin</span>
+            </div>
+            {locationRows.map((row) => (
+              <div className="cfz-row" key={row.name}>
+                <strong>
+                  {row.name}
+                  <small>
+                    Karissa Laramie · {row.visits} visits · {row.units} units
+                  </small>
+                </strong>
+                <span>{row.payments}</span>
+                <span className="cfz-awaiting">Awaiting data</span>
+                <span className="cfz-awaiting">Awaiting data</span>
+              </div>
+            ))}
+          </div>
+          <p className="cfz-note">
+            *Meriden payment total is awaiting confirmation from the
+            location-level report.
+          </p>
+        </article>
       </section>
     </main>
   );
