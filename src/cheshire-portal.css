@@ -202,6 +202,7 @@
   top: 0;
   z-index: 30;
   width: 330px;
+  max-height: calc(100vh - 32px);
   padding: 17px;
   color: #1c2b33;
   visibility: hidden;
@@ -211,11 +212,16 @@
   border: 1px solid #dce5e1;
   border-radius: 12px;
   box-shadow: 0 16px 38px rgba(6, 43, 37, 0.18);
+  overflow-y: auto;
   transform: translateX(-4px);
   transition:
     opacity 0.14s ease,
     transform 0.14s ease,
     visibility 0.14s;
+}
+.cfz-source-item:nth-last-child(-n + 4) .cfz-source-detail {
+  top: auto;
+  bottom: 0;
 }
 .cfz-source-item:hover .cfz-source-detail,
 .cfz-source-item:focus-within .cfz-source-detail {
