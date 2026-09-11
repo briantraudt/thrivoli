@@ -8,6 +8,7 @@ import {
 import { screenByPath, screens } from "./data";
 import { StediEligibility } from "./stedi-eligibility";
 import { CheshireProject, PublicHome } from "./CheshireProject";
+import { CheshireDashboard, CheshireLogin, CheshireMapPage, CheshireProtected, CheshireShell } from "./CheshirePortal";
 import type { Metric, ScreenDefinition, Tone } from "./types";
 
 const nav = [
@@ -361,7 +362,9 @@ function Shell() {
 export default function App() {
   return <Routes>
     <Route path="/" element={<PublicHome/>}/>
-    <Route path="/cheshire" element={<CheshireProject/>}/>
+    <Route path="/cheshire" element={<CheshireLogin/>}/>
+    <Route path="/cheshire/dashboard" element={<CheshireProtected><CheshireShell><CheshireDashboard/></CheshireShell></CheshireProtected>}/>
+    <Route path="/cheshire/map" element={<CheshireProtected><CheshireShell><CheshireMapPage><CheshireProject/></CheshireMapPage></CheshireShell></CheshireProtected>}/>
     <Route path="*" element={<PublicHome/>}/>
   </Routes>;
 }
