@@ -4,11 +4,12 @@
   background: #efece5;
 }
 .cfz-header {
-  height: 74px;
+  height: 68px;
   padding: 0 clamp(20px, 4vw, 58px);
-  display: flex;
+  display: grid;
+  grid-template-columns: minmax(210px, 1fr) auto minmax(210px, 1fr);
   align-items: center;
-  justify-content: space-between;
+  gap: 28px;
   background: #fff;
   border-bottom: 1px solid #e5e0d8;
 }
@@ -50,6 +51,7 @@
   font-size: 12px;
 }
 .cfz-header > button {
+  justify-self: end;
   padding: 9px 13px;
   color: #42545c;
   background: #fff;
@@ -57,13 +59,11 @@
   border-radius: 8px;
 }
 .cfz-nav {
-  height: 55px;
-  padding: 0 clamp(20px, 4vw, 58px);
+  align-self: stretch;
   display: flex;
-  align-items: end;
-  gap: 28px;
-  background: #fff;
-  border-bottom: 1px solid #e5e0d8;
+  align-items: center;
+  justify-content: center;
+  gap: 32px;
 }
 .cfz-nav a {
   height: 100%;
@@ -249,7 +249,7 @@
 .cfz-dashboard {
   width: min(1420px, 100%);
   margin: auto;
-  padding: 34px clamp(20px, 4vw, 58px) 50px;
+  padding: 24px clamp(20px, 4vw, 58px) 50px;
 }
 .cfz-page-heading {
   display: flex;
@@ -261,14 +261,14 @@
 .cfz-page-heading h1,
 .cfz-map-page > header h1 {
   margin: 0;
-  font-size: clamp(30px, 3.4vw, 46px);
+  font-size: clamp(28px, 3vw, 40px);
   line-height: 1.05;
   letter-spacing: -0.035em;
 }
 .cfz-page-heading > div:first-child > p:last-child,
 .cfz-map-page > header > p:last-child {
   max-width: 680px;
-  margin: 10px 0 0;
+  margin: 6px 0 0;
   color: #6b7a82;
   font-size: 16px;
   line-height: 1.5;
@@ -605,17 +605,21 @@
     height: auto;
     padding-top: 14px;
     padding-bottom: 14px;
+    grid-template-columns: 1fr auto;
+    gap: 10px 16px;
   }
-  .cfz-brand small,
+  .cfz-brand small {
+    display: none;
+  }
   .cfz-header button {
-    font-size: 0;
-  }
-  .cfz-header button svg {
-    width: 18px;
+    font-size: 13px;
   }
   .cfz-nav {
+    grid-column: 1 / -1;
+    grid-row: 2;
     height: 52px;
-    gap: 20px;
+    justify-content: flex-start;
+    gap: 24px;
     overflow-x: auto;
   }
   .cfz-nav a {

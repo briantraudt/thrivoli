@@ -220,12 +220,12 @@ export function CheshireShell({ children }: { children: ReactNode }) {
             <small>Cheshire Fitness Zone</small>
           </div>
         </NavLink>
+        <nav className="cfz-nav" aria-label="Cheshire portal">
+          <NavLink to="/cheshire/dashboard">Dashboard</NavLink>
+          <NavLink to="/cheshire/map">Profitability map</NavLink>
+        </nav>
         <button onClick={signOut}>Sign out</button>
       </header>
-      <nav className="cfz-nav" aria-label="Cheshire portal">
-        <NavLink to="/cheshire/dashboard">Dashboard</NavLink>
-        <NavLink to="/cheshire/map">Profitability map</NavLink>
-      </nav>
       {children}
     </div>
   );
@@ -253,12 +253,8 @@ export function CheshireDashboard() {
     <main className="cfz-dashboard">
       <header className="cfz-page-heading">
         <div>
-          <p className="cfz-eyebrow">Executive dashboard</p>
           <h1>Business performance</h1>
-          <p>
-            A single view of revenue, profitability, capacity, and data
-            readiness across Cheshire Fitness Zone.
-          </p>
+          <p>Revenue, productivity, and operating performance.</p>
         </div>
         <div className="cfz-period">
           <span>Reporting period</span>
