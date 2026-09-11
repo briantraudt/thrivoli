@@ -213,23 +213,14 @@ export function CheshireShell({ children }: { children: ReactNode }) {
   return (
     <div className="cfz-shell">
       <aside className="cfz-sidebar">
-        <NavLink to="/cheshire/dashboard" className="cfz-brand">
-          <span>t</span>
-          <div>
-            <strong>thrivoli</strong>
-            <small>Client workspace</small>
-          </div>
+        <NavLink to="/cheshire/dashboard" className="cfz-sidebar-title">
+          Cheshire
         </NavLink>
-        <div className="cfz-client-name">
-          <span>Workspace</span>
-          <strong>Cheshire Fitness Zone</strong>
-        </div>
         <nav className="cfz-nav" aria-label="Cheshire portal">
           <NavLink to="/cheshire/dashboard">Dashboard</NavLink>
           <NavLink to="/cheshire/map">Profitability map</NavLink>
         </nav>
         <div className="cfz-sidebar-footer">
-          <span>Private client dashboard</span>
           <button onClick={signOut}>Sign out</button>
         </div>
       </aside>
