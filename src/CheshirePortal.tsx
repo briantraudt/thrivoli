@@ -473,106 +473,149 @@ export function CheshireDashboard() {
       payments: "$1,801.09*",
     },
   ];
+  const monthlyPerformance = [
+    { month: "March", productivity: 96, schoolHours: 70.75 },
+    { month: "April", productivity: 125, schoolHours: 51.25 },
+    { month: "May", productivity: 113, schoolHours: 49.5 },
+  ];
   return (
     <main className="cfz-dashboard">
-      <section className="cfz-metrics">
-        <article>
-          <span>Clinic income</span>
-          <strong>$15,477.55</strong>
-          <small>Insurance + patient payments</small>
+      <header className="cfz-dashboard-heading">
+        <div>
+          <p className="cfz-eyebrow">Executive overview</p>
+          <h1>Business performance</h1>
+        </div>
+        <div className="cfz-dashboard-period">
+          <span>Reporting period</span>
+          <strong>Mar 7 – May 23, 2026</strong>
+          <small>Quarterly pilot · Karissa Laramie</small>
+        </div>
+      </header>
+
+      <section className="cfz-executive-summary">
+        <article className="cfz-income-hero">
+          <div>
+            <span>Captured clinic income</span>
+            <strong>$15,477.55</strong>
+            <small>$14,064.11 insurance · $1,413.44 private pay</small>
+          </div>
+          <div className="cfz-income-composition" aria-label="Income mix">
+            <i>
+              <b style={{ width: "91%" }} />
+            </i>
+            <span>
+              <strong>91%</strong> insurance
+            </span>
+            <span>
+              <strong>9%</strong> private pay
+            </span>
+          </div>
         </article>
-        <article>
-          <span>School income</span>
-          <strong className="cfz-data-pending">Rate needed</strong>
-          <small className="pending">171.5 billed hours received</small>
-        </article>
-        <article>
-          <span>Location overhead</span>
-          <strong className="cfz-data-pending">Awaiting data</strong>
-          <small className="pending">Local + allocated central costs</small>
-        </article>
-        <article>
-          <span>Operating margin</span>
-          <strong className="cfz-data-pending">Awaiting costs</strong>
-          <small className="pending">Income less overhead and labor</small>
-        </article>
-        <article>
-          <span>Average reimbursement</span>
-          <strong>$81.89</strong>
-          <small>Per clinic visit</small>
-        </article>
-        <article>
-          <span>Quarterly productivity</span>
-          <strong>111%</strong>
-          <small>$500 quarterly bonus earned</small>
-        </article>
+        <div className="cfz-scorecard">
+          <article>
+            <span>Clinic visits</span>
+            <strong>189</strong>
+            <small>Across 3 locations</small>
+          </article>
+          <article>
+            <span>Units billed</span>
+            <strong>574</strong>
+            <small>3.04 per visit</small>
+          </article>
+          <article>
+            <span>Avg. reimbursement</span>
+            <strong>$81.89</strong>
+            <small>Per clinic visit</small>
+          </article>
+          <article>
+            <span>Productivity</span>
+            <strong>111%</strong>
+            <small>$500 quarterly bonus</small>
+          </article>
+        </div>
       </section>
+
       <section className="cfz-dashboard-grid">
-        <article className="cfz-panel">
+        <article className="cfz-panel cfz-trends">
           <header>
             <div>
-              <p className="cfz-eyebrow">Therapist detail</p>
-              <h2>Therapist income and activity</h2>
+              <p className="cfz-eyebrow">Quarterly trend</p>
+              <h2>Productivity and school activity</h2>
             </div>
-            <span>Karissa Laramie · OTR/L</span>
+            <span>Monthly view</span>
           </header>
-          <div className="cfz-mix">
-            <div className="cfz-donut">
-              <span>
-                <strong>91%</strong>insurance
-              </span>
-            </div>
-            <div className="cfz-mix-list">
-              <div>
-                <i className="insurance" />
-                <span>
-                  <strong>$14,064.11</strong>
-                  <small>Insurance payments</small>
-                </span>
-                <b>91%</b>
-              </div>
-              <div>
-                <i className="patient" />
-                <span>
-                  <strong>$1,413.44</strong>
-                  <small>Patient payments</small>
-                </span>
-                <b>9%</b>
-              </div>
-              <div>
-                <i className="bonus" />
-                <span>
-                  <strong>$550.00</strong>
-                  <small>Bonus expense</small>
-                </span>
-                <b>3.6% of payments</b>
-              </div>
-            </div>
+          <div className="cfz-trend-legend">
+            <span>
+              <i /> Productivity
+            </span>
+            <span>
+              <i /> School hours
+            </span>
           </div>
-          <div className="cfz-unit-strip">
-            <div>
-              <span>Clinic visits</span>
-              <strong>189</strong>
-            </div>
-            <div>
-              <span>Clinic units billed</span>
-              <strong>574</strong>
-            </div>
-            <div>
-              <span>Average units per visit</span>
-              <strong>3.04</strong>
-            </div>
-            <div>
-              <span>Payments per visit</span>
-              <strong>$81.89</strong>
-            </div>
+          <div className="cfz-trend-chart">
+            {monthlyPerformance.map((item) => (
+              <div className="cfz-trend-month" key={item.month}>
+                <div className="cfz-bar-pair">
+                  <i
+                    className="productivity"
+                    style={{ height: `${(item.productivity / 130) * 100}%` }}
+                  >
+                    <b>{item.productivity}%</b>
+                  </i>
+                  <i
+                    className="school"
+                    style={{ height: `${(item.schoolHours / 75) * 100}%` }}
+                  >
+                    <b>{item.schoolHours}</b>
+                  </i>
+                </div>
+                <strong>{item.month}</strong>
+              </div>
+            ))}
+          </div>
+          <div className="cfz-trend-footer">
+            <span>
+              <strong>171.5</strong> total school hours
+            </span>
+            <span className="pending">School income awaits contract rate</span>
           </div>
         </article>
+
+        <article className="cfz-panel cfz-profitability-status">
+          <header>
+            <div>
+              <p className="cfz-eyebrow">Profitability</p>
+              <h2>What completes the picture</h2>
+            </div>
+            <b>3 inputs needed</b>
+          </header>
+          <div className="cfz-profitability-list">
+            <div>
+              <span>School income</span>
+              <strong>Contract reimbursement rate</strong>
+            </div>
+            <div>
+              <span>Direct labor</span>
+              <strong>Wages, taxes, benefits, bonuses</strong>
+            </div>
+            <div>
+              <span>Location overhead</span>
+              <strong>Direct + shared operating costs</strong>
+            </div>
+          </div>
+          <footer>
+            Once connected, operating margin and break-even volume calculate by
+            location, therapist, and service.
+          </footer>
+        </article>
+      </section>
+
+      <section className="cfz-detail-grid">
         <article className="cfz-panel cfz-locations">
           <header>
             <div>
               <p className="cfz-eyebrow">Location economics</p>
-              <h2>Income, overhead, and margin</h2>
+              <h2>Location economics</h2>
             </div>
             <span>Mar 7 – May 23, 2026</span>
           </header>
@@ -601,6 +644,37 @@ export function CheshireDashboard() {
             *Meriden payment total is awaiting confirmation from the
             location-level report.
           </p>
+        </article>
+        <article className="cfz-panel cfz-therapist-summary">
+          <header>
+            <div>
+              <p className="cfz-eyebrow">Therapist summary</p>
+              <h2>Karissa Laramie</h2>
+            </div>
+            <span>OTR/L</span>
+          </header>
+          <div className="cfz-therapist-kpis">
+            <div>
+              <span>Clinic income</span>
+              <strong>$15,477.55</strong>
+            </div>
+            <div>
+              <span>School hours</span>
+              <strong>171.5</strong>
+            </div>
+            <div>
+              <span>Total bonus</span>
+              <strong>$550</strong>
+            </div>
+            <div>
+              <span>Payments / visit</span>
+              <strong>$81.89</strong>
+            </div>
+          </div>
+          <footer>
+            Labor cost and time allocation are awaiting the employment-cost
+            source.
+          </footer>
         </article>
       </section>
     </main>
