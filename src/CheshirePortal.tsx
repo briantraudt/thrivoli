@@ -452,26 +452,6 @@ export function CheshireDashboard() {
   ];
   return (
     <main className="cfz-dashboard">
-      <header className="cfz-page-heading">
-        <div>
-          <h1>Business performance</h1>
-          <p>Revenue, productivity, and operating performance.</p>
-        </div>
-        <div className="cfz-period">
-          <span>Reporting period</span>
-          <strong>Mar 7 – May 23, 2026</strong>
-        </div>
-      </header>
-      <aside className="cfz-coverage">
-        <div>
-          <strong>Pilot data is active</strong>
-          <span>
-            Current results reflect Karissa Laramie’s validated pilot dataset.
-            Company-wide totals will populate as source connections are added.
-          </span>
-        </div>
-        <b>Partial coverage</b>
-      </aside>
       <section className="cfz-metrics">
         <article>
           <span>Clinic payments</span>
@@ -549,38 +529,6 @@ export function CheshireDashboard() {
               <span>Payments per visit</span>
               <strong>$81.89</strong>
             </div>
-          </div>
-        </article>
-        <article className="cfz-panel cfz-readiness">
-          <header>
-            <div>
-              <p className="cfz-eyebrow">Implementation</p>
-              <h2>Data readiness</h2>
-            </div>
-            <b>4 of 6 sources</b>
-          </header>
-          <div className="cfz-source-list">
-            {[
-              ["Therapist statistics", 100],
-              ["Clinic payments", 92],
-              ["School billing", 80],
-              ["Bonus calculations", 100],
-              ["Employment cost", 12],
-              ["Contract rates", 12],
-            ].map(([name, value]) => (
-              <div key={String(name)}>
-                <span>{name}</span>
-                <i>
-                  <b style={{ width: `${value}%` }} />
-                </i>
-                <strong>{value}%</strong>
-              </div>
-            ))}
-          </div>
-          <div className="cfz-needed">
-            <strong>Needed for profitability</strong>
-            <span>School contract reimbursement rate</span>
-            <span>Therapist wages, taxes, and benefits</span>
           </div>
         </article>
       </section>
