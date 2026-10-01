@@ -1,0 +1,28 @@
+// Valid synthetic control fixtures and targeted negative mutations; no customer data.
+import assert from 'node:assert/strict';
+import { INTAKE_REQUIREMENTS,INTAKE_LOCATIONS,SOURCE_TYPES,tableFromMatrix,validateTable } from '../supabase/functions/_shared/cheshire-intake.ts';
+const req=source=>INTAKE_REQUIREMENTS.find(r=>r.id===source);
+const context={expectedDistricts:['synthetic-district'],expectedSchoolProvidersByDistrict:{'synthetic-district':['synthetic-staff']},verifiedPayrollStaffIds:['synthetic-staff'],expectedProvidersBySource:Object.fromEntries(SOURCE_TYPES.map(s=>[s,Object.fromEntries(INTAKE_LOCATIONS.map(l=>[l,[s==='cash_programs'?'synthetic-program':'synthetic-staff']]))]))};
+const check=(name,source,records,expectedStatus,extraFields=[])=>{const fields=[...req(source).fields,...extraFields];const table=tableFromMatrix([fields,...records.map(row=>fields.map(k=>Object.hasOwn(row,k)?row[k]:'0'))],source);const r=validateTable(table,source,'2026-09',context);console.log(JSON.stringify({name,status:r.status,failures:r.checks.filter(c=>!c.passed)}));assert.equal(r.status,expectedStatus);};
+check('valid_complete_manifest','coverage_manifest',SOURCE_TYPES.filter(s=>s!=='coverage_manifest').flatMap(s=>INTAKE_LOCATIONS.map(location=>({reporting_month:'2026-09',source_type:s,coverage_status:'active',location,provider_id:s==='cash_programs'?'synthetic-program':'synthetic-staff',district:s==='school_billing'?'synthetic-district':'not_applicable'}))),'complete');
+const cash=INTAKE_LOCATIONS.map(location=>({reporting_month:'2026-09',location,program:'synthetic-program',income:'0',report_total:'0'}));
+check('explicit_zero_cash_valid','cash_programs',cash,'complete');
+check('blank_cash_not_zero','cash_programs',cash.map((r,i)=>i? r:{...r,income:null}),'incomplete');
+check('wrong_month_incomplete','cash_programs',cash.map(r=>({...r,reporting_month:'2026-08'})),'incomplete');
+check('valid_insurance','insurance_revenue',INTAKE_LOCATIONS.map(location=>({reporting_month:'2026-09',location,therapist_id:'synthetic-staff',date_basis:'payment_date',currency:'USD'})),'complete');
+const payroll=[{reporting_month:'2026-09',staff_id:'synthetic-staff',role:'therapist',payroll_cost_basis:'gross_cash_inclusive',cash_pay:'10',payroll_taxes:'2',benefits:'3',pto_cost:'1',bonuses:'2',paid_hours:'1',report_total:'15'}];
+check('inclusive_pay_not_double_counted','payroll',payroll,'complete',['pto_cost','bonuses']);
+check('disjoint_pay_all_costs_added','payroll',payroll.map(r=>({...r,payroll_cost_basis:'disjoint_components',report_total:'18'})),'complete',['pto_cost','bonuses']);
+check('disjoint_pay_missing_components','payroll',payroll.map(r=>({...r,payroll_cost_basis:'disjoint_components',report_total:'18',pto_cost:null})),'incomplete',['pto_cost','bonuses']);
+check('valid_school','school_billing',[{reporting_month:'2026-09',currency:'USD',district:'synthetic-district',therapist_id:'synthetic-staff',billing_basis:'hours',billed_quantity:'1.5',contract_rate:'2',rate_effective_start:'2026-09-01',rate_effective_end:'2026-09-30',invoice_total:'3',report_total:'3'}],'complete');
+console.log('Positive controls and targeted mutations passed');
+context.expectedProvidersBySource.operating_expenses=Object.fromEntries(INTAKE_LOCATIONS.map(location=>[location,['legal services']]));
+const expenses=INTAKE_LOCATIONS.map(location=>({reporting_month:'2026-09',expense_id:`legal-${location}`,expense_category:'Legal Services',cost_scope:'direct_location',location,source_amount:'10',allocated_amount:'10',allocation_percent:'100',overhead_overlap:'separate',report_total:'70'}));
+check('operating_full_declared_scope','operating_expenses',expenses,'complete');
+check('operating_reconciled_subset_not_complete','operating_expenses',[{...expenses[0],report_total:'10'}],'incomplete');
+check('operating_unapproved_scope_not_complete','operating_expenses',expenses.map((row,i)=>i?row:{...row,expense_category:'Other review'}),'incomplete');
+const payerRows=INTAKE_LOCATIONS.flatMap(location=>['synthetic-payer-a','synthetic-payer-b'].map(payer=>({reporting_month:'2026-09',location,therapist_id:'synthetic-staff',payer,date_basis:'payment_date',currency:'USD'})));
+check('multiple_payers_preserved_per_provider','insurance_revenue',payerRows,'complete');
+check('duplicate_provider_payer_basis_rejected','insurance_revenue',[...payerRows,payerRows[0]],'incomplete');
+check('blank_payer_rejected','insurance_revenue',payerRows.map((row,i)=>i?row:{...row,payer:''}),'incomplete');
+check('unbounded_payer_rejected','insurance_revenue',payerRows.map((row,i)=>i?row:{...row,payer:'x'.repeat(161)}),'incomplete');
