@@ -35,7 +35,7 @@ function mock(options={}) {
   }
   if(u.pathname==='/rest/v1/rpc/finalize_cheshire_intake_review'){
    if(options.staleSave||payload.p_review_token!==row.review_token||row.status!=='reviewing')return reply([]);
-   row={...row,status:payload.p_validation.status,reported_month:payload.p_validation.reported_month?payload.p_validation.reported_month+'-01':null,validation:payload.p_validation,validation_scope:payload.p_scope,validation_dependencies:payload.p_dependencies};return reply([row]);
+   row={...row,status:payload.p_validation.status,reported_month:payload.p_validation.reported_month?payload.p_validation.reported_month+'-01':null,validation:payload.p_validation,validation_scope:payload.p_scope,validation_dependencies:payload.p_dependencies,review_revision:'aaaaaaaa-1111-4111-8111-111111111111',validation_dependency_revisions:{}};return reply([row]);
   }
   if(u.pathname.startsWith('/storage/v1/object/'))return options.storageMissing?reply({},404):new Response(options.hashMismatch?new Uint8Array([1,2,3]):bytes);
   if(u.pathname==='/rest/v1/rpc/reserve_cheshire_intake_ai_call')return options.aiReservationUnavailable?reply({},503):reply(options.aiAlreadyReserved?false:true);
@@ -73,3 +73,5 @@ const streamState=mock();let sent=0,cancelled=false;const stream=new ReadableStr
 for(const flag of ['noReader','noPortal']){r=await run('metric_read_'+flag,{[flag]:true},{operation:'metrics',month:'2026-09',location:'all'});assert.equal(r.response.status,403);assert(!r.state.calls.some(c=>c.url.includes('read_cheshire_metric_state')));}
 for(const body of [{operation:'metrics',month:'2026-13',location:'all'},{operation:'metrics',month:'2026-09',location:'Unknown'},{operation:'metrics',month:'2026-09',status:'complete'}]){r=await run('invalid_metric_scope',{},body);assert.equal(r.response.status,400);assert(!r.state.calls.some(c=>c.url.includes('read_cheshire_metric_state')));}
 r=await run('authorized_metric_read',{enableAi:true},{operation:'metrics',month:'2026-09',location:'all'},{HF_TOKEN:'mock-hf-token'});assert.equal(r.response.status,200);assert.equal(r.data.metrics.profit.available,false);assert(!JSON.stringify(r.data).includes(privateMarker));assert(!r.state.calls.some(c=>c.url.includes('huggingface')||c.url.includes('/storage/')||c.url.includes('cheshire_intake_settings')));
+
+r=await run('safe_review_metadata_only',{},review);assert.equal(r.response.status,200);assert.equal(r.data.document.review_revision,'aaaaaaaa-1111-4111-8111-111111111111');assert.deepEqual(r.data.document.validation_dependency_revisions,{});assert(!('review_token' in r.data.document));assert(!('validation_scope' in r.data.document));assert(!('uploaded_by' in r.data.document));assert(!JSON.stringify(r.data).includes(r.state.row.review_token));

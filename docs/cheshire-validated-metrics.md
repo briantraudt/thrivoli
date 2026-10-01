@@ -65,3 +65,20 @@ Before production activation:
 - Do not use a synthetic test upload in production or claim this patch calculates reconciled profit
 
 No production schema, source rows, permissions, credentials or deployments were changed while preparing this candidate.
+
+
+## Checklist review-version correction
+
+The checklist now compares the source identity/hash and a separate, server-owned review revision. A successful re-review rotates `review_revision` even when the bytes are unchanged, and the finalization transaction records `validation_dependency_revisions` while holding its existing dependency locks. These UUIDs are metadata only; the browser does not select or receive the internal `review_token`. The same RLS audience and RPC privileges remain in place.
+
+Apply `20261001194828_cheshire_checklist_review_freshness.sql` first, then deploy the updated intake edge function, then the UI. The UI explicitly selects the additive columns, so it must not precede the migration. Legacy reviews have no inferred revision evidence and remain incomplete until rechecked in dependency order: coverage manifest, payroll, then dependent sources/allocation. Allocation also rejects payroll whose own manifest review is stale. Operating expenses require the current matching overhead-reference revision, including when one is missing.
+
+Synthetic model, provider lifecycle, service response, and local PostgreSQL tests cover same-byte manifest/payroll re-reviews, completed replacement IDs, transitively stale payroll, missing/malformed versions, interrupted reviews, ambiguous sources, current-reference positives, and missing/changed overhead references. No real source values are changed or inferred by this correction.
+
+## Worksheet identity correction
+
+XLSX intake resolves the package office-document relationship, declared workbook sheets, worksheet content types and shared-string relationships before reading values. Duplicate/missing/orphan worksheet parts, hidden sheets, nonworksheet links and external/ambiguous targets are rejected for manual review. Nonstandard worksheet filenames and namespace-prefixed spreadsheet cells are supported when their declared graph is unambiguous.
+
+The XML reader stops during construction at 25,000 elements across the entire workbook (at most 20,000 per package-metadata part), depth 30, 64 attributes/namespaces per element, 50,000 workbook-wide attributes, 256-character namespace URIs, 4 MiB of workbook-wide expanded names and 20,000-character raw/decoded text and attribute values. This conservative limit bounds tree memory; larger supported-value exports should use CSV. It consumes structural cell and shared-string content rather than matching raw markup. XML comments cannot create source cells or shift shared-string indexes. Duplicate cells, unsupported layouts, hidden data rows, conflicting value structures, entity declarations and DTDs fail closed. Existing archive-size, row/column, formula, restricted-field and reconciliation gates still apply. Uncommon unsupported exports should be provided as one visible aggregate worksheet or CSV; no file is silently partially accepted.
+
+The parser correction requires the new shared `cheshire-xlsx-identity.ts` module in the edge-function deployment. Synthetic relationship, comment, namespace, duplicate-cell and shared-string tests stay local. Recheck the unchanged original overhead privately after activation; preserve its source hash, exact cells and blanks, and do not promote its fixed baseline to current-month actuals.
