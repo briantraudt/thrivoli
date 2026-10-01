@@ -1,14 +1,13 @@
 import { useState } from "react";
+import { CheshireMonthlyIntakeReview } from "./CheshireMonthlyIntake";
 import {
   ArrowDown,
   ArrowUpRight,
   Building2,
   CalendarDays,
-  Check,
   ChevronDown,
   ChevronRight,
   CircleHelp,
-  FileCheck2,
   Layers3,
   LockKeyhole,
   RefreshCw,
@@ -52,7 +51,7 @@ export function CheshireFinanceDashboardView({
   const selectedLocations = LOCATIONS.filter(
     (name) => location === "all" || name === location,
   );
-  const period = snapshot?.effectiveMonth
+  const period = snapshot?.costBasis === "fixed_monthly_baseline" ? "Fixed monthly baseline" : snapshot?.effectiveMonth
     ? new Date(`${snapshot.effectiveMonth}T12:00:00Z`).toLocaleDateString(
         "en-US",
         { month: "long", year: "numeric", timeZone: "UTC" },
@@ -100,11 +99,9 @@ export function CheshireFinanceDashboardView({
         <div>
           <p className="cfd-eyebrow">BUSINESS INTELLIGENCE</p>
           <h1>
-            Every location.
-            <br />
-            <span>One clear picture.</span>
+            Cheshire performance
           </h1>
-          <p>Revenue, people and operating costs, brought together.</p>
+          <p>Monthly costs and reporting readiness across seven locations.</p>
         </div>
         <div className="cfd-review-note">
           <CalendarDays size={19} />
@@ -137,7 +134,7 @@ export function CheshireFinanceDashboardView({
           </div>
         </label>
         <div className="cfd-period">
-          <span>ACCOUNTING PERIOD</span>
+          <span>COST REPORTING BASIS</span>
           <strong>
             <CalendarDays size={16} /> {period}
           </strong>
@@ -176,9 +173,9 @@ export function CheshireFinanceDashboardView({
       ) : null}
 
       <section className="cfd-kpis" aria-label="Financial overview">
-        <article className="cfd-kpi primary">
+        <article className="cfd-kpi cfd-kpi-primary">
           <div>
-            <span>Known monthly overhead</span>
+            <span>{snapshot?.costBasis === "fixed_monthly_baseline" ? "Known fixed monthly overhead" : "Known monthly overhead"}</span>
             <Wallet size={18} />
           </div>
           <strong>
@@ -227,19 +224,7 @@ export function CheshireFinanceDashboardView({
         </article>
       </section>
 
-      <div className="cfd-context-note">
-        <CircleHelp size={16} />
-        <p>
-          {snapshot
-            ? "These are supplied monthly overhead amounts. "
-            : "Monthly reporting foundation. "}
-          {snapshot?.effectiveMonth
-            ? ""
-            : "The effective accounting month still needs confirmation. "}
-          The known subtotal is not a complete expense total or a profit
-          calculation.
-        </p>
-      </div>
+      <div className="cfd-context-note"><CircleHelp size={16} /><p>{snapshot?.costBasis === "fixed_monthly_baseline" ? "The owner confirmed these supplied costs as fixed each month until updated. This is a recurring cost reference, not a reconciled monthly general ledger. " : `These are supplied monthly overhead amounts. ${snapshot?.effectiveMonth ? "" : "The accounting month still needs confirmation. "}`}The known subtotal is not a complete expense total or a profit calculation.</p></div>
 
       <div className="cfd-content-grid">
         <section className="cfd-panel cfd-economics">
@@ -489,67 +474,7 @@ export function CheshireFinanceDashboardView({
           ) : null}
         </section>
 
-        <aside className="cfd-review-panel">
-          <div className="cfd-review-heading">
-            <span>
-              <FileCheck2 size={20} />
-            </span>
-            <p className="cfd-eyebrow">NEXT REVIEW</p>
-            <h2>
-              Complete the
-              <br />
-              profitability picture.
-            </h2>
-            <p>
-              Four pieces turn a cost baseline into decision-ready reporting.
-            </p>
-          </div>
-          <ol className="cfd-checklist">
-            <li className={snapshot ? "started" : ""}>
-              <span>{snapshot ? <Check size={14} /> : "1"}</span>
-              <div>
-                <strong>Monthly overhead baseline</strong>
-                <p>
-                  {snapshot
-                    ? `${summary?.knownCells}/${summary?.totalCells} selected cells entered. Confirm blanks and effective month.`
-                    : "Connect the protected source, confirm blanks and effective month."}
-                </p>
-              </div>
-            </li>
-            <li>
-              <span>2</span>
-              <div>
-                <strong>Revenue across all streams</strong>
-                <p>
-                  Insurance payments, school invoices and cash specialty income.
-                </p>
-              </div>
-            </li>
-            <li>
-              <span>3</span>
-              <div>
-                <strong>People and shared costs</strong>
-                <p>Loaded payroll, actual hours and agreed allocation rules.</p>
-              </div>
-            </li>
-            <li>
-              <span>4</span>
-              <div>
-                <strong>Reconcile, then calculate</strong>
-                <p>
-                  Match periods, resolve duplicate expense categories and verify
-                  source totals.
-                </p>
-              </div>
-            </li>
-          </ol>
-          <div className="cfd-review-bottom">
-            <ShieldCheck size={16} />
-            <span>
-              Patient information is excluded from this financial workspace.
-            </span>
-          </div>
-        </aside>
+        <CheshireMonthlyIntakeReview snapshot={snapshot} />
       </div>
 
       <section className="cfd-streams" aria-labelledby="cfd-stream-title">
@@ -568,7 +493,7 @@ export function CheshireFinanceDashboardView({
             <h3>Insurance</h3>
             <p>Visits, units and payments by location, therapist and payer.</p>
             <footer>
-              <span>Source needed</span>
+              <span>Current-period source needed</span>
               <ArrowDown size={16} />
             </footer>
             <small>Keep service dates and payment dates distinct.</small>
@@ -580,7 +505,7 @@ export function CheshireFinanceDashboardView({
               District invoices, contract rates and clinic/school staff time.
             </p>
             <footer>
-              <span>Source needed</span>
+              <span>Current-period source needed</span>
               <ArrowDown size={16} />
             </footer>
             <small>
@@ -593,7 +518,7 @@ export function CheshireFinanceDashboardView({
             <h3>Cash programs</h3>
             <p>Program income, direct staffing and relevant operating costs.</p>
             <footer>
-              <span>Source needed</span>
+              <span>Current-period source needed</span>
               <ArrowDown size={16} />
             </footer>
             <small>

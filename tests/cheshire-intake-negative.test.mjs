@@ -1,0 +1,34 @@
+import assert from 'node:assert/strict';
+// Independent synthetic safety probes. No customer source data; no external calls or repository writes.
+import { INTAKE_REQUIREMENTS, INTAKE_LOCATIONS, SOURCE_TYPES, tableFromMatrix, validateTable } from '../supabase/functions/_shared/cheshire-intake.ts';
+import { parseXlsx } from '../supabase/functions/_shared/cheshire-files.ts';
+import { zipSync, strToU8 } from 'fflate';
+const test=(name,getTable,source,context={expectedProvidersBySource:{cash_programs:Object.fromEntries(INTAKE_LOCATIONS.map(l=>[l,['synthetic-program']]))}})=>{try {const r=validateTable(getTable(),source,'2026-09',context);assert.notEqual(r.status,'complete',name);console.log(JSON.stringify({name,accepted:r.status==='complete',status:r.status,failures:r.checks.filter(x=>!x.passed)}));}catch(error){if(error.code==='ERR_ASSERTION')throw error;console.log(JSON.stringify({name,accepted:false,rejected:error.message}));}};
+const req=k=>INTAKE_REQUIREMENTS.find(r=>r.id===k).fields;
+const values=(fields,record)=>fields.map(f=>record[f]??'0');
+const cashFields=req('cash_programs');
+const cash=[cashFields,...INTAKE_LOCATIONS.map(location=>values(cashFields,{reporting_month:'2026-09',location,program:'synthetic-program',income:'0',report_total:'0'}))];
+const enc=v=>v.replaceAll('&','&amp;').replaceAll('<','&lt;');
+const xmlFor=matrix=>matrix.map((row,r)=>row.map((v,c)=>`<c r="${String.fromCharCode(65+c)}${r+1}" t="inlineStr"><is><t>${enc(v)}</t></is></c>`).join('')).join('');
+const workbook=(table,extra='',otherSheets={})=>zipSync({'[Content_Types].xml':strToU8('<Types/>'),'xl/workbook.xml':strToU8('<workbook/>'),'xl/worksheets/sheet1.xml':strToU8(`<worksheet><sheetData>${xmlFor(table)}${extra}</sheetData></worksheet>`),...otherSheets});
+test('xlsx_unheaded_ssn_discarded',()=>parseXlsx(workbook(cash,'<c r="F2" t="inlineStr"><is><t>123-45-6789</t></is></c>'),'cash_programs'),'cash_programs');
+test('xlsx_noncandidate_sheet_content_discarded',()=>parseXlsx(workbook(cash,'',{'xl/worksheets/sheet2.xml':strToU8('<worksheet><sheetData><c r="A41" t="inlineStr"><is><t>patient_name</t></is></c><c r="A42" t="inlineStr"><is><t>Synthetic Example</t></is></c></sheetData></worksheet>')}),'cash_programs'),'cash_programs');
+const insFields=req('insurance_revenue');
+const insurance=(overrides={})=>[insFields,...INTAKE_LOCATIONS.map((location,index)=>values(insFields,{reporting_month:'2026-09',date_basis:'payment_date',currency:'USD',location,therapist_id:'synthetic-provider',units:'0',...overrides,index:undefined}))];
+const allProviders={insurance_revenue:Object.fromEntries(INTAKE_LOCATIONS.map(l=>[l,['synthetic-provider']]))};
+test('insurance_invalid_units',()=>tableFromMatrix(insurance({units:'not-a-number'}),'insurance_revenue'),'insurance_revenue',{expectedProvidersBySource:allProviders});
+test('insurance_partial_location_manifest',()=>tableFromMatrix(insurance(),'insurance_revenue'),'insurance_revenue',{expectedProvidersBySource:{insurance_revenue:{Cheshire:['synthetic-provider']}}});
+const payFields=req('payroll');
+test('payroll_single_staff_without_scope',()=>tableFromMatrix([payFields,values(payFields,{reporting_month:'2026-09',staff_id:'synthetic-single-staff',role:'therapist',payroll_cost_basis:'gross_cash_inclusive'})],'payroll'),'payroll');
+const manFields=req('coverage_manifest');
+const man=[manFields,...SOURCE_TYPES.filter(s=>s!=='coverage_manifest').map((s,i)=>values(manFields,{reporting_month:'2026-09',source_type:s,location:INTAKE_LOCATIONS[i],provider_id:'synthetic-single-provider',district:s==='school_billing'?'synthetic-district':'not_applicable'}))];
+test('manifest_one_location_per_source',()=>tableFromMatrix(man,'coverage_manifest'),'coverage_manifest');
+const schoolFields=req('school_billing');
+test('school_impossible_rate_dates',()=>tableFromMatrix([schoolFields,values(schoolFields,{reporting_month:'2026-09',currency:'USD',district:'synthetic-district',therapist_id:'synthetic-provider',billing_basis:'hours',billed_quantity:'0',contract_rate:'0',rate_effective_start:'2026-00-01',rate_effective_end:'2026-99-99',invoice_total:'0',report_total:'0'})],'school_billing'),'school_billing',{expectedDistricts:['synthetic-district']});
+test('school_missing_expected_therapist',()=>tableFromMatrix([schoolFields,values(schoolFields,{reporting_month:'2026-09',currency:'USD',location:'Cheshire',district:'synthetic-district',therapist_id:'synthetic-provider-A',billing_basis:'hours',billed_quantity:'1',contract_rate:'1',rate_effective_start:'2026-09-01',rate_effective_end:'2026-09-30',invoice_total:'1',report_total:'1'})],'school_billing'),'school_billing',{expectedDistricts:['synthetic-district'],expectedSchoolProvidersByDistrict:{'synthetic-district':['synthetic-provider-A','synthetic-provider-B']},expectedProvidersBySource:{school_billing:Object.fromEntries(INTAKE_LOCATIONS.map(l=>[l,l==='Cheshire'?['synthetic-provider-A','synthetic-provider-B']:[]]))}});
+test('ambiguous_comma_decimal_money',()=>tableFromMatrix([cashFields,...INTAKE_LOCATIONS.map((location,i)=>values(cashFields,{reporting_month:'2026-09',location,program:'synthetic-program',income:i?'0':'1,23',report_total:'1,23'}))],'cash_programs'),'cash_programs');
+test('currency_marked_units',()=>tableFromMatrix(insurance({units:'$1'}),'insurance_revenue'),'insurance_revenue',{expectedProvidersBySource:allProviders});
+
+test('school_unapproved_extra_district',()=>tableFromMatrix([schoolFields,...['synthetic-district','unapproved-district'].map(district=>values(schoolFields,{reporting_month:'2026-09',currency:'USD',location:'Cheshire',district,therapist_id:'synthetic-provider-A',billing_basis:'hours',billed_quantity:'1',contract_rate:'1',rate_effective_start:'2026-09-01',rate_effective_end:'2026-09-30',invoice_total:'1',report_total:'2'}))],'school_billing'),'school_billing',{expectedDistricts:['synthetic-district'],expectedSchoolProvidersByDistrict:{'synthetic-district':['synthetic-provider-A']}});
+const expenseFields=req('operating_expenses');
+for(const category of ['emr','Insurance'])test(`operating_baseline_overlap_${category}`,()=>tableFromMatrix([expenseFields,values(expenseFields,{reporting_month:'2026-09',expense_id:'synthetic-expense',expense_category:category,cost_scope:'direct_location',location:'Cheshire',source_amount:'1',allocated_amount:'1',allocation_percent:'100',overhead_overlap:'separate',report_total:'1'})],'operating_expenses'),'operating_expenses');

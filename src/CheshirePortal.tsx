@@ -2,6 +2,8 @@ import { useEffect, useState, type FormEvent, type ReactNode } from "react";
 import { NavLink, Navigate, useLocation, useNavigate } from "react-router-dom";
 import type { Session } from "@supabase/supabase-js";
 import { cheshireSupabase } from "./lib/cheshireSupabase";
+import { CheshireMonthlyIntakeProvider } from "./cheshire/CheshireMonthlyIntakeProvider";
+import { CheshireMonthlyUploadSidebar } from "./cheshire/CheshireMonthlyIntake";
 import { createRequestGuard } from "./cheshire/requestGuard";
 import "./cheshire-portal.css";
 export { CheshireFinanceDashboard as CheshireDashboard } from "./cheshire/CheshireFinanceDashboard";
@@ -12,183 +14,6 @@ type AuthState =
   | "checking-access"
   | "authorized"
   | "denied";
-
-const cheshireDataSources = [
-  {
-    name: "Therapist stats workbook",
-    cadence: "Weekly",
-    status: "received",
-    fields: [
-      "Therapist and discipline",
-      "Week-ending date",
-      "Hours worked and travel",
-      "Visit and unit targets",
-      "Clinic visits and units",
-      "School hours",
-      "Productivity percentage",
-      "Daily, weekly, monthly, quarterly, and annual totals",
-    ],
-  },
-  {
-    name: "Therapist Daily Summary",
-    cadence: "Weekly",
-    status: "received",
-    fields: [
-      "Therapist",
-      "Service date",
-      "Location",
-      "Service type",
-      "Visits",
-      "Units",
-      "Cancellations or no-shows",
-    ],
-  },
-  {
-    name: "Summation by Provider",
-    cadence: "Monthly",
-    status: "received",
-    fields: [
-      "Treating provider",
-      "Location",
-      "Service date",
-      "Units",
-      "Charge amount",
-      "Insurance payments",
-      "Patient payments",
-      "Write-offs",
-      "Outstanding balance",
-    ],
-  },
-  {
-    name: "Payment Summary",
-    cadence: "Monthly",
-    status: "received",
-    fields: [
-      "Treating provider",
-      "Reporting period",
-      "Insurance payments",
-      "Patient payments",
-      "Total payments",
-    ],
-  },
-  {
-    name: "Detailed payment export",
-    cadence: "Monthly",
-    status: "needed",
-    fields: [
-      "Payment date",
-      "Service date",
-      "Therapist",
-      "Location",
-      "Payer",
-      "Service or CPT code",
-      "Insurance payment",
-      "Patient payment",
-      "Adjustments and write-offs",
-      "Claim balance",
-      "Financial trend period",
-      "Codes billed",
-      "Average reimbursement",
-      "Charge summary",
-    ],
-  },
-  {
-    name: "Appointment & facility reports",
-    cadence: "Weekly / monthly",
-    status: "needed",
-    fields: [
-      "Service date",
-      "Location or facility",
-      "Therapist and discipline",
-      "Appointments scheduled",
-      "Completed visits",
-      "Cancellations and no-shows",
-      "Available capacity",
-      "Facility summary",
-      "Therapist summary",
-    ],
-  },
-  {
-    name: "School billing workbook",
-    cadence: "Monthly",
-    status: "received",
-    fields: [
-      "Therapist",
-      "School or district",
-      "Service date",
-      "Service category",
-      "Billed hours or visits",
-      "Travel or admin time",
-      "Contract rate",
-      "Invoice period and total",
-    ],
-  },
-  {
-    name: "Bonus calculations",
-    cadence: "Monthly / quarterly",
-    status: "received",
-    fields: [
-      "Therapist",
-      "Bonus period",
-      "Target",
-      "Actual result",
-      "Qualification status",
-      "Monthly payout",
-      "Quarterly payout",
-      "Paid date",
-    ],
-  },
-  {
-    name: "School contract rates",
-    cadence: "Annually / on change",
-    status: "partial",
-    fields: [
-      "School or district",
-      "Effective dates",
-      "Discipline and service",
-      "Hourly or per-visit method",
-      "Reimbursement rate",
-      "Minimums or caps",
-      "Travel and administrative terms",
-    ],
-  },
-  {
-    name: "Employment costs",
-    cadence: "Monthly / on change",
-    status: "needed",
-    fields: [
-      "Therapist",
-      "Employee role or department",
-      "Location allocation",
-      "Salary or hourly wage",
-      "FTE or paid hours",
-      "Payroll taxes",
-      "Benefits",
-      "Paid time off",
-      "Bonuses",
-      "Effective dates",
-      "Office, billing, and authorization allocation",
-    ],
-  },
-  {
-    name: "Operating expense reconciliation",
-    cadence: "Monthly",
-    status: "needed",
-    fields: [
-      "Location or central department",
-      "Accounting month",
-      "Expense category",
-      "Amount",
-      "Vendor",
-      "Direct or shared classification",
-      "Allocation rule",
-      "Recurring or one-time",
-      "Budget or forecast amount",
-      "Growth and scenario assumptions",
-      "Planned staffing and capacity",
-    ],
-  },
-] as const;
 
 export function CheshireLogin() {
   const navigate = useNavigate();
@@ -402,6 +227,10 @@ export function CheshireProtected({ children }: { children: ReactNode }) {
 }
 
 export function CheshireShell({ children }: { children: ReactNode }) {
+  return <CheshireMonthlyIntakeProvider><CheshireShellContent>{children}</CheshireShellContent></CheshireMonthlyIntakeProvider>;
+}
+
+function CheshireShellContent({ children }: { children: ReactNode }) {
   const navigate = useNavigate();
   const signOut = async () => {
     await cheshireSupabase.auth.signOut({ scope: "local" });
@@ -417,58 +246,7 @@ export function CheshireShell({ children }: { children: ReactNode }) {
           <NavLink to="/cheshire/dashboard">Dashboard</NavLink>
           <NavLink to="/cheshire/map">Profitability map</NavLink>
         </nav>
-        <section
-          className="cfz-source-tracker"
-          aria-labelledby="cfz-source-title"
-        >
-          <header>
-            <div>
-              <span id="cfz-source-title">Data sources</span>
-              <small>Source requirements</small>
-            </div>
-            <b>BI</b>
-          </header>
-
-          <div className="cfz-source-items">
-            {cheshireDataSources.map((source) => {
-              const sourceId = `source-${source.name.replaceAll(" ", "-").toLowerCase()}`;
-              return (
-                <div
-                  className={`cfz-source-item ${source.status}`}
-                  key={source.name}
-                >
-                  <button type="button" aria-describedby={sourceId}>
-                    <i aria-hidden="true" />
-                    <span>
-                      <strong>{source.name}</strong>
-                      <small>{source.cadence}</small>
-                    </span>
-                  </button>
-                  <div
-                    className="cfz-source-detail"
-                    role="tooltip"
-                    id={sourceId}
-                  >
-                    <header>
-                      <strong>{source.name}</strong>
-                      <span>{source.status}</span>
-                    </header>
-                    <small>Required information</small>
-                    <ul>
-                      {source.fields.map((field) => (
-                        <li key={field}>{field}</li>
-                      ))}
-                    </ul>
-                  </div>
-                </div>
-              );
-            })}
-          </div>
-          <p>
-            Received files still need validation and connection. Hover or focus
-            for requirements.
-          </p>
-        </section>
+        <CheshireMonthlyUploadSidebar />
         <div className="cfz-sidebar-footer">
           <button onClick={signOut}>Sign out</button>
         </div>

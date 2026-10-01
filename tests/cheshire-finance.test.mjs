@@ -214,7 +214,7 @@ test("production dashboard has no pilot client amounts or therapist name and can
   );
   assert.doesNotMatch(
     portal,
-    /Karissa|15,477\.55|14,064\.11|6 of 11 complete|55%/,
+    /const locationRows =|monthlyPerformance|cfz-income-hero|6 of 11 complete|55%/,
   );
   assert.doesNotMatch(
     dashboard,
@@ -222,4 +222,15 @@ test("production dashboard has no pilot client amounts or therapist name and can
   );
   assert.match(dashboard, /setSnapshot\(null\)/);
   assert.match(dashboard, /parseFinanceSnapshot\(result\.data\)/);
+});
+
+test('primary KPI is namespaced and cannot inherit generic global button layout',()=>{
+ const source=readFileSync(new URL('../src/cheshire/CheshireFinanceDashboardView.tsx',import.meta.url),'utf8');
+ assert.match(source,/cfd-kpi cfd-kpi-primary/);
+ assert.doesNotMatch(source,/className=["'][^"']*cfd-kpi\s+primary/);
+});
+
+test('fixed baseline requires an explicit owner basis and never invents an accounting month',()=>{
+ const source={...syntheticSource(),cost_basis:'fixed_monthly_baseline',basis_note:'Synthetic owner confirmed fixed costs',basis_confirmed_at:'2026-10-01T00:00:00Z',revision_id:'synthetic-revision'};
+ const snapshot=parseFinanceSnapshot(source);assert.equal(snapshot.costBasis,'fixed_monthly_baseline');assert.equal(snapshot.effectiveMonth,null);assert.equal(snapshot.revisionId,'synthetic-revision');assert.throws(()=>parseFinanceSnapshot({...source,basis_note:null}));
 });

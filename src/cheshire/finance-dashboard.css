@@ -278,26 +278,26 @@
   gap: 6px;
   min-height: 35px;
 }
-.cfd-kpi.primary {
+.cfd-kpi.cfd-kpi-primary {
   background: #183f34;
   border-color: #183f34;
   color: #fff;
 }
-.cfd-kpi.primary > div {
+.cfd-kpi.cfd-kpi-primary > div {
   color: #d2dfd7;
 }
-.cfd-kpi.primary > div > svg {
+.cfd-kpi.cfd-kpi-primary > div > svg {
   color: #9fba9f;
 }
-.cfd-kpi.primary > p {
+.cfd-kpi.cfd-kpi-primary > p {
   color: #b4c7b9;
 }
-.cfd-kpi.primary footer {
+.cfd-kpi.cfd-kpi-primary footer {
   border-color: #305448;
   color: #cbd9c9;
   background: #1d453a;
 }
-.cfd-kpi.primary .cfd-dot {
+.cfd-kpi.cfd-kpi-primary .cfd-dot {
   background: #bcc8a2;
 }
 .cfd-context-note {
@@ -1034,7 +1034,7 @@
 }
 
 @media (max-width: 700px) {
-  .cfd-kpi.primary > strong {
+  .cfd-kpi.cfd-kpi-primary > strong {
     font-size: 24px;
   }
   .cfd-kpi > p {
@@ -1059,7 +1059,7 @@
   .cfd-kpis {
     grid-template-columns: 1fr;
   }
-  .cfd-kpi.primary > strong {
+  .cfd-kpi.cfd-kpi-primary > strong {
     font-size: 32px;
   }
   .cfd-period {
@@ -1070,3 +1070,7 @@
     gap: 16px;
   }
 }
+/* Data-first typography; dashboard modifiers never inherit generic button classes. */
+.cfd-heading{padding:20px 0}.cfd-heading h1{font-size:30px;line-height:1.15;letter-spacing:-.035em}.cfd-heading>div>p:last-child{font-size:13px;line-height:1.5;margin-top:8px}.cfd-eyebrow{font-size:10px;color:#61725e}.cfd-topline{font-size:12px;color:#536950;padding-bottom:16px}.cfd-review-note strong{font-size:13px}.cfd-review-note span{font-size:12px;color:#52694e}.cfd-controls{margin-bottom:18px}.cfd-controls label>span,.cfd-period>span{font-size:10px;color:#5a7054}.cfd-controls select,.cfd-period strong{font-size:13px}.cfd-badge{font-size:12px}.cfd-basis small{font-size:12px;color:#52684d}.cfd-refresh{font-size:12px!important}.cfd-kpi{display:block;padding:18px 16px 0}.cfd-kpi>div{font-size:13px;line-height:1.4}.cfd-kpi>strong{font-size:30px;margin:15px 0 9px}.cfd-kpi>strong.cfd-pending-value{font-size:18px}.cfd-kpi>p{font-size:12px;line-height:1.55;color:#54694e;min-height:37px}.cfd-kpi footer{font-size:12px;line-height:1.45;color:#53694d;padding:11px 16px;margin:0 -16px;min-height:47px}.cfd-kpi.cfd-kpi-primary>p{color:#d2e0cf}.cfd-kpi.cfd-kpi-primary footer{color:#e0e9d8}.cfd-context-note{font-size:12px;line-height:1.55;color:#586d50;padding-bottom:19px}.cfd-content-grid{grid-template-columns:minmax(0,1fr) 310px}.cfd-panel-heading{padding:20px}.cfd-tabs button{font-size:12px}.cfd-location-table{font-size:13px}.cfd-location-table thead{font-size:12px;color:#5a6f51}.cfd-location-table th:first-child{padding-left:18px}.cfd-location-table tbody td,.cfd-location-table tbody th{height:68px}.cfd-location-icon{margin-right:7px}.cfd-coverage{font-size:12px;color:#42633a}.cfd-coverage.partial{color:#795e20;background:#fff6df}.cfd-muted{font-size:12px;color:#5e7255}.cfd-location-table tfoot{font-size:12px}.cfd-table-note{font-size:12px;color:#5a7051}.cfd-cost-row strong{font-size:13px}.cfd-cost-row>div>span{font-size:12px;color:#586e4e}.cfd-people-intro,.cfd-people-foot{font-size:13px;color:#4c6543}.cfd-people strong{font-size:14px}.cfd-people small{font-size:12px;color:#536d49}.cfd-detail p,.cfd-detail-grid>div{font-size:12px;color:#4b653f}.cfd-detail-grid small{font-size:12px;color:#607652}.cfd-stream-grid p{font-size:13px;color:#4c6542}.cfd-stream-grid small{font-size:12px;color:#526c47}.cfd-stream-grid footer,.cfd-stream-no{font-size:12px;color:#4c6b3f}.cfd-streams>header>span{font-size:12px;color:#4f6c41}.cfd-provenance{font-size:12px;line-height:1.5;color:#526e44}.cfd-count{font-size:12px;color:#536c47}.cfd-unknown{color:#825f1e}
+@media(max-width:1260px){.cfd-content-grid{grid-template-columns:minmax(0,1fr)}.cfd-kpis{grid-template-columns:repeat(2,minmax(0,1fr))}.cfd-location-table{min-width:620px}}
+@media(max-width:700px){.cfd-heading h1{font-size:28px}.cfd-kpis{grid-template-columns:1fr}.cfd-kpi>strong,.cfd-kpi.cfd-kpi-primary>strong{font-size:32px}.cfd-kpi>strong.cfd-pending-value{font-size:21px}.cfd-kpi>p{font-size:13px;min-height:0}.cfd-kpi footer{font-size:12px;min-height:0}.cfd-kpi>div{font-size:14px}.cfd-context-note{font-size:12px}.cfd-controls{gap:16px}.cfd-period{padding-left:0;border:0}.cfd-provenance{font-size:12px}.cfd-detail-grid>div{font-size:12px}.cfd-topline>span:last-child{font-size:10px}}

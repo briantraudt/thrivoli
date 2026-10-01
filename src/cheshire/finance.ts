@@ -35,6 +35,10 @@ export const CATEGORIES = [
 export type LocationName = (typeof LOCATIONS)[number];
 export type FinanceSnapshot = {
   sourceName: string;
+  costBasis: "monthly_source" | "fixed_monthly_baseline";
+  basisNote: string | null;
+  basisConfirmedAt: string | null;
+  revisionId: string | null;
   cadence: "monthly";
   effectiveMonth: string | null;
   importedAt: string;
@@ -50,6 +54,9 @@ function record(value: unknown): Record<string, unknown> {
 /** Fail closed on malformed data; an omitted cell is never interpreted as zero. */
 export function parseFinanceSnapshot(input: unknown): FinanceSnapshot {
   const value = record(input);
+  const costBasis = value.cost_basis ?? "monthly_source";
+  if (!["monthly_source", "fixed_monthly_baseline"].includes(String(costBasis))) throw new Error("Invalid cost basis");
+  if (costBasis === "fixed_monthly_baseline" && (typeof value.basis_note !== "string" || !value.basis_note.trim() || typeof value.basis_confirmed_at !== "string" || !Number.isFinite(Date.parse(value.basis_confirmed_at)))) throw new Error("Unconfirmed fixed cost basis");
   if (value.cadence !== "monthly")
     throw new Error("Monthly source basis has not been confirmed");
   if (
@@ -101,6 +108,10 @@ export function parseFinanceSnapshot(input: unknown): FinanceSnapshot {
   summarizeOverhead(rows); // validates decimal precision and unique location/category pairs
   return {
     sourceName: value.source_name,
+    costBasis: costBasis as FinanceSnapshot["costBasis"],
+    basisNote: typeof value.basis_note === "string" ? value.basis_note : null,
+    basisConfirmedAt: typeof value.basis_confirmed_at === "string" ? value.basis_confirmed_at : null,
+    revisionId: typeof value.revision_id === "string" ? value.revision_id : null,
     cadence: "monthly",
     effectiveMonth: value.effective_month as string | null,
     importedAt: value.imported_at,

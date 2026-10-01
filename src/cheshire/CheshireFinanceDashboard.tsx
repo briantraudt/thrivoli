@@ -1,6 +1,7 @@
 import { useEffect, useState } from "react";
 import { cheshireSupabase } from "../lib/cheshireSupabase";
 import { parseFinanceSnapshot, type FinanceSnapshot } from "./finance";
+import { useIntake } from "./intakeContext";
 import { createRequestGuard } from "./requestGuard";
 import {
   CheshireFinanceDashboardView,
@@ -10,6 +11,9 @@ import {
 export function CheshireFinanceDashboard() {
   const [snapshot, setSnapshot] = useState<FinanceSnapshot | null>(null);
   const [state, setState] = useState<FinanceLoadState>("loading");
+  const { setReferenceSnapshot } = useIntake();
+  const [snapshotOwner, setSnapshotOwner] = useState<string | null>(null);
+  useEffect(() => { setReferenceSnapshot(snapshot, snapshotOwner); }, [snapshot, snapshotOwner, setReferenceSnapshot]);
   const [attempt, setAttempt] = useState(0);
   useEffect(() => {
     let active = true;
@@ -38,7 +42,7 @@ export function CheshireFinanceDashboard() {
         const result = await cheshireSupabase
           .from("cheshire_finance_snapshot")
           .select(
-            "source_name,cadence,effective_month,imported_at,overhead_rows",
+            "source_name,cadence,effective_month,imported_at,overhead_rows,cost_basis,basis_confirmed_at,basis_note,revision_id",
           )
           .eq("id", "current-overhead")
           .maybeSingle();
@@ -52,6 +56,7 @@ export function CheshireFinanceDashboard() {
           return;
         }
         setSnapshot(parseFinanceSnapshot(result.data));
+        setSnapshotOwner(userId);
         setState("ready");
       } catch {
         if (current()) setState("error");
