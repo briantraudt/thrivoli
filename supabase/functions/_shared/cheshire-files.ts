@@ -1,4 +1,5 @@
 import { Inflate, strFromU8 } from 'fflate';
+import { resolveXlsxIdentity, readXlsxStrings, readXlsxCells, createXlsxXmlBudget } from './cheshire-xlsx-identity.ts';
 import { INTAKE_LOCATIONS, INTAKE_EXPENSE_CATEGORIES, mapHeaders, parseDelimited, tableFromMatrix, type ParsedTable, type SourceType } from './cheshire-intake.ts';
 export const MAX_UPLOAD_BYTES=5*1024*1024;
 const MAX_EXPANDED_BYTES=20*1024*1024;
@@ -42,7 +43,7 @@ export function inspectXlsxArchive(bytes:Uint8Array){
  }
  const ranges=[...entries.values()].sort((a,b)=>a.localStart-b.localStart);if(ranges.some((entry,index)=>index>0&&entry.localStart<ranges[index-1].localEnd))throw new Error('Workbook archive entries overlap.');
  if(offset!==start+directorySize||eocd+22+view.getUint16(eocd+20,true)!==bytes.length)throw new Error('Workbook archive boundaries are inconsistent.');
- if(!entries.has('[Content_Types].xml')||!entries.has('xl/workbook.xml'))throw new Error('The archive is not a supported XLSX workbook.');
+ if(!entries.has('[Content_Types].xml')||!entries.has('_rels/.rels'))throw new Error('The archive is not a supported XLSX workbook.');
  return entries;
 }
 function crc32(bytes:Uint8Array){let crc=0xffffffff;for(const byte of bytes){crc^=byte;for(let bit=0;bit<8;bit++)crc=(crc>>>1)^((crc&1)?0xedb88320:0);}return(crc^0xffffffff)>>>0;}
@@ -53,8 +54,6 @@ function expandEntry(bytes:Uint8Array,entry:ZipEntry){
  else {const decoder=new Inflate((chunk)=>accept(chunk));const compressed=bytes.subarray(entry.dataStart,entry.dataEnd);if(!compressed.length)throw new Error('A compressed workbook entry is empty.');for(let offset=0;offset<compressed.length;offset+=1024){const end=Math.min(offset+1024,compressed.length);decoder.push(compressed.subarray(offset,end),end===compressed.length);}}
  if(total!==entry.expanded)throw new Error('Expanded workbook size does not match its directory.');const output=new Uint8Array(total);let offset=0;for(const chunk of chunks){output.set(chunk,offset);offset+=chunk.length;}if(crc32(output)!==entry.crc)throw new Error('Workbook content failed its integrity check.');return output;
 }
-function xmlText(value:string){return value.replace(/&(#x[0-9a-f]+|#\d+|amp|lt|gt|quot|apos);/gi,(_,entity:string)=>{const named:Record<string,string>={amp:'&',lt:'<',gt:'>',quot:'"',apos:"'"};if(entity[0]!=='#')return named[entity]??'';const n=entity[1].toLowerCase()==='x'?parseInt(entity.slice(2),16):parseInt(entity.slice(1),10);return n>0&&n<=0x10ffff?String.fromCodePoint(n):'';});}
-function attr(text:string,key:string){return text.match(new RegExp('(?:^|\\s)'+key+'=["\\\']([^"\\\']*)["\\\']'))?.[1]??'';}
 function colIndex(value:string){let index=0;for(const char of value)index=index*26+char.charCodeAt(0)-64;return index-1;}
 function sourceMonth(matrix:(string|null)[][]){for(const row of matrix.slice(0,12))for(let index=0;index<row.length;index++){if(/^(reporting|accounting)\s*month$/i.test(row[index]??'')&&/^\d{4}-(0[1-9]|1[0-2])$/.test(row[index+1]??''))return row[index+1];}return null;}
 function sourceControl(matrix:(string|null)[][]){for(const row of matrix)for(let index=0;index<row.length;index++){if(/^(report|control|grand)\s*total$/i.test(row[index]??'')&&/^\d+(\.\d{1,2})?$/.test(row[index+1]??''))return row[index+1];}return null;}
@@ -66,29 +65,26 @@ function overheadMetadataKind(row:(string|null)[]):'month'|'control'|null {
  return null;
 }
 export function parseXlsx(bytes:Uint8Array,sourceType:SourceType):ParsedTable {
- const entries=inspectXlsxArchive(bytes);const files:Record<string,Uint8Array>={};
- for(const [name,entry]of entries){if(name==='xl/sharedStrings.xml'||/^xl\/worksheets\/sheet\d+\.xml$/.test(name)||name.endsWith('.rels'))files[name]=expandEntry(bytes,entry);}
- if(Object.entries(files).some(([name,data])=>name.endsWith('.rels')&&/TargetMode=["']External["']/i.test(strFromU8(data))))throw new Error('Workbook external relationships require manual review. No external content was opened.');
- const read=(name:string)=>{const value=files[name]?strFromU8(files[name]):'';if(/<!DOCTYPE|<!ENTITY/i.test(value))throw new Error('Workbook XML entity declarations are unsupported.');return value;};
- const shared=[...read('xl/sharedStrings.xml').matchAll(/<si(?:\s[^>]*)?>([\s\S]*?)<\/si>/g)].map(match=>[...match[1].matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g)].map(part=>xmlText(part[1])).join(''));
+ const entries=inspectXlsxArchive(bytes);const files:Record<string,Uint8Array>=Object.create(null);
+ const read=(name:string)=>{const entry=entries.get(name);if(!entry)return '';files[name]??=expandEntry(bytes,entry);const value=strFromU8(files[name]);if(/<!DOCTYPE|<!ENTITY/i.test(value))throw new Error('Workbook XML entity declarations are unsupported.');return value;};
+ const budget=createXlsxXmlBudget();const identity=resolveXlsxIdentity([...entries.keys()],read,budget);
+ const shared=identity.sharedStrings?readXlsxStrings(read(identity.sharedStrings),budget):[];
  if(shared.length>200000||shared.some(value=>value.length>20000))throw new Error('Workbook strings exceed the review limit.');
  const candidates:ParsedTable[]=[];let totalCells=0;let populatedSheets=0;
- for(const name of Object.keys(files).filter(name=>name.startsWith('xl/worksheets/')).sort()){
+ for(const name of identity.worksheets){
   const xml=read(name),matrix:(string|null)[][]=[];let formulas=false;let maxCol=0;
-  for(const match of xml.matchAll(/<c\b([^>]*?)(?:\/>|>([\s\S]*?)<\/c>)/g)){
-   const coordinate=attr(match[1],'r').match(/^([A-Z]+)([1-9]\d*)$/);if(!coordinate)continue;const row=Number(coordinate[2])-1,col=colIndex(coordinate[1]);
+  for(const cell of readXlsxCells(xml,budget)){
+   const coordinate=cell.coordinate.match(/^([A-Z]+)([1-9]\d*)$/)!;const row=Number(coordinate[2])-1,col=colIndex(coordinate[1]);
    if(row>=10001||col>=100||++totalCells>150000)throw new Error('Workbook rows or columns exceed the review limit.');
-   const content=match[2]??'',type=attr(match[1],'t');if(/<f(?:\s|>)/.test(content))formulas=true;
-   let value=content.match(/<v(?:\s[^>]*)?>([\s\S]*?)<\/v>/)?.[1]??null;
-   if(type==='s'){if(value===null)value=null;else{if(!/^\d+$/.test(value)||Number(value)>=shared.length)throw new Error('A workbook shared-string reference is invalid.');value=shared[Number(value)];}}
-   else if(type==='inlineStr')value=[...content.matchAll(/<t(?:\s[^>]*)?>([\s\S]*?)<\/t>/g)].map(part=>xmlText(part[1])).join('');
-   else if(!['','n','str'].includes(type)&&value!==null)throw new Error('Boolean, error or unsupported typed workbook cells require manual review; they are not financial zeroes.');
-   else if(value!==null)value=xmlText(value);
+   const type=cell.type;if(cell.formula)formulas=true;let value=cell.value;
+   if(type==='s'){if(value!==null){if(!/^\d+$/.test(value)||Number(value)>=shared.length)throw new Error('A workbook shared-string reference is invalid.');value=shared[Number(value)];}}
+   else if(!['','n','str','inlineStr'].includes(type)&&value!==null)throw new Error('Boolean, error or unsupported typed workbook cells require manual review; they are not financial zeroes.');
    if(value&&value.length>20000)throw new Error('A workbook cell exceeds the review limit.');
    matrix[row]??=[];matrix[row][col]=value;maxCol=Math.max(maxCol,col+1);
   }
+  if(!matrix.some(row=>row?.some(value=>value!==null&&value!==''))){if(formulas)throw new Error('A formula-bearing worksheet without cached values requires manual review; formulas are never executed.');continue;}
+  if(++populatedSheets>1)throw new Error('Multiple populated worksheets require manual review. Upload one monthly aggregate sheet or CSV per document.');
   const rectangular=Array.from({length:matrix.length},(_,index)=>Array.from({length:maxCol},(_,col)=>matrix[index]?.[col]??null));
-  if(rectangular.some(row=>row.some(value=>value!==null&&value!=='')))populatedSheets++;
   const period=sourceMonth(rectangular),control=sourceControl(rectangular);
   const blocked=[...new Set(rectangular.flatMap(row=>mapHeaders(row.map(value=>value??''),sourceType).blocked))];
   if(rectangular.some(row=>row.some(value=>value&&/\b\d{3}-\d{2}-\d{4}\b/.test(value))))blocked.push('restricted_identifier_pattern');

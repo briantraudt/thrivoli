@@ -2,13 +2,14 @@ import assert from 'node:assert/strict';
 // Synthetic archive probes only. No customer files or network.
 import { INTAKE_REQUIREMENTS, INTAKE_LOCATIONS, validateTable } from '../supabase/functions/_shared/cheshire-intake.ts';
 import { inspectXlsxArchive,parseXlsx } from '../supabase/functions/_shared/cheshire-files.ts';
-import { zipSync,strToU8 } from 'fflate';
+import { strToU8 } from 'fflate';
+import {xlsx} from './helpers/xlsx-fixture.mjs';
 const fields=INTAKE_REQUIREMENTS.find(r=>r.id==='cash_programs').fields;
 const base=[fields,...INTAKE_LOCATIONS.map(location=>['2026-09',location,'synthetic-program','0','0'])];
 const cell=(v,c,r)=>`<c r="${String.fromCharCode(65+c)}${r+1}" t="inlineStr"><is><t>${v}</t></is></c>`;
-const make=(transform=(x)=>x,extra={})=>zipSync({'[Content_Types].xml':strToU8('<Types/>'),'xl/workbook.xml':strToU8('<workbook/>'),'xl/worksheets/sheet1.xml':strToU8(`<worksheet><sheetData>${base.map((row,r)=>row.map((v,c)=>transform(cell(v,c,r),c,r)).join('')).join('')}</sheetData></worksheet>`),...extra});
+const make=(transform=(x)=>x,extra={})=>xlsx(`<worksheet><sheetData>${base.map((row,r)=>`<row r="${r+1}">${row.map((v,c)=>transform(cell(v,c,r),c,r)).join('')}</row>`).join('')}</sheetData></worksheet>`,extra);
 const check=(name,fn)=>{try{const table=fn();const review=validateTable(table,'cash_programs','2026-09',{expectedProvidersBySource:{cash_programs:Object.fromEntries(INTAKE_LOCATIONS.map(l=>[l,['synthetic-program']]))}});assert.notEqual(review.status,'complete',name);console.log(JSON.stringify({name,accepted:review.status==='complete',status:review.status,firstIncome:table.rows[0]?.income,warnings:table.warnings}));}catch(e){if(e.code==='ERR_ASSERTION')throw e;console.log(JSON.stringify({name,accepted:false,rejected:e.message}));}};
-check('missing_shared_string_value_becomes_zero',()=>parseXlsx(make((original,c,r)=>r&&c===3?`<c r="D${r+1}" t="s"/>`:original,{'xl/sharedStrings.xml':strToU8('<sst><si><t>0</t></si></sst>')}),'cash_programs'));
+check('missing_shared_string_value_becomes_zero',()=>parseXlsx(make((original,c,r)=>r&&c===3?`<c r="D${r+1}" t="s"/>`:original,{'xl/sharedStrings.xml':strToU8('<sst xmlns="http://schemas.openxmlformats.org/spreadsheetml/2006/main"><si><t>0</t></si></sst>')}),'cash_programs'));
 check('boolean_values_become_money',()=>parseXlsx(make((original,c,r)=>r&&c===3?`<c r="D${r+1}" t="b"><v>0</v></c>`:original),'cash_programs'));
 check('vba_project',()=>parseXlsx(make(x=>x,{'xl/vbaProject.bin':new Uint8Array([1,2,3])}),'cash_programs'));
 check('ole_embedding',()=>parseXlsx(make(x=>x,{'xl/embeddings/oleObject1.bin':new Uint8Array([1,2,3])}),'cash_programs'));
