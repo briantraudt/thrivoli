@@ -1,3 +1,6 @@
+import { useValidatedMetrics } from './useValidatedMetrics';
+import { CheshireValidatedMetrics } from './CheshireValidatedMetrics';
+import { formatMetric } from './metrics';
 import { useState } from "react";
 import { CheshireMonthlyIntakeReview } from "./CheshireMonthlyIntake";
 import {
@@ -33,7 +36,7 @@ export type FinanceLoadState =
   | "error";
 type Tab = "locations" | "costs" | "people";
 
-/** Pure presentation surface; test fixtures stay outside the production bundle. */
+/** Source-backed dashboard; test fixtures stay outside the production bundle. */
 export function CheshireFinanceDashboardView({
   snapshot,
   state,
@@ -44,6 +47,8 @@ export function CheshireFinanceDashboardView({
   onRefresh: () => void;
 }) {
   const [location, setLocation] = useState("all");
+  const validatedMetrics = useValidatedMetrics(location);
+  const loadedPayroll = validatedMetrics.data?.sources.find(source=>source.source_type==='payroll')?.metrics.find(metric=>metric.key==='loaded_payroll');
   const [tab, setTab] = useState<Tab>("locations");
   const [detail, setDetail] = useState<string | null>(null);
   const summary = snapshot ? financeSummary(snapshot, location) : null;
@@ -206,12 +211,12 @@ export function CheshireFinanceDashboardView({
         </article>
         <article className="cfd-kpi">
           <div>
-            <span>Fully loaded labor</span>
+            <span>Reported loaded payroll</span>
             <Layers3 size={18} />
           </div>
-          <strong className="cfd-pending-value">Awaiting data</strong>
+          <strong className={loadedPayroll?undefined:"cfd-pending-value"}>{loadedPayroll?formatMetric(loadedPayroll):"Awaiting data"}</strong>
           <p>Wages, taxes, benefits, PTO and bonuses</p>
-          <footer>Clinic and school allocation needed</footer>
+          <footer>{loadedPayroll?"Source payroll month; accounting match pending":"Company payroll and location allocation needed"}</footer>
         </article>
         <article className="cfd-kpi">
           <div>
@@ -225,6 +230,8 @@ export function CheshireFinanceDashboardView({
       </section>
 
       <div className="cfd-context-note"><CircleHelp size={16} /><p>{snapshot?.costBasis === "fixed_monthly_baseline" ? "The owner confirmed these supplied costs as fixed each month until updated. This is a recurring cost reference, not a reconciled monthly general ledger. " : `These are supplied monthly overhead amounts. ${snapshot?.effectiveMonth ? "" : "The accounting month still needs confirmation. "}`}The known subtotal is not a complete expense total or a profit calculation.</p></div>
+
+      <CheshireValidatedMetrics {...validatedMetrics} />
 
       <div className="cfd-content-grid">
         <section className="cfd-panel cfd-economics">
@@ -462,7 +469,7 @@ export function CheshireFinanceDashboardView({
                     <strong>{role.name}</strong>
                     <small>{role.detail}</small>
                   </span>
-                  <span className="cfd-coverage partial">Source needed</span>
+                  <span className="cfd-coverage partial">Current-period source needed</span>
                 </div>
               ))}
               <p className="cfd-people-foot">
@@ -493,7 +500,7 @@ export function CheshireFinanceDashboardView({
             <h3>Insurance</h3>
             <p>Visits, units and payments by location, therapist and payer.</p>
             <footer>
-              <span>Current-period source needed</span>
+              <span>{validatedMetrics.data?.sources.some(source=>source.source_type==='insurance_revenue')?'Validated source figures above':'Current-period source needed'}</span>
               <ArrowDown size={16} />
             </footer>
             <small>Keep service dates and payment dates distinct.</small>
@@ -505,7 +512,7 @@ export function CheshireFinanceDashboardView({
               District invoices, contract rates and clinic/school staff time.
             </p>
             <footer>
-              <span>Current-period source needed</span>
+              <span>{validatedMetrics.data?.sources.some(source=>source.source_type==='school_billing')?'Validated source figures above':'Current-period source needed'}</span>
               <ArrowDown size={16} />
             </footer>
             <small>
@@ -518,7 +525,7 @@ export function CheshireFinanceDashboardView({
             <h3>Cash programs</h3>
             <p>Program income, direct staffing and relevant operating costs.</p>
             <footer>
-              <span>Current-period source needed</span>
+              <span>{validatedMetrics.data?.sources.some(source=>source.source_type==='cash_programs')?'Validated source figures above':'Current-period source needed'}</span>
               <ArrowDown size={16} />
             </footer>
             <small>

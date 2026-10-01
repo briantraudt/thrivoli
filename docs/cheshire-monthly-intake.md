@@ -24,7 +24,7 @@ Earlier uploaded sources are stored as `source-audit-v1` metadata with period/sc
 - PDF/PNG scans and unsupported or ambiguous spreadsheets are retained as incomplete for manual review. No OCR is performed.
 - Files with unconsumed meaningful cells, unknown columns, formulas, unsupported cell types, multiple populated sheets, suspicious identifiers, unsafe ZIP structure or mismatched totals cannot auto-complete.
 - An abandoned reservation owned by another approved account must be completed by that uploader or reviewed by the owner; ownership is never silently reassigned.
-- Upload review stores original files and validation/provenance. It does **not** automatically import parsed financial rows into dashboard revenue, labor or profit metrics. Metric ingestion requires a separately reconciled source/period/unit pipeline.
+- Upload review stores original files and validation/provenance. It does **not** automatically import parsed financial rows into dashboard revenue, labor or profit metrics. Metric ingestion requires a separately reconciled source/period/unit pipeline. The separately reviewed candidate in `cheshire-validated-metrics.md` adds that source-specific path, with its own migration and activation checks.
 
 ## Verification
 

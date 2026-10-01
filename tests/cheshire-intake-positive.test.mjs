@@ -21,3 +21,8 @@ const expenses=INTAKE_LOCATIONS.map(location=>({reporting_month:'2026-09',expens
 check('operating_full_declared_scope','operating_expenses',expenses,'complete');
 check('operating_reconciled_subset_not_complete','operating_expenses',[{...expenses[0],report_total:'10'}],'incomplete');
 check('operating_unapproved_scope_not_complete','operating_expenses',expenses.map((row,i)=>i?row:{...row,expense_category:'Other review'}),'incomplete');
+const payerRows=INTAKE_LOCATIONS.flatMap(location=>['synthetic-payer-a','synthetic-payer-b'].map(payer=>({reporting_month:'2026-09',location,therapist_id:'synthetic-staff',payer,date_basis:'payment_date',currency:'USD'})));
+check('multiple_payers_preserved_per_provider','insurance_revenue',payerRows,'complete');
+check('duplicate_provider_payer_basis_rejected','insurance_revenue',[...payerRows,payerRows[0]],'incomplete');
+check('blank_payer_rejected','insurance_revenue',payerRows.map((row,i)=>i?row:{...row,payer:''}),'incomplete');
+check('unbounded_payer_rejected','insurance_revenue',payerRows.map((row,i)=>i?row:{...row,payer:'x'.repeat(161)}),'incomplete');
