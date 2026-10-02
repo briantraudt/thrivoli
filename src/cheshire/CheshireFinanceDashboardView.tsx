@@ -1,13 +1,14 @@
 import { useEffect, useState } from 'react';
-import { Building2, CalendarDays, FileUp, LockKeyhole, RefreshCw } from 'lucide-react';
+import { CalendarDays, FileUp, LockKeyhole, RefreshCw } from 'lucide-react';
 import { CheshireMonthlyChecklist, CheshireMonthlyIntakeReview } from './CheshireMonthlyIntake';
 import { CheshireReportUpload } from './CheshireReportUpload';
 import { CheshireValidatedMetrics } from './CheshireValidatedMetrics';
+import { CheshireLocationPicker } from './CheshireLocationPicker';
 import { CheshireSummaryCategories } from './CheshireSummaryCategories';
 import { useIntake } from './intakeContext';
 import { useProfitabilityPeriod } from './useProfitabilityPeriod';
 import { buildPeriodSheet, headlineOverhead, knownRevenueSummary, periodLabel, type PeriodMode } from './periodSummary';
-import { LOCATIONS, money, type FinanceSnapshot } from './finance';
+import { money, type FinanceSnapshot } from './finance';
 import type { SheetScope } from './profitabilitySheet';
 import './finance-dashboard.css';
 import './summary-dashboard.css';
@@ -27,7 +28,7 @@ export function CheshireFinanceDashboardView({ snapshot, state, onRefresh }: { s
  const selectedDetailMonth=period.months.includes(detailMonth)?detailMonth:intake.month;
  return <main id="cheshire-financial-summary" className="cfd-dashboard csd-dashboard">
   <h1 className="cps-sr-only">Cheshire financial summary</h1>
-  <section className="csd-controls" aria-label="Report filters"><div className="csd-period-switch" role="group" aria-label="Reporting period"><button aria-pressed={mode==='mtd'} onClick={()=>setMode('mtd')}>MTD</button><button aria-pressed={mode==='ytd'} onClick={()=>setMode('ytd')}>YTD</button></div><label><CalendarDays size={16}/><span className="cps-sr-only">Reporting month</span><input type="month" aria-label="Summary reporting month" value={intake.month} onChange={event=>intake.setMonth(event.target.value)}/></label><label><Building2 size={16}/><select aria-label="Location" value={scope} onChange={event=>setScope(event.target.value as SheetScope)}><option value="all">All locations</option>{LOCATIONS.map(name=><option key={name}>{name}</option>)}</select></label><button className="csd-refresh" aria-label="Refresh financial summary" title="Refresh source coverage" disabled={state==='loading'||intake.busy||intake.state==='checking'} onClick={()=>{onRefresh();intake.refresh();}}><RefreshCw size={16}/></button><button className="csd-upload" disabled={!canUpload} onClick={()=>setUploadMonth(intake.month)}><FileUp size={17}/> Upload data</button></section>
+  <section className="csd-controls" aria-label="Report filters"><div className="csd-period-switch" role="group" aria-label="Reporting period"><button aria-pressed={mode==='mtd'} onClick={()=>setMode('mtd')}>MTD</button><button aria-pressed={mode==='ytd'} onClick={()=>setMode('ytd')}>YTD</button></div><label><CalendarDays size={16}/><span className="cps-sr-only">Reporting month</span><input type="month" aria-label="Summary reporting month" value={intake.month} onChange={event=>intake.setMonth(event.target.value)}/></label><CheshireLocationPicker value={scope} onChange={setScope}/><button className="csd-refresh" aria-label="Refresh financial summary" title="Refresh source coverage" disabled={state==='loading'||intake.busy||intake.state==='checking'} onClick={()=>{onRefresh();intake.refresh();}}><RefreshCw size={16}/></button><button className="csd-upload" disabled={!canUpload} onClick={()=>setUploadMonth(intake.month)}><FileUp size={17}/> Upload data</button></section>
   {statusMessage?<div className="cfd-status" role="status"><LockKeyhole size={18}/><strong>{statusMessage}</strong></div>:null}
   <section className="csd-totals" aria-label="Revenue expenses and profit summary"><article><span>Revenue</span><strong>{revenue.value!==null?money(revenue.value):'—'}</strong><p className={summaryState==='Missing'?'csd-small-missing':'csd-small-status'}>{summaryState==='Missing'?'Missing data':summaryState==='Checking'?'Checking data':'Some data unavailable'}</p>{revenue.value!==null?<small>{revenue.label}<span>{revenue.coverage} · partial source figure</span></small>:null}</article><article><span>Expenses</span><strong>{expense.value!==null?money(expense.value):'—'}</strong><p className={summaryState==='Missing'?'csd-small-missing':'csd-small-status'}>{summaryState==='Missing'?'Missing data':summaryState==='Checking'?'Checking data':'Some data unavailable'}</p>{expense.value!==null?<small>{expense.label}</small>:null}</article><article><span>Profit</span><strong>—</strong><p className={summaryState==='Missing'?'csd-small-missing':'csd-small-status'}>{summaryState==='Missing'?'Missing data':summaryState==='Checking'?'Checking data':'Some data unavailable'}</p></article></section>
   <div className="csd-detail-heading"><h2>Explore the detail</h2></div>
