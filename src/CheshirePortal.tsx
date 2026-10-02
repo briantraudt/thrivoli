@@ -17,11 +17,9 @@ type AuthState =
 
 export function CheshireLogin() {
   const navigate = useNavigate();
-  const [mode, setMode] = useState<"signin" | "signup">("signin");
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [error, setError] = useState("");
-  const [message, setMessage] = useState("");
   const [submitting, setSubmitting] = useState(false);
 
   useEffect(() => {
@@ -34,33 +32,14 @@ export function CheshireLogin() {
     event.preventDefault();
     setSubmitting(true);
     setError("");
-    setMessage("");
     const normalizedEmail = email.trim().toLowerCase();
-    const { error: authError } =
-      mode === "signin"
-        ? await cheshireSupabase.auth.signInWithPassword({
-            email: normalizedEmail,
-            password,
-          })
-        : await cheshireSupabase.auth.signUp({
-            email: normalizedEmail,
-            password,
-            options: {
-              emailRedirectTo: `${window.location.origin}/cheshire/dashboard`,
-            },
-          });
+    const { error: authError } = await cheshireSupabase.auth.signInWithPassword({
+      email: normalizedEmail,
+      password,
+    });
     setSubmitting(false);
     if (authError) {
-      setError(
-        mode === "signin"
-          ? "Check your email and password and try again."
-          : authError.message,
-      );
-      return;
-    }
-    if (mode === "signup") {
-      setMessage("Check your email to confirm your account.");
-      setPassword("");
+      setError("Check your email and password and try again.");
       return;
     }
     navigate("/cheshire/dashboard", { replace: true });
@@ -74,39 +53,7 @@ export function CheshireLogin() {
           <strong>thrivoli</strong>
         </div>
         <p>Cheshire Fitness Zone</p>
-        <div
-          className="cfz-auth-tabs"
-          role="tablist"
-          aria-label="Account access"
-        >
-          <button
-            type="button"
-            role="tab"
-            aria-selected={mode === "signin"}
-            className={mode === "signin" ? "active" : ""}
-            onClick={() => {
-              setMode("signin");
-              setError("");
-              setMessage("");
-            }}
-          >
-            Sign in
-          </button>
-          <button
-            type="button"
-            role="tab"
-            aria-selected={mode === "signup"}
-            className={mode === "signup" ? "active" : ""}
-            onClick={() => {
-              setMode("signup");
-              setError("");
-              setMessage("");
-            }}
-          >
-            Create account
-          </button>
-        </div>
-        <h1>{mode === "signin" ? "Sign in" : "Create account"}</h1>
+        <h1>Sign in</h1>
         <form onSubmit={submit}>
           <label>
             Email address
@@ -123,9 +70,7 @@ export function CheshireLogin() {
             <input
               type="password"
               minLength={8}
-              autoComplete={
-                mode === "signin" ? "current-password" : "new-password"
-              }
+              autoComplete="current-password"
               required
               value={password}
               onChange={(event) => setPassword(event.target.value)}
@@ -136,17 +81,8 @@ export function CheshireLogin() {
               {error}
             </div>
           )}
-          {message && (
-            <div className="cfz-auth-message" role="status">
-              {message}
-            </div>
-          )}
           <button type="submit" disabled={submitting}>
-            {submitting
-              ? "Please wait…"
-              : mode === "signin"
-                ? "Sign in"
-                : "Create account"}
+            {submitting ? "Please wait…" : "Sign in"}
           </button>
         </form>
       </section>
