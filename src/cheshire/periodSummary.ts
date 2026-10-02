@@ -47,3 +47,21 @@ export function createRequestQueue(limit=3){
   const drain=()=>{while(active<limit&&pending.length){pending.shift()!();}};
   return {run<T>(task:()=>Promise<T>,current:()=>boolean):Promise<T|null>{return new Promise((resolve,reject)=>{pending.push(()=>{if(!current()){resolve(null);queueMicrotask(drain);return;}active++;void Promise.resolve().then(task).then(resolve,reject).finally(()=>{active--;drain();});});drain();});}};
 }
+
+/** Pick one compatible revenue source subtotal, never blend payment, service, invoice or snapshot bases. */
+export function knownRevenueSummary(evidence:PeriodEvidence):{value:number|null;label:string;coverage:string}{
+  const candidates=[
+    {source:'insurance_revenue',basis:'payment_date',keys:['insurance_payments','patient_payments'],label:'Insurance & patient payments · payment-date subtotal'},
+    {source:'insurance_revenue',basis:'service_date',keys:['insurance_payments','patient_payments'],label:'Insurance & patient payments · service-date attribution'},
+    {source:'cash_programs',basis:'program_reported_month',keys:['cash_program_income'],label:'Private-program income · reported-month subtotal'},
+    {source:'school_billing',basis:'invoice_reported_month',keys:['school_invoices'],label:'School invoices · not cash collections'},
+    {source:'insurance_revenue',basis:'report_as_of',keys:['insurance_payments','patient_payments'],label:'Latest report-as-of snapshot · not a period total'},
+  ];
+  for(const candidate of candidates){
+    const observations=evidence.months.flatMap(month=>{const response=evidence.responses[month];if(!response||response.month!==month||response.location!==evidence.scope)return[];const source=response.sources.find(item=>item.source_type===candidate.source);if(!source)return[];const metrics=source.metrics.filter(metric=>candidate.keys.includes(metric.key)&&metric.basis===candidate.basis);if(metrics.length!==candidate.keys.length||new Set(metrics.map(metric=>metric.key)).size!==candidate.keys.length||metrics.some(metric=>metric.unit!=='USD'||metric.scale!==100||!Number.isSafeInteger(metric.value)))return[];const value=metrics.reduce((sum,metric)=>sum+metric.value,0);return Number.isSafeInteger(value)?[{month,value}]:[];});
+    if(!observations.length)continue;
+    const selected=candidate.basis==='report_as_of'?observations.slice(-1):observations;const value=selected.reduce((sum,item)=>sum+item.value,0);
+    if(Number.isSafeInteger(value))return{value,label:candidate.label,coverage:candidate.basis==='report_as_of'?selected[0].month:`${selected.length}/${evidence.months.length} reported months`};
+  }
+  return{value:null,label:'No compatible source subtotal yet',coverage:''};
+}

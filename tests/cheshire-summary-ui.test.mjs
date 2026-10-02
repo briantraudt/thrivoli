@@ -5,10 +5,10 @@ test('summary starts collapsed, has one generic uploader, changes real period/sc
  const{Harness}=await import(pathToFileURL(dir+'/ui.mjs'));await act(async()=>{renderer=create(React.createElement(Harness,{}));});
  const buttons=()=>renderer.root.findAllByType('button');const upload=()=>buttons().find(b=>b.props.className==='csd-upload');assert.equal(buttons().filter(b=>String(b.props.className??'').includes('upload')).length,1);assert.equal(renderer.root.findAllByProps({className:'cfi-generic-upload'}).length,0);
  const categories=renderer.root.findAllByType('details').filter(item=>String(item.props.className).startsWith('csd-category '));assert.equal(categories.length,5);assert.ok(categories.every(item=>!item.props.open));
- const totals=renderer.root.findByProps({className:'csd-totals'}).findAllByType('strong');assert.deepEqual(totals.map(node=>node.children.join('')),['Missing','Missing','Missing']);
+ const totals=renderer.root.findByProps({className:'csd-totals'}).findAllByType('strong');assert.deepEqual(totals.map(node=>node.children.join('')),['—','—','—']);
  await act(async()=>upload().props.onClick());assert.equal(renderer.root.findByProps({'data-test':'upload'}).props['data-source'],'auto');await act(async()=>renderer.update(React.createElement(Harness,{month:'2026-09'})));assert.equal(renderer.root.findAllByProps({'data-test':'upload'}).length,0);
  const ytd=buttons().find(button=>button.children.join('')==='YTD');await act(async()=>ytd.props.onClick());assert.equal(ytd.props['aria-pressed'],true);assert.ok(JSON.stringify(renderer.toJSON()).includes('Jan–Sep 2026'));
  await act(async()=>renderer.root.findByProps({'aria-label':'Location'}).props.onChange({target:{value:'Pool'}}));assert.equal(renderer.root.findByProps({className:'csd-period-context'}).findByType('strong').children.join(''),'YTD · Jan–Sep 2026 · Pool');
- await act(async()=>renderer.update(React.createElement(Harness,{month:'2026-09',busy:true})));assert.equal(upload().props.disabled,true);assert.equal(renderer.root.findByProps({className:'csd-totals'}).findAllByType('strong')[0].children.join(''),'Checking');
+ await act(async()=>renderer.update(React.createElement(Harness,{month:'2026-09',busy:true})));assert.equal(upload().props.disabled,true);assert.equal(renderer.root.findByProps({className:'csd-totals'}).findAllByType('p')[0].children.join(''),'Checking data');
  }finally{if(renderer)await act(async()=>renderer.unmount());await rm(dir,{recursive:true,force:true});delete globalThis.IS_REACT_ACT_ENVIRONMENT;}
 });

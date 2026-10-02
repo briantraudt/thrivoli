@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import{buildPeriodSheet,reportingMonths,createRequestQueue}from'../src/cheshire/periodSummary.ts';
+import{buildPeriodSheet,reportingMonths,createRequestQueue,knownRevenueSummary}from'../src/cheshire/periodSummary.ts';
 import{LOCATIONS,CATEGORIES,parseFinanceSnapshot}from'../src/cheshire/finance.ts';
 import{METRICS}from'../supabase/functions/_shared/cheshire-metrics.ts';
 const response=(month,value,key='cash_program_income',basis='program_reported_month')=>({month,location:'all',sources:[{source_type:key==='cash_program_income'?'cash_programs':'insurance_revenue',document_id:`synthetic-${month}`,content_sha256:'a'.repeat(64),validator_version:'cheshire-intake-v1',normalizer_version:'cheshire-metrics-v1',metrics:[{key,...METRICS[key],value,basis,source_rows:1,source_locations:['Cheshire']}]}],blocked:[]});
@@ -29,3 +29,10 @@ test('failed reads are unavailable, never evidence of missing uploads, and snaps
  const pending=buildPeriodSheet(null,{...base,failedMonths:[],state:'loading'},[]);assert.equal(row(pending,'programs').cells.all.availability,'checking');
 });
 test('synchronous task failure releases the bounded request slot',async()=>{const queue=createRequestQueue(1);const failed=queue.run(()=>{throw new Error('Synthetic construction error')},()=>true);const next=queue.run(async()=>42,()=>true);await assert.rejects(failed,/construction/);assert.equal(await next,42);});
+
+test('summary revenue chooses a compatible partial subtotal without adding invoices, programs or snapshots',()=>{
+ const month='2026-01';const payments=response(month,100,'insurance_payments','payment_date');payments.sources[0].metrics.push({...payments.sources[0].metrics[0],key:'patient_payments',...METRICS.patient_payments,value:50});payments.sources.push(...response(month,99999).sources);
+ const evidence={scope:'all',months:[month],responses:{[month]:payments},failedMonths:[]};assert.equal(knownRevenueSummary(evidence).value,150);assert.match(knownRevenueSummary(evidence).label,/payment-date subtotal/);
+ const zero={...evidence,responses:{[month]:response(month,0)}};assert.equal(knownRevenueSummary(zero).value,0);assert.match(knownRevenueSummary(zero).label,/Private-program/);
+ const absent={...evidence,responses:{}};assert.equal(knownRevenueSummary(absent).value,null);
+});
