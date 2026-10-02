@@ -1,5 +1,5 @@
 import test from 'node:test';import assert from 'node:assert/strict';
-import{buildPeriodSheet,reportingMonths,createRequestQueue,knownRevenueSummary}from'../src/cheshire/periodSummary.ts';
+import{buildPeriodSheet,reportingMonths,createRequestQueue,knownRevenueSummary,headlineOverhead}from'../src/cheshire/periodSummary.ts';
 import{LOCATIONS,CATEGORIES,parseFinanceSnapshot}from'../src/cheshire/finance.ts';
 import{METRICS}from'../supabase/functions/_shared/cheshire-metrics.ts';
 const response=(month,value,key='cash_program_income',basis='program_reported_month')=>({month,location:'all',sources:[{source_type:key==='cash_program_income'?'cash_programs':'insurance_revenue',document_id:`synthetic-${month}`,content_sha256:'a'.repeat(64),validator_version:'cheshire-intake-v1',normalizer_version:'cheshire-metrics-v1',metrics:[{key,...METRICS[key],value,basis,source_rows:1,source_locations:['Cheshire']}]}],blocked:[]});
@@ -35,4 +35,12 @@ test('summary revenue chooses a compatible partial subtotal without adding invoi
  const evidence={scope:'all',months:[month],responses:{[month]:payments},failedMonths:[]};assert.equal(knownRevenueSummary(evidence).value,150);assert.match(knownRevenueSummary(evidence).label,/payment-date subtotal/);
  const zero={...evidence,responses:{[month]:response(month,0)}};assert.equal(knownRevenueSummary(zero).value,0);assert.match(knownRevenueSummary(zero).label,/Private-program/);
  const absent={...evidence,responses:{}};assert.equal(knownRevenueSummary(absent).value,null);
+});
+
+test('headline overhead carries only fixed reference or a matching dated month; YTD never reuses one dated month',()=>{
+ const fixed=source();assert.equal(headlineOverhead(fixed,'ytd','2026-10','all').value,14000);assert.match(headlineOverhead(fixed,'ytd','2026-10','all').label,/not YTD actuals/);
+ const dated={...fixed,costBasis:'monthly_source',effectiveMonth:'2026-02-01'};
+ assert.equal(headlineOverhead(dated,'mtd','2026-02','all').value,14000);assert.match(headlineOverhead(dated,'mtd','2026-02','all').label,/2026-02/);
+ assert.equal(headlineOverhead(dated,'mtd','2026-03','all'),null);assert.equal(headlineOverhead(dated,'ytd','2026-10','all'),null);assert.equal(headlineOverhead({...dated,effectiveMonth:null},'mtd','2026-02','all'),null);
+ const sheet=buildPeriodSheet(dated,{scope:'all',months:['2026-10'],responses:{},failedMonths:[]},[]);assert.match(sheet.find(section=>section.id==='overhead').note,/Original source month: 2026-02/);assert.match(row(sheet,'overhead-Rent').detail,/source month 2026-02/);
 });

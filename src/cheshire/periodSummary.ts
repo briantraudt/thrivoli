@@ -1,6 +1,6 @@
 import { isMonth } from './intake.ts';
 import { buildProfitabilitySheet, type MapCategory, type SheetCell, type SheetRow, type SheetScope } from './profitabilitySheet.ts';
-import type { FinanceSnapshot } from './finance.ts';
+import { financeSummary, type FinanceSnapshot } from './finance.ts';
 import type { MetricResponse } from './metrics.ts';
 export type PeriodMode = 'mtd' | 'ytd';
 export type PeriodEvidence = { months: string[]; scope: SheetScope; responses: Partial<Record<string, MetricResponse>>; failedMonths: string[]; state?: 'ready'|'loading'|'waiting'; referenceUnavailable?: boolean; referenceLoading?: boolean };
@@ -23,8 +23,8 @@ export function buildPeriodSheet(snapshot: FinanceSnapshot|null, evidence: Perio
   return buildProfitabilitySheet(snapshot,{},categories).map(section=> {
     const ids=new Set(section.rows.map(row=>row.id));const rows=[...section.rows];
     for(const sheet of sheets){for(const row of sheet.find(item=>item.id===section.id)!.rows){if(!ids.has(row.id)){ids.add(row.id);const before=rows.findIndex(item=>item.kind!=='value');rows.splice(before<0?rows.length:before,0,row);}}}
-    return {...section, rows:rows.map(row=> {
-      if(row.id.startsWith('overhead-') || row.id==='known-overhead') return {...row,detail: `${row.detail} · monthly reference, not period actuals`,cells:evidence.referenceUnavailable||evidence.referenceLoading?{...row.cells,[evidence.scope]:{value:null,availability:evidence.referenceUnavailable?'unavailable':'checking',note:evidence.referenceUnavailable?'The overhead reference could not be loaded. Refresh to retry; missing source amounts have not been established.':'Checking the protected overhead reference. No source absence has been established.'}}:row.cells};
+    return {...section,note:section.id==='overhead'&&snapshot?.costBasis==='monthly_source'?`Original source month: ${snapshot.effectiveMonth?.slice(0,7)??'unconfirmed'}. These dated reference amounts are separate from the selected-period total.`:section.note, rows:rows.map(row=> {
+      if(row.id.startsWith('overhead-') || row.id==='known-overhead') return {...row,detail: `${row.detail} · ${snapshot?.costBasis==='monthly_source'?`source month ${snapshot.effectiveMonth?.slice(0,7)??'unconfirmed'}`:'monthly reference'}, not period actuals`,cells:evidence.referenceUnavailable||evidence.referenceLoading?{...row.cells,[evidence.scope]:{value:null,availability:evidence.referenceUnavailable?'unavailable':'checking',note:evidence.referenceUnavailable?'The overhead reference could not be loaded. Refresh to retry; missing source amounts have not been established.':'Checking the protected overhead reference. No source absence has been established.'}}:row.cells};
       const unavailable=evidence.months.filter(month=>evidence.failedMonths.includes(month));
       const observed = evidence.months.flatMap((month,index)=> {const candidate=sheets[index].find(item=>item.id===section.id)!.rows.find(item=>item.id===row.id)?.cells[evidence.scope];return candidate?.value!==null && candidate?.value!==undefined ? [{month,cell:candidate}] : [];});
       if(!observed.length&&(unavailable.length||evidence.state==='loading'||evidence.state==='waiting'))return{...row,cells:{...row.cells,[evidence.scope]:{value:null,availability:unavailable.length?'unavailable':'checking',note:unavailable.length?`Source retrieval is unavailable for ${unavailable.join(', ')}. Refresh to retry. We have not established whether a source is missing.`:'Checking the selected source scope. No source absence has been established.'}}};
@@ -64,4 +64,13 @@ export function knownRevenueSummary(evidence:PeriodEvidence):{value:number|null;
     if(Number.isSafeInteger(value))return{value,label:candidate.label,coverage:candidate.basis==='report_as_of'?selected[0].month:`${selected.length}/${evidence.months.length} reported months`};
   }
   return{value:null,label:'No compatible source subtotal yet',coverage:''};
+}
+
+/** Only a confirmed fixed baseline may carry forward without an effective-month match. */
+export function headlineOverhead(snapshot:FinanceSnapshot|null,mode:PeriodMode,month:string,scope:SheetScope):{value:number;label:string}|null{
+ if(!snapshot)return null;
+ const fixed=snapshot.costBasis==='fixed_monthly_baseline';
+ if(!fixed&&(mode!=='mtd'||snapshot.effectiveMonth!==`${month}-01`))return null;
+ const summary=financeSummary(snapshot,scope);if(!summary.knownCells)return null;
+ return{value:summary.knownTotalCents,label:fixed?`Known fixed monthly overhead · partial reference${mode==='ytd'?'; not YTD actuals':''}`:`Known overhead · ${month} monthly source · partial`};
 }

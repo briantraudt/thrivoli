@@ -6,8 +6,8 @@ import { CheshireValidatedMetrics } from './CheshireValidatedMetrics';
 import { CheshireSummaryCategories } from './CheshireSummaryCategories';
 import { useIntake } from './intakeContext';
 import { useProfitabilityPeriod } from './useProfitabilityPeriod';
-import { buildPeriodSheet, knownRevenueSummary, periodLabel, type PeriodMode } from './periodSummary';
-import { LOCATIONS, financeSummary, money, type FinanceSnapshot } from './finance';
+import { buildPeriodSheet, headlineOverhead, knownRevenueSummary, periodLabel, type PeriodMode } from './periodSummary';
+import { LOCATIONS, money, type FinanceSnapshot } from './finance';
 import type { SheetScope } from './profitabilitySheet';
 import './finance-dashboard.css';
 import './summary-dashboard.css';
@@ -15,14 +15,14 @@ export type FinanceLoadState = 'loading' | 'ready' | 'no-access' | 'empty' | 'er
 /** Summary first. Missing totals remain explicit; source amounts live in expandable detail. */
 export function CheshireFinanceDashboardView({ snapshot, state, onRefresh }: { snapshot: FinanceSnapshot | null; state: FinanceLoadState; onRefresh: () => void }) {
  const intake=useIntake();const[scope,setScope]=useState<SheetScope>('all');const[mode,setMode]=useState<PeriodMode>('mtd');const[uploadMonth,setUploadMonth]=useState<string|null>(null);const[detailMonth,setDetailMonth]=useState(intake.month);
- const period=useProfitabilityPeriod(mode,scope);const safeSnapshot=state==='ready'?snapshot:null;const overhead=safeSnapshot?financeSummary(safeSnapshot,scope):null;const sections=buildPeriodSheet(safeSnapshot,{...period,referenceUnavailable:state==='error'||state==='no-access',referenceLoading:state==='loading'},period.categories);
+ const period=useProfitabilityPeriod(mode,scope);const safeSnapshot=state==='ready'?snapshot:null;const sections=buildPeriodSheet(safeSnapshot,{...period,referenceUnavailable:state==='error'||state==='no-access',referenceLoading:state==='loading'},period.categories);
  const canUpload=intake.state==='ready'&&!intake.busy;
  useEffect(()=>{setUploadMonth(null);setDetailMonth(intake.month);},[intake.month]);
  const statusMessage=state==='no-access'?'Financial access has not been enabled for this account.':state==='empty'?'The first verified overhead source has not been imported.':state==='error'?'The protected financial source is unavailable. No cached or estimated values are being displayed.':state==='loading'?'Loading your protected financial source…':null;
  const summaryState=state==='error'||state==='no-access'||period.failedMonths.length?'Unavailable':state==='loading'||period.state!=='ready'?'Checking':'Missing';
  const revenue=knownRevenueSummary(period);
  const expenseFallback=sections.flatMap(section=>section.rows).find(row=>['monthly-overhead','payroll','operating-extra'].includes(row.id)&&row.cells[scope].value!==null);
- const expense=overhead&&overhead.knownCells>0?{value:overhead.knownTotalCents,label:`Known ${safeSnapshot?.costBasis==='fixed_monthly_baseline'?'fixed monthly':'supplied monthly'} overhead · partial reference${mode==='ytd'?'; not YTD actuals':''}`}:{value:expenseFallback?.cells[scope].value??null,label:expenseFallback?`${expenseFallback.label} · partial source costs`:''};
+ const expense=headlineOverhead(safeSnapshot,mode,intake.month,scope)??{value:expenseFallback?.cells[scope].value??null,label:expenseFallback?`${expenseFallback.label} · partial source costs`:''};
  const sourceMonths=period.months.filter(month=>(period.responses[month]?.sources.length??0)>0).length;
  const selectedDetailMonth=period.months.includes(detailMonth)?detailMonth:intake.month;
  return <main className="cfd-dashboard csd-dashboard">
