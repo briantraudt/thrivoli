@@ -6,7 +6,7 @@ import {buildMonthlyChecklist,INTAKE_REQUIREMENTS,type IntakeDocument,type Sourc
 import {useIntake} from './intakeContext';
 import type {FinanceSnapshot} from './finance';
 import './monthly-intake.css';
-const labels={missing:'Missing',uploading:'Upload pending',received:'Received',reviewing:'Reviewing',incomplete:'Incomplete',complete:'Verified complete'};
+const labels={missing:'Need Data',uploading:'Upload pending',received:'Received',reviewing:'Reviewing',incomplete:'Incomplete',complete:'Verified complete'};
 function prettyMonth(month:string){return new Date(`${month}-01T12:00:00Z`).toLocaleDateString('en-US',{month:'long',year:'numeric',timeZone:'UTC'});}
 function fieldLabel(field:string){const names:Record<string,string>={payer:'Payer organization name or ID',report_total:'Source control total',provider_id:'Provider / program / scope ID',cash_pay:'Cash pay (basis must be explicit)',payroll_cost_basis:'Payroll cost basis',overhead_overlap:'Overlap with fixed overhead'};return names[field]??field.replaceAll('_',' ');}
 function downloadTemplate(source:SourceType){const requirement=INTAKE_REQUIREMENTS.find(item=>item.id===source)!;const headers=[...requirement.fields,...(requirement.optionalFields??[])];const url=URL.createObjectURL(new Blob([headers.join(',')+'\r\n'],{type:'text/csv;charset=utf-8'}));const link=document.createElement('a');link.href=url;link.download=`${source}-column-template.csv`;link.click();URL.revokeObjectURL(url);}
