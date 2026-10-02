@@ -5,7 +5,8 @@ export const MAPPING_VERSION='cheshire-mapping-v1' as const;
 export type ConfirmedMapping={version:typeof MAPPING_VERSION;source_sha256:string;source_type:SourceType;header_row:number;columns:string[];confirmed:true};
 export type MappingProvenance=ConfirmedMapping&{confirmed_by:string;confirmed_at:string};
 export type ReportCandidate={source_type:SourceType;header_row:number;headers:string[];columns:string[];matched_required:number;required_count:number;missing_fields:string[]};
-export type ReportInspection={status:'supported'|'unsupported'|'restricted';reason:string;row_count:number;candidates:ReportCandidate[];warnings:string[]};
+export type HeaderOption={header_row:number;headers:string[]};
+export type ReportInspection={header_options?:HeaderOption[];status:'supported'|'unsupported'|'restricted';reason:string;row_count:number;candidates:ReportCandidate[];warnings:string[]};
 const ALL_FIELDS=new Set(INTAKE_REQUIREMENTS.flatMap(item=>[...item.fields,...(item.optionalFields??[])]));
 const HASH=/^[a-f0-9]{64}$/;
 function readSource(bytes:Uint8Array,filename:string,mime:string){const extension=validateFileSignature(bytes,filename,mime);if(extension==='xlsx')return readXlsxSheet(bytes);if(extension==='csv')return {matrix:parseDelimitedMatrix(new TextDecoder('utf-8',{fatal:true}).decode(bytes),true),formulas:false};return null;}
@@ -21,10 +22,10 @@ export function inspectReportUpload(bytes:Uint8Array,filename:string,mime:string
    const headers=matrix[header].map(value=>(value??'').trim());const columns=mapHeaders(headers,requirement.id).mapped;
    return {source_type:requirement.id,header_row:header+1,headers,columns,matched_required:score,required_count:requirement.fields.length,missing_fields:requirement.fields.filter(field=>!columns.includes(field))};
   }).sort((a,b)=>b.matched_required/b.required_count-a.matched_required/a.required_count||b.matched_required-a.matched_required);
-  return {status:'supported',reason:'Suggested report types use recognized column labels. Confirm the meaning of each mapped field before upload.',row_count:Math.max(0,matrix.length-1),candidates,warnings:formulas?['Formula-derived values require manual review and cannot establish completion.']:[]};
+  return {header_options:matrix.slice(0,40).map((row,index)=>({header_row:index+1,headers:row.map(value=>(value??'').trim())})),status:'supported',reason:'Suggested report types use recognized column labels. Confirm the meaning of each mapped field before upload.',row_count:Math.max(0,matrix.length-1),candidates,warnings:formulas?['Formula-derived values require manual review and cannot establish completion.']:[]};
  }catch(error){return {status:'unsupported',reason:error instanceof Error?error.message:'The report could not be inspected safely.',row_count:0,candidates:[],warnings:[]};}
 }
-export function candidateMapping(inspection:ReportInspection,sourceType:SourceType,hash:string):ConfirmedMapping|null {const candidate=inspection.candidates.find(item=>item.source_type===sourceType);return candidate?{version:MAPPING_VERSION,source_sha256:hash,source_type:sourceType,header_row:candidate.header_row,columns:[...candidate.columns],confirmed:true}:null;}
+export function candidateMapping(inspection:ReportInspection,sourceType:SourceType,hash:string,headerRow?:number):ConfirmedMapping|null {const candidate=inspection.candidates.find(item=>item.source_type===sourceType);if(!candidate)return null;const header=headerRow===undefined?null:inspection.header_options?.find(option=>option.header_row===headerRow);if(headerRow!==undefined&&!header)return null;return {version:MAPPING_VERSION,source_sha256:hash,source_type:sourceType,header_row:header?.header_row??candidate.header_row,columns:header?mapHeaders(header.headers,sourceType).mapped:[...candidate.columns],confirmed:true};}
 export function validateMapping(value:unknown,hash:string,sourceType:SourceType):ConfirmedMapping {
  if(!value||typeof value!=='object'||Array.isArray(value))throw new Error('Confirm the column mapping before review.');const mapping=value as ConfirmedMapping;
  const keys=['version','source_sha256','source_type','header_row','columns','confirmed'];

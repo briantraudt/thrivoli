@@ -2,7 +2,7 @@
 
 ## First iteration
 
-The monthly source-review panel now offers a generic report upload as well as a category-specific upload. Supported aggregate CSV and single-visible-sheet XLSX reports are inspected locally. Recognized column aliases produce candidate document groups, a required-field coverage count, and a proposed column mapping. Users can choose the report type and correct column meanings before confirming and uploading the original file.
+The monthly source-review panel now offers a generic report upload as well as a category-specific upload. Supported aggregate CSV and single-visible-sheet XLSX reports are inspected locally. Recognized column aliases produce candidate document groups, a required-field coverage count, and a proposed column mapping. Users can choose the report type, correct the detected header row (within the first 40 source rows), and correct column meanings before confirming and uploading the original file.
 
 The preview shows missing field labels, preserves unmapped columns as unresolved, and does not invent a reporting month, currency, zero, provider, location, allocation or financial value. Unknown or duplicate meanings require correction/review. A user's mapping confirmation does not establish completion.
 
