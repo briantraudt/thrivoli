@@ -46,3 +46,12 @@ test('allocation requires a current payroll supporting review, including transit
  const nextPayroll='cdcdcdcd-1111-4111-8111-111111111111';await db.query("update cheshire_intake_document set status='reviewing',review_token=$2 where id=$1",[payrollId,nextPayroll]);await call(db,{id:payrollId,token:nextPayroll,revisions:{coverage_manifest:nextManifest},rows:[]});assert.equal((await checklist(db)).payroll,'complete');assert.equal((await checklist(db)).staff_allocation,'incomplete');
  }finally{await db.close();}});
 test('legacy supporting reviews without safe versions cannot establish completion',async()=>{const db=await setup();try{await db.query('update cheshire_intake_document set review_revision=null where id=$1',[manifestId]);await assert.rejects(call(db),/Supporting review version unavailable/);assert.equal((await checklist(db)).coverage_manifest,'incomplete');}finally{await db.close();}});
+
+
+test('confirmed mapping persists atomically with original hash and source row provenance, without schema changes',async()=>{const db=await setup();try{
+ const mapping={version:'cheshire-mapping-v1',source_sha256:hash,source_type:'cash_programs',header_row:1,columns:['reporting_month','location','program','income','report_total'],confirmed:true,confirmed_by:id,confirmed_at:'2026-09-01T00:00:00Z'};
+ const first=(await call(db,{review:{...review,mapping}})).rows[0];assert.deepEqual(first.validation.mapping,mapping);assert.equal(first.content_sha256,hash);assert.equal((await checklist(db)).cash_programs,'complete');
+ const next='99999999-1111-4111-8111-111111111111';await db.query("update cheshire_intake_document set status='reviewing',review_token=$2 where id=$1",[id,next]);assert.equal((await checklist(db)).cash_programs,'reviewing');
+ const second=(await call(db,{token:next,review:{...review,mapping}})).rows[0];assert.notEqual(second.review_revision,first.review_revision);assert.deepEqual(second.validation.mapping,mapping);assert.deepEqual(second.validation_dependency_revisions,{coverage_manifest:manifestRevision});
+ const state=(await db.query("select read_cheshire_metric_state('2026-09-01') as state")).rows[0].state;assert.equal(state.batches.length,1);assert.equal(state.batches[0].content_sha256,hash);assert.equal(state.batches[0].rows[0].source_row,2);assert.equal((await db.query('select count(*) from cheshire_intake_metric_batch')).rows[0].count,2,'earlier metric batch remains retained but not served');
+ }finally{await db.close();}});
