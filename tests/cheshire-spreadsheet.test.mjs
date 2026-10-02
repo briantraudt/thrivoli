@@ -40,3 +40,18 @@ test('live map cost categories remain unvalued and deduplicated without losing s
   assert.equal(labor.length, 1); assert.match(labor[0].detail, /Clinics · Schools/); assert.equal(labor[0].cells.all.value, null); assert.equal(labor[0].cells.Cheshire.sourceType, 'payroll');
   assert.equal(row(sheet, 'map-overhead-0').cells.Orange.sourceType, 'operating_expenses');
 });
+
+test('accepted report-as-of insurance and patient payments retain separate rows, source zeros and provenance', () => {
+  const data = response('all', 'insurance_payments', 45000, 'insurance_revenue', 'report_as_of');
+  data.sources[0].metrics.push({ ...data.sources[0].metrics[0], key: 'patient_payments', ...METRICS.patient_payments, value: 0 });
+  const sheet = buildProfitabilitySheet(null, { all: data });
+  assert.equal(row(sheet, 'insurance-as-of').cells.all.value, 45000);
+  assert.equal(row(sheet, 'patient-as-of').cells.all.value, 0);
+  assert.match(row(sheet, 'insurance-as-of').cells.all.note, /Report-as-of basis/);
+  assert.match(row(sheet, 'insurance-as-of').cells.all.source, /synthetic-doc/);
+  assert.equal(row(sheet, 'insurance-payments').cells.all.value, null);
+  assert.equal(row(sheet, 'insurance-as-of').cells.Cheshire.value, null);
+  assert.equal(row(sheet, 'revenue-total').cells.all.value, null);
+  assert.equal(row(sheet, 'profit').cells.all.value, null);
+  assert.equal(row(buildProfitabilitySheet(null, {}), 'insurance-as-of'), undefined);
+});
