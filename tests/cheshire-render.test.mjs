@@ -39,7 +39,7 @@ test("dashboard renders verified source and all missing/access states without in
     const { render } = await import(pathToFileURL(`${dir}/render.mjs`));
     const ready = render("ready");
     assert.match(ready, /\$14,000\.00/);
-    assert.match(ready, /month to confirm/);
+    assert.match(ready, /supplied monthly overhead/);
     assert.match(ready, /Not yet available/);
     assert.match(ready, /140\/140 known/);
     assert.match(ready, /Expandable financial categories/);
@@ -58,9 +58,9 @@ test("dashboard renders verified source and all missing/access states without in
     }
     const blank = render("ready", null);
     assert.match(blank, /Missing/);
-    assert.doesNotMatch(blank, /<b>\$0\.00\/month<\/b>/);
+    assert.doesNotMatch(blank, /<strong>\$0\.00<\/strong>/);
     const zero = render("ready", "0");
-    assert.match(zero, /<b>\$0\.00\/month<\/b>/);
+    assert.match(zero, /<strong>\$0\.00<\/strong>/);
     assert.match(zero, /Not yet available/);
   } finally {
     await rm(dir, { recursive: true, force: true });
