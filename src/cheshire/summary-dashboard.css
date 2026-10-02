@@ -11,3 +11,5 @@
 @media(max-width:1100px){.csd-dashboard{padding:12px 18px 24px}.csd-controls{gap:8px}.csd-controls label{padding-left:8px}.csd-controls input,.csd-controls select{max-width:150px}.csd-upload{padding:9px 12px}}
 @media(max-width:980px){.csd-totals article{padding:14px 17px}.csd-totals article>strong{margin-top:0}.csd-controls .csd-upload{margin-left:auto}.csd-refresh{margin-left:0}}
 @media(max-width:620px){.csd-dashboard{padding:10px 12px 22px}.csd-controls{gap:6px;padding:6px 8px}.csd-controls label{border-left:0;padding-left:0}.csd-controls .csd-upload{margin-left:auto}.csd-period-switch button{padding:5px 12px}.csd-period-context{margin:7px 1px 10px}.csd-totals{margin:10px 0 21px}}
+
+.csd-reporting-body{font-size:14px;line-height:1.65;color:#62765e;padding:6px 0}.csd-reporting-body p{margin:12px 0}.csd-review-panel>summary{min-height:44px;align-items:center;font-size:14px}.csd-review-panel{padding-top:4px;margin-top:10px}.csd-categories+.csd-review-panel{margin-top:20px}.csd-upload-help{font-size:14px}.csd-review-panel .cfi-checklist+.csd-upload-help{margin-top:22px}

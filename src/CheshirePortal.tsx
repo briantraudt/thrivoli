@@ -3,7 +3,7 @@ import { NavLink, Navigate, useLocation, useNavigate } from "react-router-dom";
 import type { Session } from "@supabase/supabase-js";
 import { cheshireSupabase } from "./lib/cheshireSupabase";
 import { CheshireMonthlyIntakeProvider } from "./cheshire/CheshireMonthlyIntakeProvider";
-import { CheshireMonthlyUploadSidebar } from "./cheshire/CheshireMonthlyIntake";
+import { CheshirePortalNavigation } from "./cheshire/CheshirePortalNavigation";
 import { createRequestGuard } from "./cheshire/requestGuard";
 import "./cheshire-portal.css";
 export { CheshireFinanceDashboard as CheshireDashboard } from "./cheshire/CheshireFinanceDashboard";
@@ -242,11 +242,7 @@ function CheshireShellContent({ children }: { children: ReactNode }) {
         <NavLink to="/cheshire/dashboard" className="cfz-sidebar-title">
           Cheshire
         </NavLink>
-        <nav className="cfz-nav" aria-label="Cheshire portal">
-          <NavLink to="/cheshire/dashboard">Dashboard</NavLink>
-          <NavLink to="/cheshire/map">Profitability map</NavLink>
-        </nav>
-        <CheshireMonthlyUploadSidebar />
+        <CheshirePortalNavigation />
         <div className="cfz-sidebar-footer">
           <button onClick={signOut}>Sign out</button>
         </div>
@@ -273,3 +269,4 @@ export function CheshireMapPage({ children }: { children: ReactNode }) {
     </div>
   );
 }
+
