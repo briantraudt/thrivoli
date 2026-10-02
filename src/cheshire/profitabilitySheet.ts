@@ -55,9 +55,18 @@ export function buildProfitabilitySheet(snapshot: FinanceSnapshot | null, metric
     metricRow('schools', 'School invoices', 'Schools · invoiced, not collected cash', 'school_billing', 'school_invoices', 'invoice_reported_month', metrics),
     metricRow('programs', 'Private-program income', 'Private programs · receipt timing unconfirmed', 'cash_programs', 'cash_program_income', 'program_reported_month', metrics),
   ];
-  // Service-date payment figures must remain visible and distinct if a source supplies them.
-  if (Object.values(metrics).some(response => response?.sources.some(source => source.metrics.some(metric => ['insurance_payments', 'patient_payments'].includes(metric.key) && metric.basis === 'service_date')))) {
-    revenue.push(metricRow('insurance-service', 'Insurance payments · service attribution', 'Clinics · service-date basis; do not add to payment-date figures', 'insurance_revenue', 'insurance_payments', 'service_date', metrics), metricRow('patient-service', 'Patient payments · service attribution', 'Clinics · service-date basis; do not add to payment-date figures', 'insurance_revenue', 'patient_payments', 'service_date', metrics));
+  // Every accepted insurance attribution remains distinct; never blend its bases.
+  const alternateBases = [
+    { basis: 'service_date', suffix: 'service', label: 'service attribution', detail: 'Service-date basis' },
+    { basis: 'report_as_of', suffix: 'as-of', label: 'report-as-of', detail: 'Report-as-of basis' },
+  ] as const;
+  for (const alternate of alternateBases) {
+    if (Object.values(metrics).some(response => response?.sources.some(source => source.metrics.some(metric => ['insurance_payments', 'patient_payments'].includes(metric.key) && metric.basis === alternate.basis)))) {
+      revenue.push(
+        metricRow(`insurance-${alternate.suffix}`, `Insurance payments · ${alternate.label}`, `Clinics · ${alternate.detail}; do not add across reporting bases`, 'insurance_revenue', 'insurance_payments', alternate.basis, metrics),
+        metricRow(`patient-${alternate.suffix}`, `Patient payments · ${alternate.label}`, `Clinics · ${alternate.detail}; do not add across reporting bases`, 'insurance_revenue', 'patient_payments', alternate.basis, metrics),
+      );
+    }
   }
   return [
     { id: 'revenue', title: '01  Revenue', note: 'Clinics → schools → private programs. Different accounting bases stay separate.', rows: [...revenue, blockedRow('revenue-total', 'Reconciled revenue', 'Awaiting common accounting definition and coverage', 'coverage_manifest')] },
