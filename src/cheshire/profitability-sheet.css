@@ -5,3 +5,5 @@
 .cps-reason>summary{font-size:10px;font-weight:500;color:#8d774c;cursor:pointer;list-style:none}.cps-reason>summary::-webkit-details-marker{display:none}.cps-reason[open]{flex-basis:100%;text-align:left}.cps-reason>div{font-size:10px;line-height:1.5;color:#6b775f;overflow-wrap:anywhere;font-weight:400}.cps-result .cps-reason>summary{color:#547261}
 
 .cps-value>summary small{display:block;font-size:9px;line-height:1.4;font-weight:450;color:#72836f;margin-top:4px}
+@media(max-width:620px){.cps-dashboard .cfd-heading{flex-direction:column;align-items:stretch}.cps-dashboard .cfd-heading>div{min-width:0}.cps-dashboard .cfd-heading h1{margin-bottom:8px}}
+@media(max-width:360px){.cps-table .cps-label-col{width:132px}.cps-table col{width:132px}.cps-table{min-width:1188px}.cps-table.cps-filtered{min-width:396px}.cps-table th>strong{font-size:10px}.cps-table th,.cps-table td{padding-left:8px;padding-right:8px}}
