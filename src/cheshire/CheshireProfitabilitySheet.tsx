@@ -1,4 +1,4 @@
-import { Fragment, useState } from 'react';
+import { Fragment, useEffect, useRef, useState } from 'react';
 import { ChevronDown, ChevronRight, FileUp, Info } from 'lucide-react';
 import { LOCATIONS, money, type FinanceSnapshot } from './finance';
 import { buildProfitabilitySheet, type MapCategory, type ScopeMetrics, type SheetCell, type SheetScope } from './profitabilitySheet';
@@ -9,12 +9,14 @@ export function CheshireProfitabilitySheet({ snapshot, metrics, categories, loca
   snapshot: FinanceSnapshot | null; metrics: ScopeMetrics; categories: MapCategory[]; location: string; canUpload: boolean; onUpload: (source: SourceType, context: string) => void;
 }) {
   const [collapsed, setCollapsed] = useState<Set<string>>(new Set());
+  const scroller = useRef<HTMLDivElement>(null);
+  useEffect(() => { if (scroller.current) scroller.current.scrollLeft = 0; }, [location]);
   const sections = buildProfitabilitySheet(snapshot, metrics, categories);
   const scopes: SheetScope[] = [...LOCATIONS.filter(name => location === 'all' || name === location), 'all'];
   return <section className="cps-sheet" aria-labelledby="cps-title">
     <header className="cps-sheet-heading"><div><h2 id="cps-title">The profitability sheet</h2><p>Locations across. Revenue and every cost flowing down to profit.</p></div><span>USD · source-supported amounts</span></header>
     <div className="cps-scroll-hint" id="cps-help"><span>Scroll across for all locations. Row labels and headers stay in view.</span><span><i className="cps-unknown-key"/> Unknown <i className="cps-source-key"/> Source amount</span></div>
-    <div className="cps-scroll" role="region" aria-label="Profitability by location, scrollable spreadsheet" aria-describedby="cps-help" tabIndex={0}>
+    <div ref={scroller} className="cps-scroll" role="region" aria-label="Profitability by location, scrollable spreadsheet" aria-describedby="cps-help" tabIndex={0}>
       <table className={`cps-table ${location !== 'all' ? 'cps-filtered' : ''}`}>
         <caption className="cps-sr-only">Source-backed profitability by location. Unknown cells offer uploads. Reference overhead and unlike revenue bases are not combined into profit.</caption>
         <colgroup><col className="cps-label-col"/>{scopes.map(scope => <col key={scope}/>)}</colgroup>
