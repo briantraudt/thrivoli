@@ -39,13 +39,14 @@ test("dashboard renders verified source and all missing/access states without in
     const { render } = await import(pathToFileURL(`${dir}/render.mjs`));
     const ready = render("ready");
     assert.match(ready, /\$14,000\.00/);
-    assert.match(ready, /Month to confirm/);
+    assert.match(ready, /month to confirm/);
     assert.match(ready, /Not yet available/);
-    assert.match(ready, /140 of 140/);
-    assert.match(ready, /Profitability by location, scrollable spreadsheet/);
-    assert.match(ready, /All-source subtotal/);
-    for (const name of ["Cheshire", "Cromwell", "Guilford", "Meriden", "Orange", "Pool", "Torrington"])
-      assert.match(ready, new RegExp(`Upload Insurance payments · ${name}`));
+    assert.match(ready, /140\/140 known/);
+    assert.match(ready, /Expandable financial categories/);
+    assert.match(ready, /All locations/);
+    assert.match(ready, /Upload data/);
+    assert.doesNotMatch(ready, /Upload Insurance payments/);
+    assert.match(ready, /Revenue expenses and profit summary/);
     for (const state of ["loading", "no-access", "empty", "error"]) {
       const html = render(state);
       assert.doesNotMatch(
@@ -56,10 +57,10 @@ test("dashboard renders verified source and all missing/access states without in
       assert.match(html, /Not yet available/);
     }
     const blank = render("ready", null);
-    assert.match(blank, /140 blank cells remain unknown/);
-    assert.doesNotMatch(blank, /<strong>\$0\.00<\/strong>/);
+    assert.match(blank, /Missing/);
+    assert.doesNotMatch(blank, /<b>\$0\.00\/month<\/b>/);
     const zero = render("ready", "0");
-    assert.match(zero, /<strong>\$0\.00<\/strong>/);
+    assert.match(zero, /<b>\$0\.00\/month<\/b>/);
     assert.match(zero, /Not yet available/);
   } finally {
     await rm(dir, { recursive: true, force: true });
