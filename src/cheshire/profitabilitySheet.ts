@@ -5,7 +5,7 @@ import type { MetricBasis, MetricKey } from '../../supabase/functions/_shared/ch
 import type { SourceType } from './intake.ts';
 
 export type SheetScope = 'all' | typeof LOCATIONS[number];
-export type SheetCell = { value: number | null; note: string; source?: string; sourceType?: SourceType };
+export type SheetCell = { value: number | null; note: string; source?: string; sourceType?: SourceType; coverageLabel?: string };
 export type SheetRow = { id: string; label: string; detail: string; kind: 'value' | 'subtotal' | 'result'; cells: Record<SheetScope, SheetCell> };
 export type SheetSection = { id: string; title: string; note: string; rows: SheetRow[] };
 export type MapCategory = { category: string; value: string; segment_index: number | null; position: number };
@@ -20,7 +20,7 @@ function metricRow(id: string, label: string, detail: string, sourceType: Source
     const source = response?.sources.find(item => item.source_type === sourceType);
     const metric = source?.metrics.find(item => item.key === metricKey && item.basis === basis);
     if (!metric || !source) return unknown(response?.blocked.find(item => item.source_type === sourceType)?.reason ?? (['payroll', 'school_billing'].includes(sourceType) && scope !== 'all' ? 'This report has no source-supported location allocation. Company-scope amounts remain separate.' : 'A current validated source is needed for this month, location and reporting basis.'), sourceType);
-    return { value: metric.value, note: `${BASIS_LABELS[basis]}. ${metric.source_rows} source rows; ${metric.source_locations.length ? `${metric.source_locations.length} reported locations` : 'company scope; no location attribution'}. Source subtotal, not complete business coverage.`, sourceType, source: `Document ${source.document_id} · SHA-256 ${source.content_sha256} · ${source.validator_version} · ${source.normalizer_version}` };
+    return { value: metric.value, coverageLabel: scope === 'all' ? 'Source subtotal only' : undefined, note: `${BASIS_LABELS[basis]}. ${metric.source_rows} source rows; ${metric.source_locations.length ? `${metric.source_locations.length} reported locations` : 'company scope; no location attribution'}. Source subtotal, not complete business coverage.`, sourceType, source: `Document ${source.document_id} · SHA-256 ${source.content_sha256} · ${source.validator_version} · ${source.normalizer_version}` };
   }) };
 }
 function blockedRow(id: string, label: string, detail: string, sourceType?: SourceType): SheetRow {
@@ -43,11 +43,11 @@ export function buildProfitabilitySheet(snapshot: FinanceSnapshot | null, metric
     const known = rows.filter(row => row.amount !== null); const total = known.reduce((sum, row) => sum + amountToCents(row.amount!), 0);
     const expected = scope === 'all' ? LOCATIONS.length : 1;
     if (!known.length) return { ...unknown('The original source cell is blank or unavailable. An unknown amount is never zero.', 'overhead'), source: rows.length ? `${snapshot!.sourceName} · ${rows.map(row => `${row.location} ${row.sourceCell}`).join(', ')}` : undefined };
-    return { value: total, note: scope === 'all' ? `${known.length}/${expected} source cells known. ${known.length < expected ? 'Partial known subtotal.' : 'Source subtotal.'} ${baseline ? 'Baseline, not monthly actual.' : 'Source period requires reconciliation.'}` : `${baseline ? 'Fixed monthly baseline' : 'Supplied source amount'}; ${total === 0 ? 'explicit source zero' : 'original source amount'}.`, sourceType: 'overhead', source: `${snapshot!.sourceName} · ${known.map(row => `${row.location} ${row.sourceCell}`).join(', ')} · ${snapshot!.effectiveMonth ?? 'month unconfirmed'} · revision ${snapshot!.revisionId ?? 'unavailable'}` };
+    return { value: total, coverageLabel: scope === 'all' ? `${known.length}/${expected} known${known.length < expected ? ' · partial' : ''}` : undefined, note: scope === 'all' ? `${known.length}/${expected} source cells known. ${known.length < expected ? 'Partial known subtotal.' : 'Source subtotal.'} ${baseline ? 'Baseline, not monthly actual.' : 'Source period requires reconciliation.'}` : `${baseline ? 'Fixed monthly baseline' : 'Supplied source amount'}; ${total === 0 ? 'explicit source zero' : 'original source amount'}.`, sourceType: 'overhead', source: `${snapshot!.sourceName} · ${known.map(row => `${row.location} ${row.sourceCell}`).join(', ')} · ${snapshot!.effectiveMonth ?? 'month unconfirmed'} · revision ${snapshot!.revisionId ?? 'unavailable'}` };
   }) }));
   const overheadSubtotal: SheetRow = { id: 'known-overhead', label: 'Known overhead subtotal', detail: baseline ? 'Partial fixed baseline · excluded from actual profit' : 'Partial supplied costs · accounting match needed', kind: 'subtotal', cells: cells(scope => {
-    const rows = snapshot?.rows.filter(row => scope === 'all' || row.location === scope) ?? []; const known = rows.filter(row => row.amount !== null); const missing = rows.length - known.length;
-    return { value: known.length ? known.reduce((sum, row) => sum + amountToCents(row.amount!), 0) : null, note: `${known.length}/${rows.length || (scope === 'all' ? 140 : 20)} cells have amounts. ${missing} blank cells remain unknown. Not a complete expense total.`, sourceType: 'overhead', source: snapshot ? `${snapshot.sourceName} · revision ${snapshot.revisionId ?? 'unavailable'}` : undefined };
+    const rows = snapshot?.rows.filter(row => scope === 'all' || row.location === scope) ?? []; const known = rows.filter(row => row.amount !== null); const expected = scope === 'all' ? LOCATIONS.length * CATEGORIES.length : CATEGORIES.length; const missing = expected - known.length;
+    return { value: known.length ? known.reduce((sum, row) => sum + amountToCents(row.amount!), 0) : null, coverageLabel: `${known.length}/${expected} known${missing ? ' · partial' : ''}`, note: `${known.length}/${rows.length || (scope === 'all' ? 140 : 20)} cells have amounts. ${missing} blank cells remain unknown. Not a complete expense total.`, sourceType: 'overhead', source: snapshot ? `${snapshot.sourceName} · revision ${snapshot.revisionId ?? 'unavailable'}` : undefined };
   }) };
   const revenue = [
     metricRow('insurance-payments', 'Insurance payments', 'Clinics · payment-date basis', 'insurance_revenue', 'insurance_payments', 'payment_date', metrics),

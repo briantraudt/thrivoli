@@ -8,10 +8,11 @@ const row = (sheet, id) => sheet.flatMap(section => section.rows).find(item => i
 const response = (scope, key, value, source_type = 'cash_programs', basis = 'program_reported_month') => ({ month: '2026-10', location: scope, sources: [{ source_type, document_id: 'synthetic-doc', content_sha256: 'a'.repeat(64), validator_version: 'cheshire-intake-v1', normalizer_version: 'cheshire-metrics-v1', metrics: [{ key, ...METRICS[key], value, basis, location: scope === 'all' ? null : scope, source_locations: scope === 'all' ? [] : [scope], source_rows: 1 }] }], blocked: [], profit: { available: false, reason: 'Unreconciled' }, accounting_request: 'Confirm basis' });
 test('every missing source is unknown, source zero survives, partial company subtotals are explicit', () => {
   const blank = buildProfitabilitySheet(snapshot(), {});
+  assert.match(row(buildProfitabilitySheet(null, {}), 'known-overhead').cells.all.note, /140 blank cells/);
   for (const item of blank.flatMap(section => section.rows)) for (const cell of Object.values(item.cells)) assert.equal(cell.value, null);
   const source = snapshot(); source.rows[0].amount = '0'; source.rows[20].amount = '123.45';
   const sheet = buildProfitabilitySheet(source, {}); const rent = row(sheet, 'overhead-Rent');
-  assert.equal(rent.cells.Cheshire.value, 0); assert.equal(rent.cells.Cromwell.value, 12345); assert.equal(rent.cells.Guilford.value, null); assert.equal(rent.cells.all.value, 12345); assert.match(rent.cells.all.note, /2\/7.*Partial/); assert.match(rent.cells.Cheshire.source, /Cheshire D5/);
+  assert.equal(rent.cells.Cheshire.value, 0); assert.equal(rent.cells.Cromwell.value, 12345); assert.equal(rent.cells.Guilford.value, null); assert.equal(rent.cells.all.value, 12345); assert.equal(rent.cells.all.coverageLabel, '2/7 known · partial'); assert.match(rent.cells.all.note, /2\/7.*Partial/); assert.match(rent.cells.Cheshire.source, /Cheshire D5/);
   assert.equal(row(sheet, 'known-overhead').cells.all.value, 12345); assert.match(row(sheet, 'known-overhead').cells.all.note, /138 blank cells/);
 });
 test('company payroll and school figures are never allocated, missing locations are not zero', () => {
