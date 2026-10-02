@@ -64,13 +64,13 @@ function overheadMetadataKind(row:(string|null)[]):'month'|'control'|null {
  if(/^(report|control|grand)\s*total$/i.test(filled[0].value??'')&&/^\d+(\.\d{1,2})?$/.test(filled[1].value??''))return 'control';
  return null;
 }
-export function parseXlsx(bytes:Uint8Array,sourceType:SourceType):ParsedTable {
+export function readXlsxSheet(bytes:Uint8Array):{matrix:(string|null)[][];formulas:boolean} {
  const entries=inspectXlsxArchive(bytes);const files:Record<string,Uint8Array>=Object.create(null);
  const read=(name:string)=>{const entry=entries.get(name);if(!entry)return '';files[name]??=expandEntry(bytes,entry);const value=strFromU8(files[name]);if(/<!DOCTYPE|<!ENTITY/i.test(value))throw new Error('Workbook XML entity declarations are unsupported.');return value;};
  const budget=createXlsxXmlBudget();const identity=resolveXlsxIdentity([...entries.keys()],read,budget);
  const shared=identity.sharedStrings?readXlsxStrings(read(identity.sharedStrings),budget):[];
  if(shared.length>200000||shared.some(value=>value.length>20000))throw new Error('Workbook strings exceed the review limit.');
- const candidates:ParsedTable[]=[];let totalCells=0;let populatedSheets=0;
+ let found:{matrix:(string|null)[][];formulas:boolean}|null=null;let totalCells=0;let populatedSheets=0;
  for(const name of identity.worksheets){
   const xml=read(name),matrix:(string|null)[][]=[];let formulas=false;let maxCol=0;
   for(const cell of readXlsxCells(xml,budget)){
@@ -85,6 +85,13 @@ export function parseXlsx(bytes:Uint8Array,sourceType:SourceType):ParsedTable {
   if(!matrix.some(row=>row?.some(value=>value!==null&&value!==''))){if(formulas)throw new Error('A formula-bearing worksheet without cached values requires manual review; formulas are never executed.');continue;}
   if(++populatedSheets>1)throw new Error('Multiple populated worksheets require manual review. Upload one monthly aggregate sheet or CSV per document.');
   const rectangular=Array.from({length:matrix.length},(_,index)=>Array.from({length:maxCol},(_,col)=>matrix[index]?.[col]??null));
+  found={matrix:rectangular,formulas};
+ }
+ if(!found)throw new Error('No populated worksheet was found.');
+ return found;
+}
+export function parseXlsx(bytes:Uint8Array,sourceType:SourceType):ParsedTable {
+ const {matrix:rectangular,formulas}=readXlsxSheet(bytes);
   const period=sourceMonth(rectangular),control=sourceControl(rectangular);
   const blocked=[...new Set(rectangular.flatMap(row=>mapHeaders(row.map(value=>value??''),sourceType).blocked))];
   if(rectangular.some(row=>row.some(value=>value&&/\b\d{3}-\d{2}-\d{4}\b/.test(value))))blocked.push('restricted_identifier_pattern');
@@ -94,14 +101,13 @@ export function parseXlsx(bytes:Uint8Array,sourceType:SourceType):ParsedTable {
    if(headerRow>=0){const columns=rectangular[headerRow].map((value,index)=>({value,index})).filter(item=>INTAKE_LOCATIONS.includes(item.value as typeof INTAKE_LOCATIONS[number]));const rows:Record<string,string|null>[]=[];const sourceRows:number[]=[];const matrixWarnings:string[]=[];const metadataCounts={month:0,control:0};const inspectMetadata=(row:(string|null)[],index:number)=>{if(!row.some(value=>value!==null&&value!==''))return;const kind=overheadMetadataKind(row);if(kind)metadataCounts[kind]++;else matrixWarnings.push(`Unconsumed content in overhead metadata row ${index+1} requires manual review.`);};rectangular.slice(0,headerRow).forEach(inspectMetadata);const otherHeaderCells=rectangular[headerRow].filter((value,index)=>value!==null&&value!==''&&!columns.some(column=>column.index===index));if(otherHeaderCells.length>1||otherHeaderCells.some(value=>mapHeaders([value??''],'overhead').mapped[0]!=='expense_category'))matrixWarnings.push('Unrecognized content in the overhead location header requires manual review.');
     for(let row=headerRow+1;row<rectangular.length;row++){const category=rectangular[row].find(value=>INTAKE_EXPENSE_CATEGORIES.includes(value as typeof INTAKE_EXPENSE_CATEGORIES[number]));if(!category){inspectMetadata(rectangular[row],row);continue;}const categoryCol=rectangular[row].indexOf(category);if(rectangular[row].some((value,index)=>value!==null&&value!==''&&index!==categoryCol&&!columns.some(column=>column.index===index)))matrixWarnings.push(`Unmapped nonempty cells on workbook row ${row+1} require review.`);for(const column of columns){rows.push({reporting_month:period,location:column.value,expense_category:category,amount:rectangular[row][column.index],report_total:control});sourceRows.push(row+1);}}
     if(metadataCounts.month>1||metadataCounts.control>1)matrixWarnings.push('Repeated overhead month or control-total rows require manual reconciliation.');
-    candidates.push({headers:['reporting_month','location','expense_category','amount','report_total'],rows,sourceRows,sourcePeriod:period,controlTotal:control,warnings:[...matrixWarnings,...(formulas?['Formula-derived or cached workbook values need manual verification; formulas are never executed.']:[])],blockedFields:[]});continue;
+    return {headers:['reporting_month','location','expense_category','amount','report_total'],rows,sourceRows,sourcePeriod:period,controlTotal:control,warnings:[...matrixWarnings,...(formulas?['Formula-derived or cached workbook values need manual verification; formulas are never executed.']:[])],blockedFields:[]};
    }
   }
   let header=-1,score=0;for(let index=0;index<Math.min(rectangular.length,40);index++){const fields=mapHeaders(rectangular[index].map(value=>value??''),sourceType).mapped.filter(Boolean).length;if(fields>score){score=fields;header=index;}}
-  if(header>=0&&score>=2){const table=tableFromMatrix(rectangular.slice(header),sourceType);if(rectangular.slice(0,header).some(row=>row.some(Boolean)))table.warnings.push('Nonempty content before the header requires manual review; no unconsumed content is silently discarded.');table.sourceRows=table.sourceRows.map(row=>row+header);if(formulas)table.warnings.push('Formula-derived or cached workbook values need manual verification; formulas are never executed.');candidates.push(table);}
- }
- if(populatedSheets!==1)throw new Error('Multiple populated worksheets require manual review. Upload one monthly aggregate sheet or CSV per document.');
- if(candidates.length!==1)throw new Error(candidates.length?'The workbook contains multiple candidate tables. Upload one monthly aggregate table per document.':'No supported monthly aggregate table was found. Use the column template or provide a CSV export.');
- return candidates[0];
+  if(header>=0&&score>=2){const table=tableFromMatrix(rectangular.slice(header),sourceType);if(rectangular.slice(0,header).some(row=>row.some(Boolean)))table.warnings.push('Nonempty content before the header requires manual review; no unconsumed content is silently discarded.');table.sourceRows=table.sourceRows.map(row=>row+header);if(formulas)table.warnings.push('Formula-derived or cached workbook values need manual verification; formulas are never executed.');return table;}
+ throw new Error('No supported monthly aggregate table was found. Use the column template or provide a CSV export.');
 }
+
 export function parseUpload(bytes:Uint8Array,filename:string,mime:string,sourceType:SourceType){const extension=validateFileSignature(bytes,filename,mime);if(extension==='csv')return parseDelimited(new TextDecoder('utf-8',{fatal:true}).decode(bytes),sourceType);if(extension==='xlsx')return parseXlsx(bytes,sourceType);return null;}
+

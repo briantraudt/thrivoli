@@ -1,3 +1,4 @@
+import type {MappingProvenance} from './cheshire-report-mapping.ts';
 /** Shared, deterministic document requirements. No customer files or amounts belong here. */
 export const MAX_PAYER_LENGTH = 160;
 export const INTAKE_LOCATIONS = ['Cheshire', 'Cromwell', 'Guilford', 'Meriden', 'Orange', 'Pool', 'Torrington'] as const;
@@ -20,7 +21,7 @@ export type IntakeStatus = 'uploading'|'received'|'reviewing'|'incomplete'|'comp
 export type CheckKey = 'document_type'|'reporting_period'|'required_fields'|'row_values'|'location_coverage'|'reconciliation'|'privacy';
 export const REQUIRED_CHECKS: CheckKey[] = ['document_type','reporting_period','required_fields','row_values','location_coverage','reconciliation','privacy'];
 export type ReviewCheck = {key: CheckKey; passed: boolean; message: string};
-export type ReviewResult = {validator_version:'cheshire-intake-v1'|'source-audit-v1';status:'incomplete'|'complete'|'quarantined';reported_month:string|null;checks:ReviewCheck[];missing_items:string[];row_count?:number;reported_metrics?:{label:string;value:number;unit:'count'|'USD'|'hours'|'units';note?:string}[];covered_locations:string[];canonical_fields:string[];ai_status:'not_requested'|'pending'|'assisted'|'unavailable';ai_note?:string;ai_suggestions?:{check_codes:CheckKey[];source_types:SourceType[]};related_requests?:{target_source_type:SourceType;title:string;period_label:string;scope_label:string;unlocks:string;missing_items:string[]}[];reference_basis?:'fixed_monthly_baseline';missing_amounts?:{location:string;category:string;source_cell?:string}[]};
+export type ReviewResult = {mapping?:MappingProvenance;validator_version:'cheshire-intake-v1'|'source-audit-v1';status:'incomplete'|'complete'|'quarantined';reported_month:string|null;checks:ReviewCheck[];missing_items:string[];row_count?:number;reported_metrics?:{label:string;value:number;unit:'count'|'USD'|'hours'|'units';note?:string}[];covered_locations:string[];canonical_fields:string[];ai_status:'not_requested'|'pending'|'assisted'|'unavailable';ai_note?:string;ai_suggestions?:{check_codes:CheckKey[];source_types:SourceType[]};related_requests?:{target_source_type:SourceType;title:string;period_label:string;scope_label:string;unlocks:string;missing_items:string[]}[];reference_basis?:'fixed_monthly_baseline';missing_amounts?:{location:string;category:string;source_cell?:string}[]};
 export type IntakeDocument = {id:string;source_type:SourceType;requested_month:string|null;reported_month:string|null;file_name:string;content_sha256:string;status:IntakeStatus;created_at:string;reviewed_at:string|null;review_revision?:string|null;validation_dependency_revisions?:Record<string,string>;source_origin:'portal_upload'|'existing_source';storage_path:string|null;validation:ReviewResult|null;failure_message:string|null;supersedes_id?:string|null;validation_dependencies?:Record<string,string>;validation_scope?:Record<string,unknown>;source_period_label?:string|null;source_scope_label?:string|null;figure_unlocked?:string|null};
 export type ParsedTable = {headers:string[];rows:Record<string,string|null>[];sourceRows:number[];sourcePeriod:string|null;controlTotal:string|null;warnings:string[];blockedFields:string[]};
 export type ValidationContext = {verifiedPayrollStaffIds?:string[];expectedDistricts?:string[];expectedSchoolProvidersByDistrict?:Record<string,string[]>;overheadByLocationCategory?:Record<string,number|null>;expectedProvidersBySource?:Partial<Record<SourceType,Record<string,string[]>>>};
@@ -43,7 +44,7 @@ export function mapHeaders(headers:string[],sourceType:SourceType){
  return {mapped,duplicates:[...new Set(duplicates)],blocked,unmapped:headers.map((_,index)=>index).filter(index=>!mapped[index])};
 }
 /** CSV parser handles quoted separators/newlines and rejects ragged or over-limit input. */
-export function parseDelimited(text:string,sourceType:SourceType):ParsedTable {
+export function parseDelimitedMatrix(text:string,preserveEmptyRows=false):(string|null)[][] {
  if(text.length>5_000_000)throw new Error('The text export exceeds the review limit.');
  const cleaned=text.replace(/^\uFEFF/,'');const firstLine=cleaned.split(/\r?\n/,1)[0];const delimiter=firstLine.includes('\t')&&!firstLine.includes(',')?'\t':',';
  const matrix:string[][]=[];let row:string[]=[];let field='';let quoted=false;let closedQuote=false;
@@ -52,13 +53,14 @@ export function parseDelimited(text:string,sourceType:SourceType):ParsedTable {
   if(quoted){if(char==='"'){if(cleaned[index+1]==='"'){field+='"';index++;}else{quoted=false;closedQuote=true;}}else field+=char;}
   else if(char==='"'){if(field.length||closedQuote)throw new Error('Invalid quoting in the delimited export.');quoted=true;}
   else if(char===delimiter){row.push(field.trim());field='';closedQuote=false;}
-  else if(char==='\n'||char==='\r'){if(char==='\r'&&cleaned[index+1]==='\n')index++;row.push(field.trim());if(row.some(value=>value!==''))matrix.push(row);row=[];field='';closedQuote=false;}
+  else if(char==='\n'||char==='\r'){if(char==='\r'&&cleaned[index+1]==='\n')index++;row.push(field.trim());if(preserveEmptyRows||row.some(value=>value!==''))matrix.push(row);row=[];field='';closedQuote=false;}
   else {if(closedQuote&&!/\s/.test(char))throw new Error('Unexpected text after a quoted field.');field+=char;}
   if(matrix.length>10000||row.length>100||field.length>20000)throw new Error('The export exceeds the row, column or cell review limit.');
  }
  if(quoted)throw new Error('An export field has an unclosed quote.');row.push(field.trim());if(row.some(value=>value!==''))matrix.push(row);
- return tableFromMatrix(matrix,sourceType);
+ return matrix;
 }
+export function parseDelimited(text:string,sourceType:SourceType):ParsedTable {return tableFromMatrix(parseDelimitedMatrix(text),sourceType);}
 export function tableFromMatrix(matrix:(string|null)[][],sourceType:SourceType):ParsedTable {
  if(!matrix.length||matrix.length>10001)throw new Error('Provide a non-empty export with at most 10,000 rows.');
  const headers=matrix[0].map(value=>(value??'').trim());if(headers.length>100||!headers.some(Boolean))throw new Error('The export needs a header row.');
@@ -194,3 +196,4 @@ export function sanitizedAiSummary(review:ReviewResult,sourceType:SourceType){
  const requirement=INTAKE_REQUIREMENTS.find(item=>item.id===sourceType);const allowed=new Set([...(requirement?.fields??[]),...(requirement?.optionalFields??[])]);
  return {source_type:sourceType,validator_version:review.validator_version,status:review.status,canonical_fields:review.canonical_fields.filter(field=>allowed.has(field)),required_fields:[...allowed],checks:review.checks.map(check=>({key:check.key,passed:check.passed})),row_count:review.row_count,covered_location_count:review.covered_locations.length};
 }
+

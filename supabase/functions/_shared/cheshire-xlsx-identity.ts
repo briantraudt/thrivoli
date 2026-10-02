@@ -9,7 +9,7 @@ const STRINGS_TYPE='application/vnd.openxmlformats-officedocument.spreadsheetml.
 export type XlsxXmlBudget={nodes:number;attributes:number;nameChars:number};
 export const createXlsxXmlBudget=():XlsxXmlBudget=>({nodes:25000,attributes:50000,nameChars:4*1024*1024});
 type Element={name:string;path:string[];attrs:Map<string,string>;text:string;children:Element[]};
-const fail=():never=>{throw new Error('Workbook worksheet identity is ambiguous or unsupported. Export one visible monthly aggregate sheet for review.');};
+function fail():never {throw new Error('Workbook worksheet identity is ambiguous or unsupported. Export one visible monthly aggregate sheet for review.');}
 function decode(value:string){
  if(/&(?!amp;|lt;|gt;|quot;|apos;|#\d+;|#x[0-9a-fA-F]+;)/.test(value))fail();
  return value.replace(/&(amp|lt|gt|quot|apos|#\d+|#x[0-9a-fA-F]+);/g,(_,entity:string)=>{
@@ -109,3 +109,4 @@ export function readXlsxCells(xml:string,budget=createXlsxXmlBudget()){
  for(const node of nodes)if(dataNames.has(node.name)&&!consumed.has(node))fail();
  return cells;
 }
+
