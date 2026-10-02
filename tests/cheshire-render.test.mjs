@@ -42,16 +42,10 @@ test("dashboard renders verified source and all missing/access states without in
     assert.match(ready, /Month to confirm/);
     assert.match(ready, /Not yet available/);
     assert.match(ready, /140 of 140/);
-    for (const name of [
-      "Cheshire",
-      "Cromwell",
-      "Guilford",
-      "Meriden",
-      "Orange",
-      "Pool",
-      "Torrington",
-    ])
-      assert.match(ready, new RegExp(`View ${name} overhead details`));
+    assert.match(ready, /Profitability by location, scrollable spreadsheet/);
+    assert.match(ready, /All-source subtotal/);
+    for (const name of ["Cheshire", "Cromwell", "Guilford", "Meriden", "Orange", "Pool", "Torrington"])
+      assert.match(ready, new RegExp(`Upload Insurance payments · ${name}`));
     for (const state of ["loading", "no-access", "empty", "error"]) {
       const html = render(state);
       assert.doesNotMatch(
@@ -71,3 +65,4 @@ test("dashboard renders verified source and all missing/access states without in
     await rm(dir, { recursive: true, force: true });
   }
 });
+
