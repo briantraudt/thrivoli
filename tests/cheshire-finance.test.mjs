@@ -226,7 +226,7 @@ test("production dashboard has no pilot client amounts or therapist name and can
 
 test('spreadsheet summary is namespaced and cannot inherit generic global button layout',()=>{
  const source=readFileSync(new URL('../src/cheshire/CheshireFinanceDashboardView.tsx',import.meta.url),'utf8');
- assert.match(source,/cps-summary/);
+ assert.match(source,/csd-totals/);
  assert.doesNotMatch(source,/className=["']primary["']/);
 });
 
