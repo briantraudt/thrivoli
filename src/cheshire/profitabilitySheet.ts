@@ -5,7 +5,7 @@ import type { MetricBasis, MetricKey } from '../../supabase/functions/_shared/ch
 import type { SourceType } from './intake.ts';
 
 export type SheetScope = 'all' | typeof LOCATIONS[number];
-export type SheetCell = { value: number | null; note: string; source?: string; sourceType?: SourceType; coverageLabel?: string };
+export type SheetCell = { value: number | null; note: string; source?: string; sourceType?: SourceType; coverageLabel?: string; availability?: 'unavailable' | 'checking' };
 export type SheetRow = { id: string; label: string; detail: string; kind: 'value' | 'subtotal' | 'result'; cells: Record<SheetScope, SheetCell> };
 export type SheetSection = { id: string; title: string; note: string; rows: SheetRow[] };
 export type MapCategory = { category: string; value: string; segment_index: number | null; position: number };
