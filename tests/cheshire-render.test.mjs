@@ -43,7 +43,7 @@ test("dashboard renders verified source and all missing/access states without in
     assert.match(ready, /Not yet available/);
     assert.match(ready, /140\/140 known/);
     assert.match(ready, /Expandable financial categories/);
-    assert.match(ready, /All locations/);
+    assert.match(ready, /All profit centers/);
     assert.match(ready, /Upload data/);
     assert.doesNotMatch(ready, /Upload Insurance payments/);
     assert.match(ready, /Revenue expenses and profit summary/);

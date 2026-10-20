@@ -1,6 +1,6 @@
 import {parseCumulativeReport} from '../../supabase/functions/_shared/cheshire-cumulative.ts';
 import {validateMapping,mappingFromProvenance} from '../../supabase/functions/_shared/cheshire-report-mapping.ts';
-import { INTAKE_REQUIREMENTS, REQUIRED_CHECKS, SOURCE_TYPES, hasCompletionEvidence, isMonth, type IntakeDocument, type SourceType, type ReviewResult } from '../../supabase/functions/_shared/cheshire-intake.ts';
+import { INTAKE_REQUIREMENTS, REQUIRED_CHECKS, SOURCE_TYPES, hasCompletionEvidence, hasIndependentSchoolScope, isMonth, type IntakeDocument, type SourceType, type ReviewResult } from '../../supabase/functions/_shared/cheshire-intake.ts';
 import { financeSummary, type FinanceSnapshot } from './finance.ts';
 export { INTAKE_REQUIREMENTS, SOURCE_TYPES, isMonth };
 export type { IntakeDocument, SourceType, ReviewResult };
@@ -33,7 +33,7 @@ export function buildMonthlyChecklist(documents:IntakeDocument[],selectedMonth:s
  };
  const matchesDependency=(document:IntakeDocument,kind:SourceType,visiting=new Set<SourceType>()):boolean=>{
   const expected=currentDependency(kind,visiting);
-  return Boolean(expected&&document.validation_dependencies?.[kind]===`${expected.id}:${expected.content_sha256}`&&document.validation_dependency_revisions?.[kind]===expected.review_revision);
+  return Boolean(expected&&(document.source_type!=='school_billing'||kind!=='coverage_manifest'||hasIndependentSchoolScope(expected.validation))&&document.validation_dependencies?.[kind]===`${expected.id}:${expected.content_sha256}`&&document.validation_dependency_revisions?.[kind]===expected.review_revision);
  };
  return INTAKE_REQUIREMENTS.map(requirement=>{
   const matching=active.filter(doc=>doc.source_type===requirement.id);const reference=snapshot&&requirement.id==='overhead'&&(matching.length===0||matching.every(document=>document.validation?.reference_basis==='fixed_monthly_baseline'&&document.validation_dependencies?.overhead_reference===snapshot.revisionId))?snapshot:null;
@@ -41,6 +41,8 @@ export function buildMonthlyChecklist(documents:IntakeDocument[],selectedMonth:s
   const covered=[...new Set(matching.flatMap(doc=>doc.reported_month===selectedMonth?doc.validation?.covered_locations??[]:[]))];
   if(!matching.length)return{id:requirement.id,title:requirement.shortTitle,status:'missing',documents:[],missing:['No current-month source has been received for this document group.'],coveredLocations:[],requiresUpload:true,carriedForward:false,summary:'Current-period source needed'};
   const latest=matching[0];const missing=[...(latest.validation?.missing_items??[])];
+  if(requirement.id==='school_billing'&&latest.validation?.validator_version==='cheshire-intake-v1'&&!hasIndependentSchoolScope(latest.validation))missing.push('Re-review this school billing source under the independent school scope.');
+  if(requirement.id==='school_billing'&&active.some(document=>document.source_type==='coverage_manifest'&&!hasIndependentSchoolScope(document.validation)))missing.push('Re-review the monthly coverage manifest with school location=not_applicable and independent district/provider scope before school billing.');
   const baselineStale=requirement.id==='operating_expenses'&&(!snapshot?.revisionId||latest.validation_dependencies?.overhead_reference!==snapshot.revisionId);
   const dependencyStale=baselineStale||dependentKinds(requirement.id).some(kind=>!matchesDependency(latest,kind));
   if(dependencyStale)missing.push('A required monthly supporting source is missing, changed or not verified. Re-run this review after the supporting source is complete.');

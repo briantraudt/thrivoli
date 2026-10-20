@@ -1,5 +1,5 @@
 /** Deterministic, private normalization. Never pass this module's rows or results to AI. */
-import { INTAKE_LOCATIONS, MAX_PAYER_LENGTH, REQUIRED_CHECKS, SOURCE_TYPES, isMonth, canonicalField, type ParsedTable, type ReviewResult, type SourceType } from './cheshire-intake.ts';
+import { hasIndependentSchoolScope, INTAKE_LOCATIONS, MAX_PAYER_LENGTH, REQUIRED_CHECKS, SOURCE_TYPES, isMonth, canonicalField, type ParsedTable, type ReviewResult, type SourceType } from './cheshire-intake.ts';
 export const NORMALIZER_VERSION = 'cheshire-metrics-v1' as const;
 export const METRICS = {
   insurance_payments: { label: 'Reported insurance payments', unit: 'USD', scale: 100 },
@@ -60,7 +60,7 @@ export function normalizationIssue(table:ParsedTable,source:SourceType):'currenc
  return null;
 }
 export function normalizeMetrics(table:ParsedTable,source:SourceType,month:string,review:ReviewResult):NormalizedRow[] {
- if(!isMonth(month)||!verifiedReview(review,month))return [];
+ if(!isMonth(month)||!verifiedReview(review,month)||source==='school_billing'&&!hasIndependentSchoolScope(review))return [];
  if(!SOURCE_KEYS[source]||normalizationIssue(table,source))return []; // Manifest/allocation are evidence, never financial measures.
  return table.rows.map((raw,index)=>{
   if(raw.reporting_month!==month)throw new Error('A normalized source has a different reporting month.');
@@ -91,7 +91,7 @@ function assertRow(row:NormalizedRow,source:SourceType){
  if(source==='operating_expenses'&&keys.length!==1)throw new Error('Overlapping operating measures.');
 }
 function monthOf(value:string|null){return value?.slice(0,7);}
-function complete(doc:MetricDocument,month:string){return doc.source_origin==='portal_upload'&&doc.status==='complete'&&monthOf(doc.requested_month)===month&&monthOf(doc.reported_month)===month&&verifiedReview(doc.validation,month);}
+function complete(doc:MetricDocument,month:string){return (doc.source_type!=='school_billing'||hasIndependentSchoolScope(doc.validation))&&doc.source_origin==='portal_upload'&&doc.status==='complete'&&monthOf(doc.requested_month)===month&&monthOf(doc.reported_month)===month&&verifiedReview(doc.validation,month);}
 export function dependencyRevision(doc:MetricDocument){return typeof doc.review_token==='string'?doc.review_token:null;}
 const dependenciesFor=(source:SourceType):SourceType[]=>['insurance_revenue','clinic_activity','school_billing','cash_programs','payroll','operating_expenses'].includes(source)?['coverage_manifest']:source==='staff_allocation'?['coverage_manifest','payroll']:[];
 function equalMap(a:Record<string,string>,b:Record<string,string>){return JSON.stringify(Object.entries(a).sort())===JSON.stringify(Object.entries(b).sort());}
@@ -106,13 +106,15 @@ export function serveMetrics(input:{documents:MetricDocument[];batches:MetricBat
  for(const source of SOURCE_TYPES.filter(source=>SOURCE_KEYS[source])){
   const candidates=active.filter(doc=>doc.source_type===source);if(!candidates.length)continue;
   const doc=current(source);let reason=!doc?(candidates.length>1?'Multiple active files need overlap and combined-scope reconciliation.':'This source is awaiting complete same-month validation.') : '';
+  if(source==='school_billing'&&candidates.length===1&&!hasIndependentSchoolScope(candidates[0].validation))reason='Re-review school billing under the independent school scope after its monthly coverage manifest is reviewed.';
   if(doc){
    const matching=input.batches.filter(batch=>batch.document_id===doc.id&&batch.review_token===doc.review_token);
    const batch=matching.length===1?matching[0]:null;
    if(!batch||batch.content_sha256!==doc.content_sha256||monthOf(batch.reporting_month)!==month||batch.validator_version!==doc.validation?.validator_version||batch.normalizer_version!==NORMALIZER_VERSION||!equalMap(batch.validation_dependencies,doc.validation_dependencies??{}))reason='Recheck this validated upload to produce its current metric version.';
    if(!reason&&batch){
     for(const depKind of [...new Set([...dependenciesFor(source),...Object.keys(batch.dependency_revisions) as SourceType[]])]){
-     const dep=current(depKind);if(!dep||doc.validation_dependencies?.[depKind]!==`${dep.id}:${dep.content_sha256}`||batch.dependency_revisions[depKind]!==dependencyRevision(dep))reason='A supporting source changed or is unavailable. Recheck this upload after the supporting source is validated.';
+     const dep=current(depKind);if(source==='school_billing'&&depKind==='coverage_manifest'&&dep&&!hasIndependentSchoolScope(dep.validation))reason='Re-review the monthly coverage manifest under the independent school scope, then re-review school billing.';
+     if(!dep||doc.validation_dependencies?.[depKind]!==`${dep.id}:${dep.content_sha256}`||batch.dependency_revisions[depKind]!==dependencyRevision(dep))reason='A supporting source changed or is unavailable. Recheck this upload after the supporting source is validated.';
     }
     if(source==='operating_expenses'&&(!input.overhead_revision||doc.validation_dependencies?.overhead_reference!==input.overhead_revision))reason='The overhead reference changed or is unavailable. Reconcile expense overlap again.';
     if(!reason&&batch.normalization_issue)reason=batch.normalization_issue==='currency_confirmation'?'Add an explicit currency column with USD to this aggregate export before monetary metrics can be displayed.':'Repeated reporting keys need reconciliation before these rows can be added without overlap.';
@@ -126,7 +128,7 @@ export function serveMetrics(input:{documents:MetricDocument[];batches:MetricBat
        if(row.payer){const index=payerBreakdown.findIndex(item=>item.payer===row.payer);const prior=index<0?null:payerBreakdown[index];const subtotal={payer:row.payer,value:total([prior?.value??0,row.measures[key]!]),source_rows:(prior?.source_rows??0)+1,source_locations:[...new Set([...(prior?.source_locations??[]),...(row.location?[row.location]:[])])]};if(index<0)payerBreakdown.push(subtotal);else payerBreakdown[index]=subtotal;}
        groups.set(group,{key,label:meta.label,unit:meta.unit,scale:meta.scale,value:total([existing?.value??0,row.measures[key]!]),basis:row.basis,location:location==='all'?null:location,source_locations:[...new Set([...(existing?.source_locations??[]),...(row.location?[row.location]:[])])],source_rows:(existing?.source_rows??0)+1,...(row.payer?{payer_breakdown:payerBreakdown}: {})});}
      }
-     if(!groups.size&&location!=='all'){reason='No source-supported location allocation is available for this metric.';}
+     if(!groups.size&&location!=='all'){reason=source==='school_billing'?'School billing is independent of clinic locations. View its subtotal with Schools or All profit centers selected.':'No source-supported location allocation is available for this metric.';}
      else if([...groups.values()].some(metric=>(metric.payer_breakdown?.length??0)>100))reason='More than 100 payer identifiers need a reconciled aggregate payer scope before dashboard display.';
      else result.sources.push({document_id:doc.id,content_sha256:doc.content_sha256,validator_version:batch.validator_version,normalizer_version:batch.normalizer_version,source_type:source,coverage:'validated_source_scope',location_coverage:[...new Set(batch.rows.map(row=>row.location).filter((value):value is string=>value!==null))],metrics:[...groups.values()]});
     }

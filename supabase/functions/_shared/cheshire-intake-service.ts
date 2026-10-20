@@ -1,7 +1,7 @@
 import {MAPPING_VERSION,parseMappedUpload,validateMapping,mappingFromProvenance,validateRecognitionSummary,type MappingProvenance} from './cheshire-report-mapping.ts';
 import { INTAKE_LOCATIONS } from './cheshire-intake.ts';
 import { NORMALIZER_VERSION, normalizeMetrics, normalizationIssue, dependencyRevision, serveMetrics, type MetricDocument } from './cheshire-metrics.ts';
-import { SOURCE_TYPES, REQUIRED_CHECKS, isMonth, validateTable, reviewFixedBaseline, sanitizedAiSummary, type SourceType, type ReviewResult, type ValidationContext } from './cheshire-intake.ts';
+import { hasIndependentSchoolScope, SOURCE_TYPES, REQUIRED_CHECKS, isMonth, validateTable, reviewFixedBaseline, sanitizedAiSummary, type SourceType, type ReviewResult, type ValidationContext } from './cheshire-intake.ts';
 import { MAX_UPLOAD_BYTES, UPLOAD_TYPES, uploadExtension, parseUpload } from './cheshire-files.ts';
 export type IntakeEnvironment={SUPABASE_URL:string;SUPABASE_SERVICE_ROLE_KEY:string;HF_TOKEN?:string};
 type Fetcher=typeof fetch;
@@ -94,7 +94,7 @@ export async function handleIntake(request:Request,environment:IntakeEnvironment
   if(table){
    const scopeRows=await db(`cheshire_intake_document?requested_month=eq.${document.requested_month}&source_type=in.(coverage_manifest,payroll)&order=created_at.desc,id.desc&limit=100`) as DocumentRow[];
    if(scopeRows.length>=100)throw new IntakeError(409,'scope_review_limit','Too many source versions need reconciliation before this monthly scope can be verified.');const superseded=new Set(scopeRows.map(row=>row.supersedes_id).filter(Boolean));const active=scopeRows.filter(row=>!superseded.has(row.id));const manifests=active.filter(row=>row.source_type==='coverage_manifest');const payrolls=active.filter(row=>row.source_type==='payroll');const manifest=manifests.length===1?manifests[0]:undefined;const payroll=payrolls.length===1?payrolls[0]:undefined;
-   if(!['coverage_manifest','overhead'].includes(document.source_type)&&manifest&&complete(manifest,month)&&typeof manifest.review_revision==='string'&&manifest.validation_scope){context.expectedProvidersBySource=manifest.validation_scope.expectedProvidersBySource as ValidationContext['expectedProvidersBySource'];context.expectedDistricts=manifest.validation_scope.expectedDistricts as string[];context.expectedSchoolProvidersByDistrict=manifest.validation_scope.expectedSchoolProvidersByDistrict as Record<string,string[]>;dependencies.coverage_manifest=`${manifest.id}:${manifest.content_sha256}`;const revision=dependencyRevision(manifest as MetricDocument);if(revision)dependencyRevisions.coverage_manifest=revision;}
+   if(!['coverage_manifest','overhead'].includes(document.source_type)&&manifest&&complete(manifest,month)&&typeof manifest.review_revision==='string'&&manifest.validation_scope){context.expectedProvidersBySource=manifest.validation_scope.expectedProvidersBySource as ValidationContext['expectedProvidersBySource'];context.expectedDistricts=manifest.validation_scope.expectedDistricts as string[];context.expectedSchoolProvidersByDistrict=manifest.validation_scope.expectedSchoolProvidersByDistrict as Record<string,string[]>;if(hasIndependentSchoolScope(manifest.validation))context.schoolScopeVersion=manifest.validation!.school_scope_version;dependencies.coverage_manifest=`${manifest.id}:${manifest.content_sha256}`;const revision=dependencyRevision(manifest as MetricDocument);if(revision)dependencyRevisions.coverage_manifest=revision;}
    if(document.source_type==='staff_allocation'&&payroll&&complete(payroll,month)&&payroll.validation_scope&&manifest&&payroll.validation_dependencies?.coverage_manifest===`${manifest.id}:${manifest.content_sha256}`&&typeof manifest.review_revision==='string'&&(payroll.validation_dependency_revisions as Record<string,string>|undefined)?.coverage_manifest===manifest.review_revision){context.verifiedPayrollStaffIds=payroll.validation_scope.staffIds as string[];dependencies.payroll=`${payroll.id}:${payroll.content_sha256}`;const revision=dependencyRevision(payroll as MetricDocument);if(revision)dependencyRevisions.payroll=revision;}
    if(document.source_type==='operating_expenses'){const baselines=await db('cheshire_finance_snapshot?id=eq.current-overhead&select=cadence,cost_basis,effective_month,overhead_rows,revision_id');const baseline=baselines[0];if(baseline&&(baseline.cost_basis==='fixed_monthly_baseline'||baseline.effective_month===document.requested_month)){dependencies.overhead_reference=baseline.revision_id;context.overheadByLocationCategory={};for(const row of baseline.overhead_rows??[]){context.overheadByLocationCategory[JSON.stringify([row.location,row.category])]=row.amount===null?null:Math.round(Number(row.amount)*100);}}}
    if(document.source_type==='overhead'){const baselines=await db('cheshire_finance_snapshot?id=eq.current-overhead&select=source_sha256,cadence,cost_basis,basis_note,basis_confirmed_at,revision_id,overhead_rows');result=reviewFixedBaseline(table,document.content_sha256,baselines[0])??undefined;if(result)dependencies.overhead_reference=baselines[0].revision_id;}
@@ -103,7 +103,16 @@ export async function handleIntake(request:Request,environment:IntakeEnvironment
   if(confirmedMapping)result.mapping=confirmedMapping;
   let scope:Record<string,unknown>|null=null;
   if(result.status==='complete'&&table){
-   if(document.source_type==='coverage_manifest'){const providers:Partial<Record<SourceType,Record<string,string[]>>>={};const districts=new Set<string>();const schoolProviders:Record<string,string[]>={};for(const row of table.rows){const kind=row.source_type as SourceType;providers[kind]??={};providers[kind]![row.location!]??=[];if(row.coverage_status==='active')providers[kind]![row.location!].push(row.provider_id!);if(kind==='school_billing'&&row.coverage_status==='active'&&row.district&&row.district!=='not_applicable'){districts.add(row.district);schoolProviders[row.district]??=[];schoolProviders[row.district].push(row.provider_id!);}}scope={expectedProvidersBySource:providers,expectedDistricts:[...districts],expectedSchoolProvidersByDistrict:schoolProviders};}
+   if(document.source_type==='coverage_manifest'){
+    const providers:Partial<Record<SourceType,Record<string,string[]>>>={};const districts=new Set<string>();const schoolProviders:Record<string,string[]>={};
+    for(const row of table.rows){
+     const kind=row.source_type as SourceType;
+     if(kind==='school_billing'){
+      if(row.coverage_status==='active'){districts.add(row.district!);schoolProviders[row.district!]??=[];schoolProviders[row.district!].push(row.provider_id!);}
+     }else{providers[kind]??={};providers[kind]![row.location!]??=[];if(row.coverage_status==='active')providers[kind]![row.location!].push(row.provider_id!);}
+    }
+    scope={expectedProvidersBySource:providers,expectedDistricts:[...districts],expectedSchoolProvidersByDistrict:schoolProviders};
+   }
    if(document.source_type==='payroll')scope={staffIds:[...new Set(table.rows.map(row=>row.staff_id))]};
   }
   const limit=aiConfiguration.ai_monthly_limit;

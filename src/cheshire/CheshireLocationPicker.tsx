@@ -1,10 +1,10 @@
 import { useEffect, useId, useRef, useState, type KeyboardEvent } from 'react';
 import { Building2, Check, ChevronDown } from 'lucide-react';
 import { LOCATIONS } from './finance';
-import type { SheetScope } from './profitabilitySheet';
+import { profitCenterLabel, type ProfitCenterScope } from './profitCenterScope';
 
-const options: {value:SheetScope;label:string}[]=[{value:'all',label:'All locations'},...LOCATIONS.map(value=>({value,label:value}))];
-export function CheshireLocationPicker({value,onChange}:{value:SheetScope;onChange:(value:SheetScope)=>void}){
+const options: {value:ProfitCenterScope;label:string}[]=[{value:'all',label:'All profit centers'},...LOCATIONS.map(value=>({value,label:value})),{value:'schools',label:'Schools'}];
+export function CheshireLocationPicker({value,onChange}:{value:ProfitCenterScope;onChange:(value:ProfitCenterScope)=>void}){
  const[open,setOpen]=useState(false);const[active,setActive]=useState(0);const root=useRef<HTMLDivElement>(null);const trigger=useRef<HTMLButtonElement>(null);const list=useRef<HTMLUListElement>(null);const search=useRef({text:'',at:0});const id=useId();
  const selected=options.findIndex(option=>option.value===value);
  const close=(returnFocus=false)=>{setOpen(false);if(returnFocus)trigger.current?.focus();};
@@ -31,7 +31,7 @@ export function CheshireLocationPicker({value,onChange}:{value:SheetScope;onChan
   }
  };
  return <div className="csd-location" ref={root} onBlur={event=>{if(!event.currentTarget.contains(event.relatedTarget))setOpen(false);}}>
-  <button className="csd-location-trigger" ref={trigger} type="button" aria-label="Location" aria-haspopup="listbox" aria-expanded={open} aria-controls={open?id:undefined} onClick={()=>open?close(true):show()} onKeyDown={event=>{if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();show();}}}><Building2 size={16}/><span>{options[selected]?.label??'All locations'}</span><ChevronDown size={14}/></button>
-  {open?<ul className="csd-location-menu" id={id} ref={list} role="listbox" aria-label="Location" aria-activedescendant={`${id}-${active}`} tabIndex={-1} onKeyDown={onKeyDown}>{options.map((option,index)=><li id={`${id}-${index}`} key={option.value} role="option" aria-selected={option.value===value} className={index===active?'csd-location-active':undefined} onPointerMove={()=>setActive(index)} onMouseDown={event=>event.preventDefault()} onClick={()=>choose(index)}><span>{option.label}</span>{option.value===value?<Check size={16} aria-hidden="true"/>:null}</li>)}</ul>:null}
+  <button className="csd-location-trigger" ref={trigger} type="button" aria-label="Profit center" aria-haspopup="listbox" aria-expanded={open} aria-controls={open?id:undefined} onClick={()=>open?close(true):show()} onKeyDown={event=>{if(event.key==='ArrowDown'||event.key==='ArrowUp'){event.preventDefault();show();}}}><Building2 size={16}/><span>{profitCenterLabel(value)}</span><ChevronDown size={14}/></button>
+  {open?<ul className="csd-location-menu" id={id} ref={list} role="listbox" aria-label="Profit center" aria-activedescendant={`${id}-${active}`} tabIndex={-1} onKeyDown={onKeyDown}>{options.map((option,index)=><li id={`${id}-${index}`} key={option.value} role="option" aria-selected={option.value===value} className={index===active?'csd-location-active':undefined} onPointerMove={()=>setActive(index)} onMouseDown={event=>event.preventDefault()} onClick={()=>choose(index)}><span>{option.label}</span>{option.value===value?<Check size={16} aria-hidden="true"/>:null}</li>)}</ul>:null}
  </div>;
 }
