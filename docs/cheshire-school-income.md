@@ -34,6 +34,31 @@ and error cells remain distinct, and an interval with no numeric cells displays
 unknown. Source control formulas never become additional facts.
 Repeated labels retain their source row identities.
 
+When Schools is selected, an adjacent School dropdown lists every school source
+row for the reporting year, including rows whose selected-period amounts are
+blank. Options are keyed by source hash, year and original row. Repeated names
+include their worksheet/cell reference; aliases and repeated rows are not merged.
+All schools is the default. The selection persists across same-year month and
+MTD/YTD changes, including their transient loading states. Options and amounts
+stay hidden during loading. Selection resets when the verified source/year
+changes, a ready response has no usable source, or access is denied. Clinic and
+All profit centers views ignore the school-row selection.
+
+Selecting a school filters its workbook subtotal, cell counts, period table and
+source-row detail together. Original controls and review notes remain explicitly
+workbook-wide evidence. Monthly normalized invoices currently lack retained
+school/therapist dimensions, so their all-school subtotal is withheld for an
+individual school rather than attributed to that school.
+
+The adjacent Therapist selector displays **Therapist data needed** and is disabled.
+The current dashboard payload provides no verified school-to-therapist roster or
+school-specific labor facts. Enabling therapist selection needs a reviewed,
+minimized school/therapist breakdown with stable identifiers, source provenance,
+matching work-time/payroll periods and supported cost treatment. Neither source
+hours nor payroll names are used to infer those relationships. School labor and
+profit remain unavailable; this presentation change adds no allocation, schema,
+access, source imports or accounting facts.
+
 July/August is one two-month interval, included once in YTD only after August.
 Neither July nor August MTD receives an invented split; July YTD excludes the
 combined interval with an explanation. An ambiguous leading December remains
