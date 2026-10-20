@@ -2,6 +2,8 @@ import { estimatedFixedOverhead } from './overheadEstimate';
 import { cumulativeRevenueSummary } from '../../supabase/functions/_shared/cheshire-cumulative.ts';
 import { readCumulativeReports } from './cumulativeReports';
 import { CheshireCumulativeReports } from './CheshireCumulativeReports';
+import { CheshireSchoolIncome } from './CheshireSchoolIncome';
+import { readSchoolIncomeSource } from './schoolIncomeSource';
 import { CheshirePayrollSource } from './CheshirePayrollSource';
 import { readPayrollSourceSummary } from './payrollSourceAudit';
 import './cumulative-reports.css';
@@ -31,6 +33,7 @@ export function CheshireFinanceDashboardView({ snapshot, state, onRefresh }: { s
  const summaryState=state==='error'||state==='no-access'||period.failedMonths.length?'Unavailable':state==='loading'||period.state!=='ready'?'Checking':'Missing';
  const cumulativeReports=intake.state==='ready'&&!intake.busy?readCumulativeReports(intake.documents,mode,intake.month):[];
  const payrollSource=(state==='ready'||state==='empty')&&intake.state==='ready'&&!intake.busy?readPayrollSourceSummary(intake.documents,mode,intake.month,scope):null;
+ const schoolSource=(state==='ready'||state==='empty')&&intake.state==='ready'&&!intake.busy?readSchoolIncomeSource(intake.documents,intake.month):{source:null,issue:null};
  const cumulativeRevenue=cumulativeRevenueSummary(cumulativeReports,scope);
  const revenue=cumulativeRevenue?{value:cumulativeRevenue.value,label:cumulativeRevenue.label,coverage:cumulativeRevenue.coverage}:knownRevenueSummary(period);
  const expenseFallback=sections.flatMap(section=>section.rows).find(row=>['monthly-overhead','payroll','operating-extra'].includes(row.id)&&row.cells[scope].value!==null);
@@ -44,6 +47,7 @@ export function CheshireFinanceDashboardView({ snapshot, state, onRefresh }: { s
   {statusMessage?<div className="cfd-status" role="status"><LockKeyhole size={18}/><strong>{statusMessage}</strong></div>:null}
   <section className="csd-totals" aria-label="Revenue expenses and profit summary"><article><span>{cumulativeRevenue?'Reported payments':'Revenue'}</span><strong>{revenue.value!==null?money(revenue.value):'—'}</strong><p className={summaryState==='Missing'?'csd-small-missing':'csd-small-status'}>{summaryState==='Missing'?'Need Data':summaryState==='Checking'?'Checking data':'Some data unavailable'}</p></article><article><span>{fixedEstimate?'Estimated overhead':'Expenses'}</span><strong>{expense.value!==null?money(expense.value):'—'}</strong><p className={summaryState==='Missing'?'csd-small-missing':'csd-small-status'}>{summaryState==='Missing'?'Need Data':summaryState==='Checking'?'Checking data':'Some data unavailable'}</p></article><article><span>Profit</span><strong>—</strong><p className={summaryState==='Missing'?'csd-small-missing':'csd-small-status'}>{summaryState==='Missing'?'Need Data':summaryState==='Checking'?'Checking data':'Some data unavailable'}</p></article></section>
   <CheshirePayrollSource summary={payrollSource} onReviewSource={()=>{intake.setSelected('payroll');if(sourceReviewRef.current)sourceReviewRef.current.open=true;}}/>
+  <CheshireSchoolIncome result={schoolSource} mode={mode} month={intake.month} scope={scope} onReviewSource={()=>{intake.setSelected('school_billing');if(sourceReviewRef.current)sourceReviewRef.current.open=true;}}/>
   <div className="csd-detail-heading"><h2>Explore the detail</h2></div>
   {period.state==='loading'?<p className="csd-status" role="status">Checking the selected period and location. Missing months are never zero.</p>:null}
   {period.failedMonths.length?<p className="csd-status" role="status">Could not load {period.failedMonths.join(', ')}. Those months are unavailable; missing uploads have not been established. Refresh to retry.</p>:null}
