@@ -9,8 +9,8 @@ The existing finance-reader and portal-member RLS policy remains unchanged.
 Owner clarification supersedes the earlier request for school-to-clinic mappings.
 A narrow presentation adapter corrects legacy school-audit scope/request text
 without modifying the original audit or its deterministic import/replay payload.
-School labor and applicable shared costs are needed for school profit; clinic
-assignment is not required.
+Verified therapist labor for school work is needed for school profit. Clinics
+absorb all non-therapist overhead; school-to-clinic assignment is not required.
 
 The original workbook stays in private Library. A source-specific offline
 extractor retains school labels, source row/cell coordinates, hours and income
@@ -21,8 +21,9 @@ Only synthetic fixtures belong in tests.
 
 ## Source observations and period selection
 
-Schools operate independently of clinic locations. The clinic selector does not
-filter the school source card; its period selector still applies. Currency,
+Schools is an independent profit center alongside the clinic choices. The school
+source card appears under Schools and All profit centers, and is hidden for
+individual clinics. Its period selector still applies. Currency,
 accounting basis, hours meaning and source mappings remain null. No school label
 becomes a district or therapist identifier. Reported school income
 is displayed separately from PracticePro payments, accounting revenue, labor and
@@ -80,4 +81,8 @@ basis, complete reporting scope, resolved source exceptions and school/provider 
 receipts, district/therapist IDs, billing basis/quantity, contract rates/effective
 dates and reconciled control totals. Combining revenue requires a demonstrated
 overlap reconciliation with other payment/accounting sources. Profit additionally
-requires compatible fully loaded labor and allocated overhead.
+requires compatible school therapist labor. The employment-cost components and
+paid-time treatment still need source support; non-therapist overhead belongs to
+Clinics under the owner’s policy. The selector adds no labor allocation or profit
+calculation. See [monthly intake](cheshire-monthly-intake.md#profit-center-selection)
+for the exact selector, source-separation and compatibility behavior.

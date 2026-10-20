@@ -23,7 +23,7 @@ test('payroll source card follows filters and auth state, shows currency/cutoff 
     await act(async () => renderer.root.findAllByType('button').find(button => button.children.join('') === 'MTD').props.onClick());
     assert.equal(source().findByProps({ className: 'cpa-amount' }).findByType('strong').children.join(''), '300.00');
     assert.deepEqual(totals(), ['—', '—', '—']);
-    await act(async () => renderer.root.findByProps({ 'aria-label': 'Location' }).props.onClick());
+    await act(async () => renderer.root.findByProps({ 'aria-label': 'Profit center' }).props.onClick());
     await act(async () => renderer.root.findAllByProps({ role: 'option' }).find(option => option.findByType('span').children.join('') === 'Pool').props.onClick());
     assert.equal(renderer.root.findAllByProps({ className: 'cpa-source' }).length, 0);
     await act(async () => renderer.unmount()); renderer = null;

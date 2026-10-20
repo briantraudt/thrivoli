@@ -4,7 +4,8 @@ import assert from 'node:assert/strict';
 import { readFile } from 'node:fs/promises';
 import { PGlite } from '@electric-sql/pglite';
 import { buildMonthlyChecklist,parseIntakeDocuments } from '../src/cheshire/intake.ts';
-import { REQUIRED_CHECKS } from '../supabase/functions/_shared/cheshire-intake.ts';
+import { REQUIRED_CHECKS, SCHOOL_SCOPE_VERSION } from '../supabase/functions/_shared/cheshire-intake.ts';
+import { serveMetrics } from '../supabase/functions/_shared/cheshire-metrics.ts';
 const id='22222222-2222-2222-2222-222222222222',token='33333333-3333-3333-3333-333333333333',manifestId='44444444-4444-4444-4444-444444444444',manifestToken='55555555-5555-5555-5555-555555555555',manifestRevision='aaaaaaaa-1111-4111-8111-111111111111',hash='a'.repeat(64);
 const review={validator_version:'cheshire-intake-v1',status:'complete',reported_month:'2026-09',missing_items:[],covered_locations:[],canonical_fields:[],row_count:1,checks:REQUIRED_CHECKS.map(key=>({key,passed:true,message:'Synthetic validation'}))};
 const rows=[{source_row:2,location:'Cheshire',basis:'program_reported_month',measures:{cash_program_income:0}}];
@@ -14,6 +15,21 @@ await db.exec(await readFile(new URL('../supabase/migrations/20261001194828_ches
 await db.query(`insert into cheshire_intake_document(id,source_type,requested_month,reported_month,uploaded_by,file_name,content_sha256,byte_size,mime_type,storage_path,no_phi_attested_at,status,review_token,validation,review_revision) values($1,'coverage_manifest','2026-09-01','2026-09-01',$1,'Synthetic manifest.csv',$3,1,'text/csv','synthetic/manifest.csv',now(),'complete',$2,$4,$5)`,[manifestId,manifestToken,hash,JSON.stringify(review),manifestRevision]);
 await db.query(`insert into cheshire_intake_document(id,source_type,requested_month,uploaded_by,file_name,content_sha256,byte_size,mime_type,storage_path,no_phi_attested_at,status,review_token) values($1,'cash_programs','2026-09-01',$1,'Synthetic upload.csv',$3,1,'text/csv','synthetic/upload.csv',now(),'reviewing',$2)`,[id,token,hash]);return db;}
 const call=(db,changes={})=>{const p={id,hash,token,review,scope:null,dependencies:{coverage_manifest:`${manifestId}:${hash}`},revisions:{coverage_manifest:manifestToken},version:'cheshire-metrics-v1',rows,issue:null,...changes};return db.query('select * from finalize_cheshire_intake_review($1,$2,$3,$4,$5,$6,$7,$8,$9,$10)',[p.id,p.hash,p.token,JSON.stringify(p.review),p.scope,JSON.stringify(p.dependencies),JSON.stringify(p.revisions),p.version,JSON.stringify(p.rows),p.issue]);};
+test('school policy marker round-trips through existing JSON storage and metric RPC without a migration',async()=>{const db=await setup();try{
+ const schoolReview={...review,school_scope_version:SCHOOL_SCOPE_VERSION};
+ await db.query('update cheshire_intake_document set validation=$2 where id=$1',[manifestId,JSON.stringify(schoolReview)]);
+ await db.query("update cheshire_intake_document set source_type='school_billing' where id=$1",[id]);
+ const schoolRows=[{source_row:2,location:null,basis:'invoice_reported_month',measures:{school_invoices:300,school_hours:15000}}];
+ const saved=(await call(db,{review:schoolReview,rows:schoolRows})).rows[0];
+ assert.equal(saved.validation.school_scope_version,SCHOOL_SCOPE_VERSION);
+ assert.deepEqual(saved.validation_dependency_revisions,{coverage_manifest:manifestRevision});
+ const state=(await db.query("select read_cheshire_metric_state('2026-09-01') as state")).rows[0].state;
+ assert.equal(state.documents.find(document=>document.id===manifestId).validation.school_scope_version,SCHOOL_SCOPE_VERSION);
+ assert.equal(state.batches[0].rows[0].location,null);
+ assert.equal(serveMetrics(state,'2026-09').sources[0].metrics.find(metric=>metric.key==='school_invoices').value,300);
+ assert.equal((await checklist(db)).school_billing,'complete');
+ assert.equal((await call(db,{review:schoolReview,rows:schoolRows})).rows.length,0,'identical finalized review cannot create another batch');
+ }finally{await db.close();}});
 test('schema and RPCs are service-only, transaction commits source and metrics once, read excludes stale reviews',async()=>{const db=await setup();try{
  const access=(await db.query(`select has_table_privilege('anon','cheshire_intake_metric_batch','select') anon_read,has_table_privilege('authenticated','cheshire_intake_metric_batch','select') member_read,has_table_privilege('service_role','cheshire_intake_metric_batch','select') service_read,has_function_privilege('authenticated','read_cheshire_metric_state(date)','execute') member_rpc,has_function_privilege('anon','finalize_cheshire_intake_review(uuid,text,uuid,jsonb,jsonb,jsonb,jsonb,text,jsonb,text)','execute') anon_write;`)).rows[0];assert.deepEqual(access,{anon_read:false,member_read:false,service_read:true,member_rpc:false,anon_write:false});
  await db.exec('set role authenticated');await assert.rejects(db.query('select * from cheshire_intake_metric_batch'),/permission denied/);await assert.rejects(db.query("select read_cheshire_metric_state('2026-09-01')"),/permission denied/);await db.exec('reset role;set role service_role');

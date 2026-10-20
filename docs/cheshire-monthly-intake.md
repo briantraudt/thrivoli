@@ -18,6 +18,30 @@ Payroll requires an explicit inclusive-gross or disjoint-component basis. School
 
 Earlier uploaded sources are stored as `source-audit-v1` metadata with period/scope labels and optional numeric reported metrics. They never satisfy the selected-month checklist. Historical metrics render only in the dated earlier-source detail, not company totals or profit.
 
+## Independent monthly school coverage
+
+Schools are independent of clinic locations. In `coverage_manifest`, each active `school_billing` row must use `location=not_applicable` and name one district/provider pair. Duplicate pairs, clinic-attributed school rows, blank scope, and mixed active/no-activity declarations fail review. When there is no school activity, supply exactly one school row with `coverage_status`, `location`, `provider_id`, and `district` all `not_applicable`. That declaration verifies the manifest scope only; it does not create zero invoices or make a missing school billing export complete.
+
+Every other source type still declares active or not-applicable coverage for each of the seven clinics. The school roster is built separately from the clinic provider map. School invoice exports keep their existing district/therapist/billing-basis/quantity/rate/period/total fields and omit a location column. They must match the independently reviewed district/provider roster and retain existing arithmetic, rate-date, currency and privacy checks.
+
+New manifest and school reviews carry `school_scope_version=school-independent-v1` in their existing validation JSON. School billing completion, normalization and metric reads require that marker on both the billing review and its supporting manifest, plus the existing exact source/review dependency checks. Legacy school approvals must be re-reviewed; a manifest with old clinic-attributed school rows requires a corrected, superseding source upload. Historical files, receipts and reported amounts are retained unchanged. Historical `source-audit-v1` school income does not use this monthly approval path.
+
+This policy marker does not invalidate legacy clinic, payroll or expense reviews merely because they lack the school marker. Replacing or re-reviewing the shared manifest still changes its existing dependency revision: every source that depended on that specific manifest then needs its usual freshness check/re-review. Do not bypass that freshness rule or automatically rewrite earlier approvals.
+
+No database migration, access change, credential change or data backfill is needed. After release approval, deploy the revised intake function before the matching UI. Until then these are local candidate changes. The existing JSON validation storage and validator/normalizer version contracts remain unchanged.
+
+Brian's business-unit policy assigns therapist labor to Schools or Clinics according to source-supported work; Clinics absorb all non-therapist overhead. School overhead allocation is not a prerequisite. This billing correction does not implement labor allocation or change the payroll intake contract.
+
+## Profit-center selection
+
+The existing selector is labeled **Profit center** and offers **All profit centers**, the seven clinic locations, and **Schools**. `schools` is a presentation identity distinct from the clinic location contract. It is never added to `LOCATIONS`, `INTAKE_LOCATIONS`, database rows, or uploaded school records. The protected metrics request continues using the existing `location=all` route for Schools; the view selects only the authorized `school_billing` source and its blockers before showing any financial figures.
+
+- **Schools** shows the historical school workbook and eligible monthly school invoice figures as separate evidence. Clinic activity, cumulative clinic/payment reports, company payroll, clinic overhead and operating costs are excluded from that financial view. School therapist labor and profit remain unknown. The existing monthly/year-to-date and combined-interval rules still apply.
+- **A clinic** shows that clinic's reporting; it excludes historical and monthly school figures and school rows from its financial category table.
+- **All profit centers** shows the source-specific reporting together, with an explicit warning that the school workbook and invoices may overlap each other and existing PracticePro/QuickBooks payments. They are never added into a consolidated revenue or profit total. Existing source subtotals retain their labels and period caveats.
+
+The data-request/source-review panel stays explicitly workspace-wide, so source evidence is not hidden or reclassified when selecting a profit center. Existing authentication and finance-access gates still apply. Selector state does not change source bytes, amounts, mappings, importer replay behavior or access. No therapist labor calculation, payroll ingestion, schema change or new API contract is included.
+
 ## First-release limits
 
 - CSV and bounded supported XLSX aggregate tables receive deterministic checks.

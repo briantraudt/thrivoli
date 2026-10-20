@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {mkdtemp,mkdir,rm} from 'node:fs/promises';import {fileURLToPath,pathToFileURL} from 'node:url';
 import {build} from 'esbuild';import React from 'react';import {create,act} from 'react-test-renderer';
-test('school source card follows protection and periods independently of clinic filters without changing financial totals',async()=>{
+test('school source card follows profit-center selection and periods without changing financial totals',async()=>{
  const root=fileURLToPath(new URL('../',import.meta.url));await mkdir(root+'node_modules/.cache/',{recursive:true});
  const dir=await mkdtemp(root+'node_modules/.cache/school-ui-');let renderer;
  const previousDocument=globalThis.document;globalThis.document={addEventListener:()=>{},removeEventListener:()=>{}};globalThis.IS_REACT_ACT_ENVIRONMENT=true;
@@ -23,9 +23,12 @@ test('school source card follows protection and periods independently of clinic 
   assert.ok(text().includes('excluded from this selected subtotal'));
   await act(async()=>renderer.root.findAllByType('button').find(n=>n.children.join('')==='YTD').props.onClick());
   const schoolBeforeScope=JSON.stringify(card().findByProps({className:'csi-head'}).findAllByType('strong').map(n=>n.children));
-  await act(async()=>renderer.root.findByProps({'aria-label':'Location'}).props.onClick());
+  await act(async()=>renderer.root.findByProps({'aria-label':'Profit center'}).props.onClick());
   await act(async()=>renderer.root.findAllByProps({role:'option'}).find(n=>n.findByType('span').children.join('')==='Pool').props.onClick());
-  assert.ok(text().includes('The clinic filter does not change these figures'));assert.ok(text().includes('Fictional Academy'));
+  assert.equal(renderer.root.findAllByProps({className:'csi-source'}).length,0);assert.ok(!text().includes('Fictional Academy'));
+  await act(async()=>renderer.root.findByProps({'aria-label':'Profit center'}).props.onClick());
+  await act(async()=>renderer.root.findAllByProps({role:'option'}).find(n=>n.findByType('span').children.join('')==='Schools').props.onClick());
+  assert.ok(text().includes('These figures appear under Schools and All profit centers'));assert.ok(text().includes('Fictional Academy'));
   assert.equal(JSON.stringify(card().findByProps({className:'csi-head'}).findAllByType('strong').map(n=>n.children)),schoolBeforeScope);assert.deepEqual(totals(),['—','—','—']);
   await act(async()=>renderer.unmount());renderer=null;
   for(const props of [{state:'no-access'},{state:'checking'},{state:'unavailable'},{busy:true},{financeState:'no-access'},{financeState:'error'},{financeState:'loading'}]){
