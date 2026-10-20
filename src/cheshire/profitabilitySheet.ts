@@ -16,10 +16,11 @@ const cells = (make: (scope: SheetScope) => SheetCell) => Object.fromEntries(SCO
 const unknown = (note: string, sourceType?: SourceType): SheetCell => ({ value: null, note, sourceType });
 function metricRow(id: string, label: string, detail: string, sourceType: SourceType, metricKey: MetricKey, basis: MetricBasis, metrics: ScopeMetrics): SheetRow {
   return { id, label, detail, kind: 'value', cells: cells(scope => {
+    if (sourceType === 'school_billing' && scope !== 'all') return unknown('Schools operate independently of clinic locations. School figures are reported separately.', sourceType);
     const response = metrics[scope];
     const source = response?.sources.find(item => item.source_type === sourceType);
     const metric = source?.metrics.find(item => item.key === metricKey && item.basis === basis);
-    if (!metric || !source) return unknown(response?.blocked.find(item => item.source_type === sourceType)?.reason ?? (['payroll', 'school_billing'].includes(sourceType) && scope !== 'all' ? 'This report has no source-supported location allocation. Company-scope amounts remain separate.' : 'A current validated source is needed for this month, location and reporting basis.'), sourceType);
+    if (!metric || !source) return unknown(response?.blocked.find(item => item.source_type === sourceType)?.reason ?? (sourceType === 'payroll' && scope !== 'all' ? 'This report has no source-supported location allocation. Company-scope amounts remain separate.' : sourceType === 'school_billing' ? 'A current validated school source is needed for this month and reporting basis.' : 'A current validated source is needed for this month, location and reporting basis.'), sourceType);
     return { value: metric.value, coverageLabel: scope === 'all' ? 'Source subtotal only' : undefined, note: `${BASIS_LABELS[basis]}. ${metric.source_rows} source rows; ${metric.source_locations.length ? `${metric.source_locations.length} reported locations` : 'company scope; no location attribution'}. Source subtotal, not complete business coverage.`, sourceType, source: `Document ${source.document_id} · SHA-256 ${source.content_sha256} · ${source.validator_version} · ${source.normalizer_version}` };
   }) };
 }

@@ -4,6 +4,26 @@ import { parseSchoolIncomeAudit, schoolAmount, schoolUnits, schoolPeriodTotal, s
 import { readSchoolIncomeSource } from '../src/cheshire/schoolIncomeSource.ts';
 import { parseIntakeDocuments, buildMonthlyChecklist } from '../src/cheshire/intake.ts';
 import { schoolAuditFixture, schoolDocumentFixture } from './helpers/school-income-fixture.mjs';
+import { schoolScopeText, schoolSourceReviewText } from '../src/cheshire/schoolScope.ts';
+import { buildProfitabilitySheet } from '../src/cheshire/profitabilitySheet.ts';
+
+test('owner school-scope clarification preserves immutable evidence and unrelated source requests',()=>{
+  const doc=schoolDocumentFixture();
+  doc.source_scope_label='School-level source rows; currency, accounting basis and location/provider mapping unconfirmed';
+  doc.validation.missing_items=['Approve school/location/provider mappings and reconcile overlap with PracticePro and QuickBooks before combining revenue.'];
+  const raw=JSON.stringify(doc);
+  assert.match(schoolSourceReviewText(doc,doc.source_scope_label),/independent of clinic locations/);
+  assert.equal(schoolSourceReviewText(doc,doc.validation.missing_items[0]),'Confirm school and therapist identities and reconcile overlap with PracticePro and QuickBooks before combining revenue.');
+  assert.equal(schoolSourceReviewText({...doc,source_type:'payroll'},doc.source_scope_label),doc.source_scope_label);
+  assert.equal(schoolScopeText('Unresolved source error at X5'), 'Unresolved source error at X5');
+  assert.equal(JSON.stringify(doc),raw);
+});
+test('school source values cannot populate a clinic revenue cell',()=>{
+  const sections=buildProfitabilitySheet(null,{Pool:{sources:[{source_type:'school_billing',metrics:[{key:'school_invoices',basis:'invoice_reported_month',value:12345}]}],blocked:[]}});
+  const school=sections.flatMap(s=>s.rows).find(r=>r.id==='schools');
+  assert.equal(school.cells.Pool.value,null);
+  assert.match(school.cells.Pool.note,/independently of clinic locations/);
+});
 
 test('school source retains repeated labels, exact signed values and source-cell states',()=>{
   const a=schoolAuditFixture(); const sh=a.sheets[0];

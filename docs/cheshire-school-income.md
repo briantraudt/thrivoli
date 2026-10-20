@@ -6,6 +6,12 @@ The protected financial dashboard reads a `school-income-audit-v1` payload from
 validator, with null requested month, reported month and storage path.
 The existing finance-reader and portal-member RLS policy remains unchanged.
 
+Owner clarification supersedes the earlier request for school-to-clinic mappings.
+A narrow presentation adapter corrects legacy school-audit scope/request text
+without modifying the original audit or its deterministic import/replay payload.
+School labor and applicable shared costs are needed for school profit; clinic
+assignment is not required.
+
 The original workbook stays in private Library. A source-specific offline
 extractor retains school labels, source row/cell coordinates, hours and income
 cell states, formulas and cached results, period intervals, source controls,
@@ -15,8 +21,10 @@ Only synthetic fixtures belong in tests.
 
 ## Source observations and period selection
 
-Currency, accounting basis, hours meaning and mappings remain null. No school
-label becomes a clinic, district or therapist identifier. Reported school income
+Schools operate independently of clinic locations. The clinic selector does not
+filter the school source card; its period selector still applies. Currency,
+accounting basis, hours meaning and source mappings remain null. No school label
+becomes a district or therapist identifier. Reported school income
 is displayed separately from PracticePro payments, accounting revenue, labor and
 profit; it does not create normalized metric batches or satisfy monthly coverage.
 
@@ -68,7 +76,7 @@ combined interval, missing periods, source details, scope and access gates.
 - Existing regression suite and production TypeScript/Vite build.
 
 Validated monthly revenue still requires confirmed currency and accounting
-basis, complete reporting scope, resolved source exceptions, monthly invoices or
+basis, complete reporting scope, resolved source exceptions and school/provider identities, monthly invoices or
 receipts, district/therapist IDs, billing basis/quantity, contract rates/effective
 dates and reconciled control totals. Combining revenue requires a demonstrated
 overlap reconciliation with other payment/accounting sources. Profit additionally
