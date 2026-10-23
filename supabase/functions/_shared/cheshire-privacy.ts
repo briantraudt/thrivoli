@@ -41,8 +41,8 @@ export function headerPrivacyHit(header: string): boolean {
   const normalized = canonicalHeader(raw);
   if (!normalized || normalized.length > 80) return false;
   if (BLOCKED.has(normalized) || /^dx\d+$/.test(normalized)) return true;
-  if (/\b(account|acct|chart)\s*(#|number|no\.?|num)\b/i.test(raw)) return true;
-  if (/\b(policy|member|insured|subscriber|patient|guarantor|student)\s*(#|number|no\.?|num|id)\b/i.test(raw)) return true;
+  if (/\b(account|acct|chart)\s*(?:#|number|no\.?|num)(?!\w)/i.test(raw)) return true;
+  if (/\b(policy|member|insured|subscriber|patient|guarantor|student)\s*(?:#|number|no\.?|num|id)(?!\w)/i.test(raw)) return true;
   if (/\b(first|last|middle|full|client|patient|student|child|guarantor)\s+names?\b/i.test(raw)) return true;
   if (/(patient|student|child|guarantor|subscriber|insured).*(name|identifier|birth|dob|address|email|phone|record|ssn)/.test(normalized)) return true;
   if (/(firstname|lastname|middlename|birthdate|dateofbirth|socialsecurity|medicalrecord)/.test(normalized)) return true;

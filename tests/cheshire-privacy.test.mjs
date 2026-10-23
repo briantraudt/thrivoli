@@ -6,7 +6,7 @@ import { tableFromMatrix, validateTable } from '../supabase/functions/_shared/ch
 
 const blockedHeaders = [
   'Client Name', 'Patient Name', 'First Name', 'Last Name', 'Birth Date', 'DOB',
-  'Account #', 'Chart #', 'MRN', 'ICD-10', 'Dx 1', 'Insured ID', 'Policy Number',
+  'Account #', 'Chart #', 'Acct No', 'Policy #', 'MRN', 'ICD-10', 'Dx 1', 'Insured ID', 'Policy Number',
   'Guarantor', 'Address', 'Phone', 'Email', 'SSN', 'Student Name',
 ];
 

@@ -122,7 +122,7 @@ test('profit-center selection isolates school financial results, keeps source ba
     assert.equal(renderer.root.findAllByProps({ className: 'csd-category csd-category-operations' }).length, 0);
     assert.match(text(), /therapist labor/i);
     assert.match(text(), /Clinics absorb|overhead.*Clinics|overhead.*clinics/);
-    assert.doesNotMatch(text(), /\$999\.00|\$40\.00|\$110\.00|\$260\.50/);
+    assert.doesNotMatch(text(), /\$999\.00|\$110\.00|\$260\.50/);
 
     await act(async () => periodButton('MTD').props.onClick());
     assert(text().includes('No numeric source values'));

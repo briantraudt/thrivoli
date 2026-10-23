@@ -158,19 +158,19 @@ test('selected school filters all workbook totals/details, never allocates invoi
     const therapist = renderer.root.findByProps({ 'aria-label': 'Therapist' });
     assert.equal(therapist.type, 'select'); assert.equal(therapist.props.disabled, true);
     assert.match(words(therapist), /Therapist data needed/);
-    assert.equal(amount(), '130.25');
+    assert.equal(amount(), '$130.25');
     assert.deepEqual(totals(), ['$200.00', '—', '—']);
 
     await pickSchool(row5Value);
-    assert.equal(amount(), '100.00');
+    assert.equal(amount(), '$100.00');
     assert.deepEqual(totals(), ['—', '—', '—']);
     assert.deepEqual(detailRows(), ['FICTIONAL Academy · 2026!A5']);
     assert.match(words(card()), /2 numeric income cells/);
     const periodRows = card().findAllByType('table')[0].findByType('tbody').findAllByType('tr');
     const january = periodRows.find(row => words(row.findByType('th')) === 'Month 1');
     const summer = periodRows.find(row => words(row.findByType('th')) === 'July / August');
-    assert.equal(words(january.findAllByType('td')[0]), '70.00');
-    assert.equal(words(summer.findAllByType('td')[0]), '30.00');
+    assert.equal(words(january.findAllByType('td')[0]), '$70.00');
+    assert.equal(words(summer.findAllByType('td')[0]), '$30.00');
     assert.equal(renderer.root.findAllByProps({ className: 'cvm-source' }).length, 0);
     assert.match(words(renderer.toJSON()), /individual school|selected school|school-specific|not linked to this school/i);
 
@@ -178,39 +178,39 @@ test('selected school filters all workbook totals/details, never allocates invoi
     assert.equal(amount(), 'No numeric source values');
     assert.equal(schoolSelect().props.value, row5Value);
     await act(async () => renderer.update(React.createElement(Harness, { month: '2026-01' })));
-    assert.equal(amount(), '70.00'); assert.equal(schoolSelect().props.value, row5Value);
+    assert.equal(amount(), '$70.00'); assert.equal(schoolSelect().props.value, row5Value);
     await clickPeriod('YTD');
     await act(async () => renderer.update(React.createElement(Harness, { month: '2026-07' })));
-    assert.equal(amount(), '70.00');
+    assert.equal(amount(), '$70.00');
     assert.match(words(card()), /combined source interval/);
     await clickPeriod('MTD'); assert.equal(amount(), 'No numeric source values');
     await act(async () => renderer.update(React.createElement(Harness, { month: '2026-08' })));
     assert.equal(amount(), 'No numeric source values');
-    await clickPeriod('YTD'); assert.equal(amount(), '100.00');
+    await clickPeriod('YTD'); assert.equal(amount(), '$100.00');
     assert.equal(schoolSelect().props.value, row5Value);
 
     await pickSchool(blankValue); assert.equal(amount(), 'No numeric source values');
     assert.deepEqual(totals(), ['—', '—', '—']);
     assert.deepEqual(detailRows(), ['Blank Academy · 2026!A6']);
-    await pickSchool(zeroValue); assert.equal(amount(), '0.00');
+    await pickSchool(zeroValue); assert.equal(amount(), '$0.00');
     assert.deepEqual(totals(), ['—', '—', '—'], 'Observed workbook zero is not fabricated USD invoice revenue');
     await pickSchool(row5Value);
     await pickCenter('Pool');
     assert.equal(renderer.root.findAllByProps({ className: 'csi-source' }).length, 0);
     assert.equal(totals()[0], '$110.00');
     await pickCenter('All profit centers');
-    assert.equal(amount(), '130.25', 'All profit centers ignores the individual school selection');
+    assert.equal(amount(), '$130.25', 'All profit centers ignores the individual school selection');
     assert.equal(totals()[0], '$110.00');
     await pickCenter('Schools');
     assert.equal(schoolSelect().props.value, row5Value);
-    assert.equal(amount(), '100.00'); assert.deepEqual(totals(), ['—', '—', '—']);
+    assert.equal(amount(), '$100.00'); assert.deepEqual(totals(), ['—', '—', '—']);
 
     await act(async () => renderer.update(React.createElement(Harness, { month: '2025-08' })));
-    assert.equal(schoolSelect().props.value, 'all'); assert.equal(amount(), '130.25');
+    assert.equal(schoolSelect().props.value, 'all'); assert.equal(amount(), '$130.25');
     const priorValue = schoolSelect().findAllByType('option').find(option => words(option).includes('2025!A5')).props.value;
-    await pickSchool(priorValue); assert.equal(amount(), '100.00');
+    await pickSchool(priorValue); assert.equal(amount(), '$100.00');
     await act(async () => renderer.update(React.createElement(Harness, { month: '2025-08', hash: 'b'.repeat(64) })));
-    assert.equal(schoolSelect().props.value, 'all'); assert.equal(amount(), '130.25');
+    assert.equal(schoolSelect().props.value, 'all'); assert.equal(amount(), '$130.25');
 
     for (const [props, resets] of [[{ state: 'no-access' }, true], [{ state: 'checking', empty: true, month: '2026-10' }, false],
       [{ state: 'unavailable', empty: true }, false], [{ busy: true }, false], [{ financeState: 'no-access' }, true],
@@ -225,7 +225,7 @@ test('selected school filters all workbook totals/details, never allocates invoi
       assert(!words(renderer.toJSON()).includes('FICTIONAL Academy'), 'Unavailable school labels must not leak from selection intent');
       await act(async () => renderer.update(React.createElement(Harness)));
       assert.equal(schoolSelect().props.value, resets ? 'all' : currentValue, JSON.stringify(props));
-      assert.equal(amount(), resets ? '130.25' : '100.00');
+      assert.equal(amount(), resets ? '$130.25' : '$100.00');
     }
   } finally {
     if (renderer) await act(async () => renderer.unmount());
