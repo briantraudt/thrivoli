@@ -24,7 +24,9 @@ test('Schools uses a distinct UI identity and filters source evidence without in
   assert.equal(metricLocationScope('Pool'), 'Pool');
   assert.equal(metricLocationScope('all'), 'all');
   assert.equal(profitCenterLabel('schools'), 'Schools');
-  assert.equal(profitCenterLabel('all'), 'All profit centers');
+  assert.equal(profitCenterLabel('all'), 'All business');
+  assert.equal(metricLocationScope('cash'), 'all');
+  assert.equal(profitCenterLabel('cash'), 'Cash programs');
   assert(!LOCATIONS.some(location => location.toLowerCase() === 'schools'));
   assert(!INTAKE_LOCATIONS.some(location => location.toLowerCase() === 'schools'));
   const data = { month: '2026-09', location: 'all', sources: [source('school_billing', 'school_invoices', 20000),
@@ -124,7 +126,7 @@ test('profit-center selection isolates school financial results, keeps source ba
     assert.match(text(), /Clinics absorb|overhead.*Clinics|overhead.*clinics/);
     assert.doesNotMatch(text(), /\$999\.00|\$110\.00|\$260\.50/);
 
-    await act(async () => periodButton('MTD').props.onClick());
+    await act(async () => periodButton('Month').props.onClick());
     assert(text().includes('No numeric source values'));
     assert.deepEqual(totals(), ['$200.00', '—', '—']);
     await act(async () => renderer.update(React.createElement(Harness, { month: '2026-07' })));
@@ -140,7 +142,7 @@ test('profit-center selection isolates school financial results, keeps source ba
     assert.equal(totals()[0], '$80.00');
     const categoryTable = renderer.root.findAllByProps({ className: 'csd-detail-table' });
     assert(!categoryTable.some(table => table.findAllByType('strong').some(node => node.children.join('') === 'School invoices')));
-    await pick('All profit centers');
+    await pick('All business');
     assert.deepEqual(totals(), allTotals);
     assert.equal(schoolCards().length, 1);
     assert(sourceTitles().includes('School billing'));

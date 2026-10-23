@@ -20,7 +20,7 @@ test('payroll source card follows filters and auth state, shows currency/cutoff 
     assert.equal(source().findByType('a').props.href, '#csd-source-review');
     await act(async () => source().findByType('a').props.onClick());
     assert.equal(renderer.root.findByProps({ className: 'cfi-compact-selector' }).findByType('select').props.value, 'payroll');
-    await act(async () => renderer.root.findAllByType('button').find(button => button.children.join('') === 'MTD').props.onClick());
+    await act(async () => renderer.root.findAllByType('button').find(button => button.children.join('') === 'Month').props.onClick());
     assert.equal(source().findByProps({ className: 'cpa-amount' }).findByType('strong').children.join(''), '$300.00');
     assert.deepEqual(totals(), ['—', '—', '—']);
     await act(async () => renderer.root.findByProps({ 'aria-label': 'Profit center' }).props.onClick());

@@ -1,4 +1,4 @@
-import { School, UsersRound } from 'lucide-react';
+import { School } from 'lucide-react';
 import type { SchoolFilterOption } from './schoolFilters';
 
 export function CheshireSchoolFilters({ options, value, onChange }: {
@@ -10,9 +10,6 @@ export function CheshireSchoolFilters({ options, value, onChange }: {
         <option value="all">{options.length ? 'All schools' : 'School data unavailable'}</option>
         {options.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
       </select>
-    </label>
-    <label className="csd-school-filter csd-therapist-filter"><UsersRound size={16} aria-hidden="true"/><span className="cps-sr-only">Therapist</span>
-      <select aria-label="Therapist" aria-describedby="csd-school-filter-help" value="unavailable" disabled><option value="unavailable">Therapist data needed</option></select>
     </label>
   </div>;
 }

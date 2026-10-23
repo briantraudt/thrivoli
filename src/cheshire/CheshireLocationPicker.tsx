@@ -3,7 +3,7 @@ import { Building2, Check, ChevronDown } from 'lucide-react';
 import { LOCATIONS } from './finance';
 import { profitCenterLabel, type ProfitCenterScope } from './profitCenterScope';
 
-const options: {value:ProfitCenterScope;label:string}[]=[{value:'all',label:'All profit centers'},...LOCATIONS.map(value=>({value,label:value})),{value:'schools',label:'Schools'}];
+const options: {value:ProfitCenterScope;label:string}[]=[{value:'all',label:'All business'},...LOCATIONS.map(value=>({value,label:value})),{value:'schools',label:'Schools'},{value:'cash',label:'Cash programs'}];
 export function CheshireLocationPicker({value,onChange}:{value:ProfitCenterScope;onChange:(value:ProfitCenterScope)=>void}){
  const[open,setOpen]=useState(false);const[active,setActive]=useState(0);const root=useRef<HTMLDivElement>(null);const trigger=useRef<HTMLButtonElement>(null);const list=useRef<HTMLUListElement>(null);const search=useRef({text:'',at:0});const id=useId();
  const selected=options.findIndex(option=>option.value===value);
