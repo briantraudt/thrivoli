@@ -12,7 +12,7 @@ test('payroll source card follows filters and auth state, shows currency/cutoff 
     const totals = () => renderer.root.findByProps({ className: 'csd-totals' }).findAllByType('strong').map(node => node.children.join(''));
     const source = () => renderer.root.findByProps({ className: 'cpa-source' });
     assert.deepEqual(totals(), ['—', '—', '—']);
-    assert.equal(source().findByProps({ className: 'cpa-amount' }).findByType('strong').children.join(''), '600.00');
+    assert.equal(source().findByProps({ className: 'cpa-amount' }).findByType('strong').children.join(''), '$600.00');
     const rendered = JSON.stringify(renderer.toJSON());
     for (const text of ['Currency unconfirmed', 'Mar 6, 2026', 'Employer taxes', 'Fully loaded labor and profit still need data', 'Gross already includes', 'individual payroll rows have not been imported']) assert.ok(rendered.includes(text), text);
     assert.equal(source().findByType('tbody').findAllByType('tr').length, 3);
@@ -21,7 +21,7 @@ test('payroll source card follows filters and auth state, shows currency/cutoff 
     await act(async () => source().findByType('a').props.onClick());
     assert.equal(renderer.root.findByProps({ className: 'cfi-compact-selector' }).findByType('select').props.value, 'payroll');
     await act(async () => renderer.root.findAllByType('button').find(button => button.children.join('') === 'MTD').props.onClick());
-    assert.equal(source().findByProps({ className: 'cpa-amount' }).findByType('strong').children.join(''), '300.00');
+    assert.equal(source().findByProps({ className: 'cpa-amount' }).findByType('strong').children.join(''), '$300.00');
     assert.deepEqual(totals(), ['—', '—', '—']);
     await act(async () => renderer.root.findByProps({ 'aria-label': 'Profit center' }).props.onClick());
     await act(async () => renderer.root.findAllByProps({ role: 'option' }).find(option => option.findByType('span').children.join('') === 'Pool').props.onClick());

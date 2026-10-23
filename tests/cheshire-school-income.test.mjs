@@ -30,7 +30,7 @@ test('school source retains repeated labels, exact signed values and source-cell
   sh.rows[0].values[0].income.value='-10.25';sh.rawHundredths='4000';
   const parsed=parseSchoolIncomeAudit(a,'a'.repeat(64));
   assert.equal(parsed.sheets[0].rows.length,2);
-  assert.equal(schoolAmount(schoolUnits('-10.25')),'-10.25');
+  assert.equal(schoolAmount(schoolUnits('-10.25')),'-$10.25');
   assert.equal(schoolPeriodTotal(parsed.sheets[0],[0]).hundredths,0n);
   assert.equal(schoolPeriodTotal(parsed.sheets[0],[1]).hundredths,null);
   sh.rows[0].values[1].income={ref:'E4',state:'error',value:'#VALUE!',formula:'=-V3'};

@@ -93,7 +93,7 @@ export function readPayrollSourceSummary(documents: IntakeDocument[], mode: 'mtd
 export function formatPayrollSourceAmount(value: number): string {
   if (!Number.isSafeInteger(value) || value < 0) throw new Error('Invalid payroll display amount');
   const exact = BigInt(value);
-  return `${new Intl.NumberFormat('en-US').format(exact / 100n)}.${String(exact % 100n).padStart(2, '0')}`;
+  return `$${new Intl.NumberFormat('en-US').format(exact / 100n)}.${String(exact % 100n).padStart(2, '0')}`;
 }
 
 export function payrollDateLabel(value: string): string {

@@ -1,4 +1,5 @@
 import type {MappingProvenance} from './cheshire-report-mapping.ts';
+import { headerPrivacyHit, scanMatrix } from './cheshire-privacy.ts';
 /** Shared, deterministic document requirements. No customer files or amounts belong here. */
 export const MAX_PAYER_LENGTH = 160;
 export const SCHOOL_SCOPE_VERSION = 'school-independent-v1' as const;
@@ -36,12 +37,11 @@ const ALIASES:Record<string,string[]>={
  insurance_payments:['insurancepayments','insurancepayment','insuranceincome','insurance'],patient_payments:['patientpayments','patientpayment','copays','patientincome'],adjustments:['adjustments','otheradjustments'],report_total:['reporttotal','controltotal','sourcetotal','grandtotal'],
  scheduled_visits:['scheduledvisits','appointmentsscheduled','scheduled','patientsscheduled'],completed_visits:['completedvisits','visitscompleted','visits','arrived','patientsarrived'],cancellations:['cancellations','canceled','cancelled'],no_shows:['noshows','noshow'],units:['units','unitsbilled','totalunitsbilled'],worked_hours:['workedhours','hoursworked'],district:['district','schooldistrict','school'],billed_hours:['billedhours','billablehours','hours'],contract_rate:['contractrate','hourlyrate','rate'],invoice_total:['invoicetotal','invoiceamount'],program:['program','programname','specialtyprogram'],income:['income','revenue','programincome'],role:['role','category','staffrole'],payroll_cost_basis:['payrollcostbasis','costbasis'],cash_pay:['cashpay','grosscashpay','basecashpay','grosspay','wages','salary'],payroll_taxes:['payrolltaxes','employertaxes'],benefits:['benefits','benefitcost'],pto_cost:['ptocost','paidtimeoffcost'],bonuses:['bonuses','bonus'],paid_hours:['paidhours'],revenue_stream:['revenuestream','stream','servicetype'],allocation_percent:['allocationpercent','allocationpercentage','allocationpct','percent'],expense_category:['expensecategory','category','expense'],amount:['amount','cost','monthlyamount'],
 };
-const BLOCKED_HEADERS=new Set(['patientname','patientid','patient','patientdob','dateofbirth','dob','mrn','medicalrecordnumber','diagnosis','diagnoses','clinicalnotes','ssn','socialsecuritynumber','memberid','subscriberid','student','studentname','studentid','childname']);
 export function mapHeaders(headers:string[],sourceType:SourceType){
  const requirement=INTAKE_REQUIREMENTS.find(item=>item.id===sourceType)!;
  const mapped=headers.map(header=>[...requirement.fields,...(requirement.optionalFields??[])].find(field=>(ALIASES[field]??[canonicalField(field)]).includes(canonicalField(header)))??'');
  const duplicates=mapped.filter((field,index)=>field&&mapped.indexOf(field)!==index);
- const blocked=headers.filter(header=>{const normalized=canonicalField(header);return BLOCKED_HEADERS.has(normalized)||/(patient|student|child).*(name|identifier|id|birth|dob|address|email|phone|record)/.test(normalized);});
+ const blocked=headers.filter(header=>headerPrivacyHit(header));
  return {mapped,duplicates:[...new Set(duplicates)],blocked,unmapped:headers.map((_,index)=>index).filter(index=>!mapped[index])};
 }
 /** CSV parser handles quoted separators/newlines and rejects ragged or over-limit input. */
@@ -74,7 +74,9 @@ export function tableFromMatrix(matrix:(string|null)[][],sourceType:SourceType):
  });
  const periods=[...new Set(rows.map(row=>row.reporting_month).filter((value):value is string=>Boolean(value)))];
  const controls=[...new Set(rows.map(row=>row.report_total).filter((value):value is string=>Boolean(value)))];
- return {headers:mapping.mapped.filter(Boolean),rows,sourceRows,sourcePeriod:periods.length===1&&isMonth(periods[0])?periods[0]:null,controlTotal:controls.length===1?controls[0]:null,warnings,blockedFields:mapping.blocked};
+ const privacy=scanMatrix(matrix);
+ const blockedFields=[...new Set([...mapping.blocked,...(privacy.length?['restricted_patient_data']:[])])];
+ return {headers:mapping.mapped.filter(Boolean),rows,sourceRows,sourcePeriod:periods.length===1&&isMonth(periods[0])?periods[0]:null,controlTotal:controls.length===1?controls[0]:null,warnings,blockedFields};
 }
 function decimal(value:string|null|undefined,{signed=false,precision=2,money=false}={}){
  if(value==null)return null;let normalized=value;
@@ -90,8 +92,8 @@ export function validateTable(table:ParsedTable,sourceType:SourceType,requestedM
  if(!isMonth(requestedMonth))throw new Error('Choose a valid reporting month.');
  const requirement=INTAKE_REQUIREMENTS.find(item=>item.id===sourceType);if(!requirement)throw new Error('Unsupported source type.');
  const missing:string[]=[];const checks:ReviewCheck[]=[];const add=(key:CheckKey,passed:boolean,message:string)=>{checks.push({key,passed,message});if(!passed)missing.push(message);};
- const privacyOk=table.blockedFields.length===0&&!table.rows.some(row=>Object.values(row).some(value=>value&&/\b\d{3}-\d{2}-\d{4}\b/.test(value)));
- add('privacy',privacyOk,privacyOk?'No blocked identifier columns detected.':'Restricted personal or patient-data markers were detected. Remove identifiers before review. Nothing will be sent to AI.');
+ const privacyOk=table.blockedFields.length===0;
+ add('privacy',privacyOk,privacyOk?'No blocked identifier columns detected.':'This file includes patient or student details, so it cannot be saved. Export totals only, with no names, birth dates, account or chart numbers, diagnosis codes, insurance IDs, addresses, phone numbers, emails, or Social Security numbers.');
  add('document_type',table.rows.length>0&&table.warnings.length===0,table.warnings.length?table.warnings.join(' '):table.rows.length?'Readable tabular export.':'The file contains no usable detail rows.');
  const periods=[...new Set(table.rows.map(row=>row.reporting_month))];const periodOk=periods.length===1&&periods[0]===requestedMonth&&table.sourcePeriod===requestedMonth;
  add('reporting_period',periodOk,periodOk?`Source period matches ${requestedMonth}.`:`The source must explicitly identify ${requestedMonth} on every detail row; the selected upload month alone is not period evidence.`);
