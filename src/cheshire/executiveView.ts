@@ -214,11 +214,11 @@ export function buildExecutive(input: ExecutiveInput): ExecutiveModel {
   const present = [clinic, schools, cash].filter((part): part is MoneyPart => part !== null);
   const sameRevenueBasis = present.length > 0 && present.every(part => part.basis === present[0].basis && !part.partial);
   const revenue = !blocked && present.length === 1 ? present[0] : null;
-  const revenueWaiting = blocked ? THERAPIST_WAIT : present.length > 1
-    ? 'Waiting on one reconciled revenue total. Clinic payments, school income, and cash programs stay separate below and are not added together.'
-    : input.scope === 'schools' ? 'Waiting on the school workbook or monthly invoices.'
-    : input.scope === 'cash' ? 'Waiting on the cash-program report.'
-    : 'Waiting on a PracticePro or QuickBooks payments export.';
+  const revenueWaiting = blocked ? 'Waiting on therapist IDs' : present.length > 1
+    ? 'Waiting on one reconciled total'
+    : input.scope === 'schools' ? 'Waiting on the school workbook or invoices'
+    : input.scope === 'cash' ? 'Waiting on the cash-program report'
+    : 'Waiting on a PracticePro or QuickBooks export';
 
   const directCosts = input.scope === 'schools' || input.scope === 'cash';
   const overhead = blocked || directCosts ? null : input.overhead;
@@ -229,7 +229,7 @@ export function buildExecutive(input: ExecutiveInput): ExecutiveModel {
     if (input.scope === 'schools') expenseWaiting = 'Waiting on therapist time and payroll. Clinic rent is not charged to schools.';
     else if (input.scope === 'cash') expenseWaiting = 'Waiting on direct costs for cash programs. Clinic overhead is not applied.';
     else if (overhead) { expenses = overhead; expenseWaiting = ''; }
-    else if (payroll) expenseWaiting = 'Waiting on the overhead workbook. Pay-date wages are listed below and are not the expense total.';
+    else if (payroll) expenseWaiting = 'Waiting on the overhead workbook';
     else expenseWaiting = 'Waiting on the overhead workbook.';
   }
 

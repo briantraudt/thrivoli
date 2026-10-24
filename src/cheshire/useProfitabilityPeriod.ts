@@ -7,13 +7,14 @@ import { createRequestQueue, reportingMonths, type PeriodMode } from './periodSu
 import type { MapCategory, SheetScope } from './profitabilitySheet';
 type Loaded={key:string;responses:Partial<Record<string,MetricResponse>>;categories:MapCategory[];failedMonths:string[];mapError:boolean};
 const MAX_AGE=30_000;
-export function useProfitabilityPeriod(mode:PeriodMode,scope:SheetScope,explicitMonths?:readonly string[]){
+export function useProfitabilityPeriod(mode:PeriodMode,scope:SheetScope,explicitMonths?:readonly string[],enabled=true){
   const intake=useIntake();const monthKey=explicitMonths&&explicitMonths.length<=24&&explicitMonths.every(month=>isMonth(month))?explicitMonths.join(','):reportingMonths(mode,intake.month).join(',');
   const sourceVersion=JSON.stringify([intake.documents.map(doc=>[doc.id,doc.content_sha256,doc.status,doc.reviewed_at,doc.review_revision,doc.validation_dependency_revisions,doc.supersedes_id]),intake.referenceSnapshot?.revisionId,intake.state,intake.busy]);
   const key=JSON.stringify([mode,intake.month,scope,monthKey,sourceVersion]);
   const cache=useRef<{version:string;values:Map<string,{at:number;data:MetricResponse}>}>({version:'',values:new Map()});
   const queue=useRef(createRequestQueue(3));const[loaded,setLoaded]=useState<Loaded|null>(null);
   useEffect(()=>{
+    if(!enabled)return;
     let active=true;setLoaded(null);
     if(cache.current.version!==sourceVersion){cache.current={version:sourceVersion,values:new Map()};}
     if(intake.state!=='ready'||intake.busy){cache.current.values.clear();return;}
@@ -32,8 +33,9 @@ export function useProfitabilityPeriod(mode:PeriodMode,scope:SheetScope,explicit
       setLoaded({key,responses:Object.fromEntries(responses.filter(row=>row.data).map(row=>[row.month,row.data!])),failedMonths:responses.filter(row=>!row.data).map(row=>row.month),categories:validMap?map.data as MapCategory[]:[],mapError:!validMap});
     }).catch(()=>{if(current())setLoaded({key,responses:{},failedMonths:months,categories:[],mapError:true});});
     return()=>{active=false;};
-  },[key,monthKey,sourceVersion,intake.state,intake.busy,intake.month,mode,scope]);
+  },[key,monthKey,sourceVersion,intake.state,intake.busy,intake.month,mode,scope,enabled]);
   const months=monthKey.split(',');
+  if(!enabled)return{months,scope,responses:{},categories:[],failedMonths:[],mapError:false,state:'ready'}as const;
   const current=intake.state==='ready'&&!intake.busy&&loaded?.key===key?loaded:null;
   return{months,scope,responses:current?.responses??{},categories:current?.categories??[],failedMonths:current?.failedMonths??[],mapError:current?.mapError??false,state:intake.state!=='ready'||intake.busy?'waiting':current?'ready':'loading'}as const;
 }

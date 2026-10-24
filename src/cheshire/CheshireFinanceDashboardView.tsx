@@ -90,7 +90,7 @@ export function CheshireFinanceDashboardView({ snapshot, state, onRefresh, sampl
   const scopeLabel = profitCenterLabel(selectedScope);
   const legacyMode: PeriodMode = period === 'month' ? 'mtd' : 'ytd';
   const currentMonths = executiveMonths(period, intake.month);
-  const loadedPeriod = useProfitabilityPeriod(legacyMode, scope, period === 'quarter' || period === 't12' ? currentMonths : undefined);
+  const loadedPeriod = useProfitabilityPeriod(legacyMode, scope, period === 'quarter' || period === 't12' ? currentMonths : undefined, !sampleParts);
   const sourcesVisible = (state === 'ready' || state === 'empty') && intake.state === 'ready' && !intake.busy;
   const schoolSource = sourcesVisible ? readSchoolIncomeSource(intake.documents, intake.month) : { source: null, issue: null };
   const schoolIdentity = schoolFilterIdentity(schoolSource, intake.month);

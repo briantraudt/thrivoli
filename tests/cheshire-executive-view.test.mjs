@@ -37,7 +37,8 @@ test('all-business revenue stays split, and profit waits unless one complete bas
     cash: { cents: 5000, basis: 'program_reported_month', partial: false },
   });
   assert.equal(split.revenue, null);
-  assert.match(split.revenueWaiting, /not added together/);
+  assert.match(split.revenueWaiting, /reconciled total/);
+  assert.match(split.beforeShared + split.revenueLines.map(line => line.drill).join(' '), /not added|overlap|separate/i);
   assert.deepEqual(split.revenueLines.map(line => line.cents), [11000, 20000, 5000]);
   assert.ok(split.revenueLines.every(line => line.share === null));
   assert.equal(split.profitCents, null);
@@ -73,7 +74,8 @@ test('pay-date wages never become the expense headline, and a flat budget is not
   const wages = buildExecutive({ ...blank, scope: 'all', payroll: { cents: 60000, basis: 'Pay-date gross wages', partial: false } });
   assert.equal(wages.expenses, null);
   assert.equal(wages.expenseLines.find(line => line.id === 'payroll')?.cents, 60000);
-  assert.match(wages.expenseWaiting, /not the expense total/);
+  assert.match(wages.expenseWaiting, /overhead workbook/);
+  assert.match(wages.expenseLines.find(line => line.id === 'payroll')?.drill ?? '', /not subtracted/);
 
   const flat = buildExecutive({
     ...blank, scope: 'all', priorLabel: 'prior period',
@@ -139,7 +141,8 @@ test('therapist filters accept opaque ids only and blank every company figure', 
   assert.equal(hidden.revenue, null);
   assert.equal(hidden.expenses, null);
   assert.ok(hidden.revenueLines.every(line => line.cents === null));
-  assert.match(hidden.revenueWaiting, /not one therapist/);
+  assert.equal(hidden.revenueWaiting, 'Waiting on therapist IDs');
+  assert.match(hidden.revenueLines[0]?.waiting ?? '', /not one therapist/);
   const filters = { period: 'quarter', location: 'Schools', therapist: 'T014', month: '2026-10' };
   assert.equal(executiveSearch(filters), 'period=quarter&location=Schools&therapist=T014&month=2026-10');
   assert.deepEqual(parseExecutiveSearch('?period=nope&location=Atlantis&therapist=Jane&month=2026-13'), { period: 'ytd', location: 'all', therapist: 'all', month: null });
