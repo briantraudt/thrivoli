@@ -6,8 +6,9 @@ import { isMonth } from './intake';
 import { createRequestQueue, reportingMonths, type PeriodMode } from './periodSummary';
 import type { MapCategory, SheetScope } from './profitabilitySheet';
 type Loaded={key:string;responses:Partial<Record<string,MetricResponse>>;categories:MapCategory[];failedMonths:string[];mapError:boolean};
+type ProfitabilityPeriod={months:string[];scope:SheetScope;responses:Partial<Record<string,MetricResponse>>;categories:MapCategory[];failedMonths:string[];mapError:boolean;state:'ready'|'loading'|'waiting'};
 const MAX_AGE=30_000;
-export function useProfitabilityPeriod(mode:PeriodMode,scope:SheetScope,explicitMonths?:readonly string[],enabled=true){
+export function useProfitabilityPeriod(mode:PeriodMode,scope:SheetScope,explicitMonths?:readonly string[],enabled=true):ProfitabilityPeriod{
   const intake=useIntake();const monthKey=explicitMonths&&explicitMonths.length<=24&&explicitMonths.every(month=>isMonth(month))?explicitMonths.join(','):reportingMonths(mode,intake.month).join(',');
   const sourceVersion=JSON.stringify([intake.documents.map(doc=>[doc.id,doc.content_sha256,doc.status,doc.reviewed_at,doc.review_revision,doc.validation_dependency_revisions,doc.supersedes_id]),intake.referenceSnapshot?.revisionId,intake.state,intake.busy]);
   const key=JSON.stringify([mode,intake.month,scope,monthKey,sourceVersion]);
@@ -35,7 +36,7 @@ export function useProfitabilityPeriod(mode:PeriodMode,scope:SheetScope,explicit
     return()=>{active=false;};
   },[key,monthKey,sourceVersion,intake.state,intake.busy,intake.month,mode,scope,enabled]);
   const months=monthKey.split(',');
-  if(!enabled)return{months,scope,responses:{},categories:[],failedMonths:[],mapError:false,state:'ready'}as const;
+  if(!enabled)return{months,scope,responses:{},categories:[],failedMonths:[],mapError:false,state:'ready'};
   const current=intake.state==='ready'&&!intake.busy&&loaded?.key===key?loaded:null;
-  return{months,scope,responses:current?.responses??{},categories:current?.categories??[],failedMonths:current?.failedMonths??[],mapError:current?.mapError??false,state:intake.state!=='ready'||intake.busy?'waiting':current?'ready':'loading'}as const;
+  return{months,scope,responses:current?.responses??{},categories:current?.categories??[],failedMonths:current?.failedMonths??[],mapError:current?.mapError??false,state:intake.state!=='ready'||intake.busy?'waiting':current?'ready':'loading'};
 }
