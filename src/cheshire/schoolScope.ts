@@ -1,6 +1,6 @@
 import type { IntakeDocument } from '../../supabase/functions/_shared/cheshire-intake.ts';
 
-export const SCHOOL_SCOPE_NOTE = 'Schools operate independently of clinic locations. These figures appear under Schools and All profit centers.';
+export const SCHOOL_SCOPE_NOTE = 'Schools operate independently of clinic locations. These figures appear under Schools and All business.';
 
 // Owner clarification changes presentation, never the immutable source evidence or replay payload.
 const clarifiedText = new Map([

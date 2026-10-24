@@ -156,8 +156,9 @@ export function CheshireProject() {
       <EditableRow label="Payer" tone="revenue-source" category="revenue" segmentIndex={index} items={chipsFor(chips, index, "revenue")} onCommit={commitChip} onDelete={deleteChip} onAdd={addDraftChip}/>
       <EditableRow label="Expense · Labor" tone="cost" category="labor" segmentIndex={index} items={chipsFor(chips, index, "labor")} onCommit={commitChip} onDelete={deleteChip} onAdd={addDraftChip}/>
       <EditableRow label="Expense · Operations" tone="cost" category="expenses" segmentIndex={index} items={chipsFor(chips, index, "expenses")} onCommit={commitChip} onDelete={deleteChip} onAdd={addDraftChip}/>
-      <EditableRow label="Location Overhead" tone="location-overhead" category="locationOverhead" segmentIndex={index} items={chipsFor(chips, index, "locationOverhead")} onCommit={commitChip} onDelete={deleteChip} onAdd={addDraftChip}/>
+      <EditableRow label={index === 1 ? "Direct school costs" : "Location overhead"} tone="location-overhead" category="locationOverhead" segmentIndex={index} items={chipsFor(chips, index, "locationOverhead")} onCommit={commitChip} onDelete={deleteChip} onAdd={addDraftChip}/>
     </article>)}</div>
+    <p className="map-school-policy">Schools are their own business. Clinic rent and location overhead stay with the clinics and are not charged to schools. The Schools column lists direct school costs only.</p>
     <section className="tree-bottom"><div className="shared-costs"><h2>Centralized Shared Overhead</h2><div className="overhead-columns">{overheadColumns.map((items, column) => <div className={"overhead-cell overhead-cell-" + (column + 1)} key={column}><EditableTags items={items} onCommit={commitChip} onDelete={deleteChip} label="Centralized Shared Overhead"/></div>)}</div><button className="cell-add" type="button" onClick={() => addDraftChip(null, "overhead", overheadChips)}>+ Add</button></div></section></div>
   </section></main>;
 }

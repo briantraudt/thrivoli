@@ -1,17 +1,16 @@
 import { Inflate, strFromU8 } from 'fflate';
 import { resolveXlsxIdentity, readXlsxStrings, readXlsxCells, createXlsxXmlBudget } from './cheshire-xlsx-identity.ts';
 import { INTAKE_LOCATIONS, INTAKE_EXPENSE_CATEGORIES, mapHeaders, parseDelimited, tableFromMatrix, type ParsedTable, type SourceType } from './cheshire-intake.ts';
+import { scanMatrix } from './cheshire-privacy.ts';
 export const MAX_UPLOAD_BYTES=5*1024*1024;
 const MAX_EXPANDED_BYTES=20*1024*1024;
-export const UPLOAD_TYPES:Record<string,string>={csv:'text/csv',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet',pdf:'application/pdf',png:'image/png'};
-export function uploadExtension(filename:string){const extension=filename.toLowerCase().split('.').at(-1)??'';if(!(extension in UPLOAD_TYPES))throw new Error('Upload a CSV, XLSX, PDF or PNG file.');return extension;}
+export const UPLOAD_TYPES:Record<string,string>={csv:'text/csv',xlsx:'application/vnd.openxmlformats-officedocument.spreadsheetml.sheet'};
+export function uploadExtension(filename:string){const extension=filename.toLowerCase().split('.').at(-1)??'';if(!(extension in UPLOAD_TYPES))throw new Error('Upload a CSV or Excel (.xlsx) file. PDF, photos, and older .xls files cannot be checked for patient details, so they are not accepted.');return extension;}
 export function validateFileSignature(bytes:Uint8Array,filename:string,mime:string){
  const extension=uploadExtension(filename);if(!bytes.length||bytes.length>MAX_UPLOAD_BYTES)throw new Error('Files must be non-empty and no larger than 5 MB.');
  if(mime!==UPLOAD_TYPES[extension])throw new Error('The file extension and media type do not match.');
  const starts=(signature:number[])=>signature.every((value,index)=>bytes[index]===value);
  if(extension==='xlsx'&&!starts([0x50,0x4b,0x03,0x04]))throw new Error('This file is not a readable XLSX archive.');
- if(extension==='pdf'&&!starts([0x25,0x50,0x44,0x46,0x2d]))throw new Error('This file is not a PDF.');
- if(extension==='png'&&!starts([0x89,0x50,0x4e,0x47,0x0d,0x0a,0x1a,0x0a]))throw new Error('This file is not a PNG image.');
  if(extension==='csv'&&(bytes.includes(0)||starts([0x50,0x4b])||starts([0x25,0x50,0x44,0x46])||starts([0x89,0x50,0x4e,0x47])))throw new Error('The CSV must be a UTF-8 text export.');
  return extension;
 }
@@ -94,7 +93,7 @@ export function parseXlsx(bytes:Uint8Array,sourceType:SourceType):ParsedTable {
  const {matrix:rectangular,formulas}=readXlsxSheet(bytes);
   const period=sourceMonth(rectangular),control=sourceControl(rectangular);
   const blocked=[...new Set(rectangular.flatMap(row=>mapHeaders(row.map(value=>value??''),sourceType).blocked))];
-  if(rectangular.some(row=>row.some(value=>value&&/\b\d{3}-\d{2}-\d{4}\b/.test(value))))blocked.push('restricted_identifier_pattern');
+  if(scanMatrix(rectangular).length)blocked.push('restricted_patient_data');
   if(blocked.length)return{headers:[],rows:[],sourceRows:[],sourcePeriod:period,controlTotal:control,warnings:[],blockedFields:blocked};
   if(sourceType==='overhead'){
    const headerRow=rectangular.findIndex(row=>row.filter(value=>INTAKE_LOCATIONS.includes(value as typeof INTAKE_LOCATIONS[number])).length>=2);

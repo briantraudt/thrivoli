@@ -10,11 +10,11 @@ test('payroll audit reconciles exact hundredths and returns aggregate fields onl
   const parsed = parsePayrollSourceAudit(input, 'a'.repeat(64));
   assert.equal(parsed.grossHundredths, 60000);
   assert.equal(parsed.currency, null);
-  assert.equal(formatPayrollSourceAmount(parsed.grossHundredths), '600.00');
+  assert.equal(formatPayrollSourceAmount(parsed.grossHundredths), '$600.00');
   assert.ok(!JSON.stringify(parsed).includes('SYNTHETIC PRIVATE'));
-  assert.equal(formatPayrollSourceAmount(Number.MAX_SAFE_INTEGER), '90,071,992,547,409.91');
-  assert.equal(formatPayrollSourceAmount(1), '0.01');
-  assert.equal(formatPayrollSourceAmount(0), '0.00');
+  assert.equal(formatPayrollSourceAmount(Number.MAX_SAFE_INTEGER), '$90,071,992,547,409.91');
+  assert.equal(formatPayrollSourceAmount(1), '$0.01');
+  assert.equal(formatPayrollSourceAmount(0), '$0.00');
   assert.throws(() => formatPayrollSourceAmount(Number.MAX_SAFE_INTEGER + 1));
 });
 test('malformed, mismatched or unreconciled payroll data fails closed', () => {

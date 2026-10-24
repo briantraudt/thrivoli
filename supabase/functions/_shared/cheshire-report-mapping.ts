@@ -1,6 +1,7 @@
 /** Local/header-only suggestions. Source bytes are reparsed and verified before review. */
 import {INTAKE_REQUIREMENTS, INTAKE_LOCATIONS, SOURCE_TYPES, mapHeaders, parseDelimitedMatrix, tableFromMatrix, type SourceType, type ParsedTable} from './cheshire-intake.ts';
 import {readXlsxSheet, validateFileSignature} from './cheshire-files.ts';
+import {privacyRejectionMessage, scanMatrix, UNINSPECTABLE_UPLOAD_MESSAGE, UNREADABLE_UPLOAD_MESSAGE} from './cheshire-privacy.ts';
 export const MAPPING_VERSION='cheshire-mapping-v1' as const;
 export type ConfirmedMapping={version:typeof MAPPING_VERSION;source_sha256:string;source_type:SourceType;header_row:number;columns:string[];confirmed:true};
 export type MappingProvenance=ConfirmedMapping&{confirmed_by:string;confirmed_at:string};
@@ -10,12 +11,24 @@ export type ReportInspection={header_options?:HeaderOption[];status:'supported'|
 const ALL_FIELDS=new Set(INTAKE_REQUIREMENTS.flatMap(item=>[...item.fields,...(item.optionalFields??[])]));
 const HASH=/^[a-f0-9]{64}$/;
 function readSource(bytes:Uint8Array,filename:string,mime:string){const extension=validateFileSignature(bytes,filename,mime);if(extension==='xlsx')return readXlsxSheet(bytes);if(extension==='csv')return {matrix:parseDelimitedMatrix(new TextDecoder('utf-8',{fatal:true}).decode(bytes),true),formulas:false};return null;}
-function privacyBlocked(matrix:(string|null)[][]){return matrix.some(row=>mapHeaders(row.map(value=>value??''),'coverage_manifest').blocked.length>0||row.some(value=>value&&/\b\d{3}-\d{2}-\d{4}\b/.test(value)));}
+function privacyBlocked(matrix:(string|null)[][]){return scanMatrix(matrix).length>0;}
+/** Screen a file before any storage write. A rejection never echoes cell text. */
+export function screenUploadBytes(bytes:Uint8Array,filename:string,mime:string):{ok:true}|{ok:false,message:string}{
+ const extension=filename.toLowerCase().split('.').at(-1)??'';
+ if(extension!=='csv'&&extension!=='xlsx')return {ok:false,message:UNINSPECTABLE_UPLOAD_MESSAGE};
+ try{
+  const source=readSource(bytes,filename,mime);
+  if(!source)return {ok:false,message:UNINSPECTABLE_UPLOAD_MESSAGE};
+  const findings=scanMatrix(source.matrix);
+  if(findings.length)return {ok:false,message:privacyRejectionMessage(findings)};
+  return {ok:true};
+ }catch{return {ok:false,message:UNREADABLE_UPLOAD_MESSAGE};}
+}
 export function inspectReportUpload(bytes:Uint8Array,filename:string,mime:string):ReportInspection {
  try{
   const source=readSource(bytes,filename,mime);if(!source)return {status:'unsupported',reason:'PDF and image reports need manual review or an aggregate CSV/XLSX export. No OCR is performed.',row_count:0,candidates:[],warnings:[]};
   const {matrix,formulas}=source;if(matrix.some(row=>row.length>100))throw new Error('The report exceeds the 100-column review limit.');if(!matrix.length||matrix.length>10001)throw new Error('Provide a non-empty export with at most 10,000 detail rows.');
-  if(privacyBlocked(matrix))return {status:'restricted',reason:'Restricted personal or patient-data markers were detected. Choose an aggregate-only corrected report.',row_count:0,candidates:[],warnings:[]};
+  if(privacyBlocked(matrix))return {status:'restricted',reason:privacyRejectionMessage(scanMatrix(matrix)),row_count:0,candidates:[],warnings:[]};
   if(matrix.some(row=>row.filter(value=>INTAKE_LOCATIONS.includes(value as never)).length>=2))return {status:'unsupported',reason:'A location-matrix layout needs its existing overhead checks. Choose Location overhead; do not relabel it as a monthly actual.',row_count:matrix.length,candidates:[],warnings:[]};
   const candidates=INTAKE_REQUIREMENTS.map(requirement=>{
    let header=0,score=-1;for(let index=0;index<Math.min(matrix.length,40);index++){const mapped=mapHeaders(matrix[index].map(value=>value??''),requirement.id).mapped;const count=new Set(mapped.filter(field=>requirement.fields.includes(field))).size;if(count>score){header=index;score=count;}}

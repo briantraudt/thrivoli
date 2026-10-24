@@ -38,7 +38,7 @@ export function schoolUnits(v: string, places = 2): bigint {
 }
 export function schoolAmount(units: bigint | string): string {
   const n = BigInt(units), a = n < 0n ? -n : n;
-  return `${n < 0n ? '-' : ''}${new Intl.NumberFormat('en-US').format(a / 100n)}.${String(a % 100n).padStart(2, '0')}`;
+  return `${n < 0n ? '-' : ''}$${new Intl.NumberFormat('en-US').format(a / 100n)}.${String(a % 100n).padStart(2, '0')}`;
 }
 function cell(input: unknown, ref?: string, precision = 2): SchoolCell {
   const o = object(input, ['ref', 'state', 'value', 'formula']);

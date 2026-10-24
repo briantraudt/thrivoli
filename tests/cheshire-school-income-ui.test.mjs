@@ -17,7 +17,7 @@ test('school source card follows profit-center selection and periods without cha
   await act(async()=>card().findByType('a').props.onClick());
   assert.equal(renderer.root.findByProps({className:'cfi-compact-selector'}).findByType('select').props.value,'school_billing');
   assert.doesNotMatch(text(),/school\/location\/provider|location\/provider mapping/);assert.ok(text().includes('Confirm school and therapist identities'));
-  await act(async()=>renderer.root.findAllByType('button').find(n=>n.children.join('')==='MTD').props.onClick());
+  await act(async()=>renderer.root.findAllByType('button').find(n=>n.children.join('')==='Month').props.onClick());
   assert.ok(text().includes('No numeric source values'));assert.deepEqual(totals(),['—','—','—']);
   await act(async()=>renderer.update(React.createElement(Harness,{month:'2026-07'})));
   assert.ok(text().includes('excluded from this selected subtotal'));
@@ -28,7 +28,7 @@ test('school source card follows profit-center selection and periods without cha
   assert.equal(renderer.root.findAllByProps({className:'csi-source'}).length,0);assert.ok(!text().includes('Fictional Academy'));
   await act(async()=>renderer.root.findByProps({'aria-label':'Profit center'}).props.onClick());
   await act(async()=>renderer.root.findAllByProps({role:'option'}).find(n=>n.findByType('span').children.join('')==='Schools').props.onClick());
-  assert.ok(text().includes('These figures appear under Schools and All profit centers'));assert.ok(text().includes('Fictional Academy'));
+  assert.ok(text().includes('These figures appear under Schools and All business'));assert.ok(text().includes('Fictional Academy'));
   assert.equal(JSON.stringify(card().findByProps({className:'csi-head'}).findAllByType('strong').map(n=>n.children)),schoolBeforeScope);assert.deepEqual(totals(),['—','—','—']);
   await act(async()=>renderer.unmount());renderer=null;
   for(const props of [{state:'no-access'},{state:'checking'},{state:'unavailable'},{busy:true},{financeState:'no-access'},{financeState:'error'},{financeState:'loading'}]){
