@@ -4,6 +4,16 @@ import { parsePayrollSourceAudit, readPayrollSourceSummary, formatPayrollSourceA
 import { parseIntakeDocuments, buildMonthlyChecklist } from '../src/cheshire/intake.ts';
 import { payrollAuditFixture, payrollDocumentFixture } from './helpers/payroll-audit-fixture.mjs';
 
+test('a trailing-twelve selection retains prior-year payroll months without carrying excluded months', () => {
+  const months = Array.from({ length: 12 }, (_, i) => i === 11 ? '2027-01' : `2026-${String(i + 2).padStart(2, '0')}`);
+  const source = readPayrollSourceSummary([payrollDocumentFixture()], 'ytd', '2027-01', 'all', months);
+  assert.equal(source.grossHundredths, 50000);
+  assert.deepEqual(source.months.map(row => row.month), ['2026-02', '2026-03']);
+  assert.equal(source.requestedMonthCount, 12);
+  assert.equal(readPayrollSourceSummary([payrollDocumentFixture()], 'ytd', '2027-01', 'Pool', months), null);
+  assert.throws(() => readPayrollSourceSummary([payrollDocumentFixture()], 'ytd', '2027-01', 'all', ['2026-02']), /Invalid selected/);
+});
+
 test('payroll audit reconciles exact hundredths and returns aggregate fields only', () => {
   const input = payrollAuditFixture();
   input.employee_rows = [{ name: 'SYNTHETIC PRIVATE NAME', direct_deposit: 'SYNTHETIC PRIVATE FIELD' }];

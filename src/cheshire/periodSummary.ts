@@ -4,8 +4,12 @@ import { financeSummary, type FinanceSnapshot } from './finance.ts';
 import type { MetricResponse } from './metrics.ts';
 export type PeriodMode = 'mtd' | 'ytd';
 export type PeriodEvidence = { months: string[]; scope: SheetScope; responses: Partial<Record<string, MetricResponse>>; failedMonths: string[]; state?: 'ready'|'loading'|'waiting'; referenceUnavailable?: boolean; referenceLoading?: boolean };
-export function reportingMonths(mode: PeriodMode, month: string): string[] {
+export function reportingMonths(mode: PeriodMode, month: string, selectedMonths?: readonly string[]): string[] {
   if (!isMonth(month) || !['mtd','ytd'].includes(mode)) throw new Error('Invalid reporting period');
+  if (selectedMonths !== undefined) {
+    if (!selectedMonths.length || selectedMonths.length > 12 || selectedMonths.some(value => !isMonth(value)) || new Set(selectedMonths).size !== selectedMonths.length || selectedMonths.at(-1) !== month) throw new Error('Invalid selected reporting months');
+    return [...selectedMonths];
+  }
   return mode === 'mtd' ? [month] : Array.from({length:Number(month.slice(5,7))}, (_,i)=>`${month.slice(0,4)}-${String(i+1).padStart(2,'0')}`);
 }
 export function periodLabel(mode: PeriodMode, month: string) {

@@ -1,3 +1,4 @@
+import { reportingMonths } from './periodSummary.ts';
 import { isMonth, type IntakeDocument } from '../../supabase/functions/_shared/cheshire-intake.ts';
 
 export type PayrollSourceMonth = { month: string; grossHundredths: number; rows: number; staffCount: number };
@@ -67,17 +68,18 @@ export function parsePayrollSourceAudit(input: unknown, sourceHash: string): Pay
 }
 
 /** Historical source subtotals never enter normalized labor, company expenses, or profit. */
-export function readPayrollSourceSummary(documents: IntakeDocument[], mode: 'mtd' | 'ytd', month: string, scope: string): PayrollSourceSummary | null {
+export function readPayrollSourceSummary(documents: IntakeDocument[], mode: 'mtd' | 'ytd', month: string, scope: string, selectedMonths?: readonly string[]): PayrollSourceSummary | null {
   if (!isMonth(month) || !['mtd', 'ytd'].includes(mode) || scope !== 'all') return null;
+  const requestedMonths = reportingMonths(mode, month, selectedMonths);
   const superseded = new Set(documents.map(document => document.supersedes_id).filter(Boolean));
   const candidates: PayrollSourceSummary[] = [];
   for (const document of documents) {
     if (superseded.has(document.id) || document.source_type !== 'payroll' || document.source_origin !== 'existing_source' || document.status !== 'incomplete' || document.requested_month !== null || document.reported_month !== null || document.storage_path !== null || document.validation?.validator_version !== 'source-audit-v1' || document.validation.status !== 'incomplete' || !document.validation.payroll_source_audit) continue;
     try {
       const audit = parsePayrollSourceAudit(document.validation.payroll_source_audit, document.content_sha256);
-      const months = audit.months.filter(row => mode === 'mtd' ? row.month === month : row.month.slice(0, 4) === month.slice(0, 4) && row.month <= month);
+      const months = audit.months.filter(row => requestedMonths.includes(row.month));
       if (!months.length) continue;
-      candidates.push({ audit, months, grossHundredths: months.reduce((sum, row) => sum + row.grossHundredths, 0), requestedMonthCount: mode === 'mtd' ? 1 : Number(month.slice(5, 7)), documentId: document.id });
+      candidates.push({ audit, months, grossHundredths: months.reduce((sum, row) => sum + row.grossHundredths, 0), requestedMonthCount: requestedMonths.length, documentId: document.id });
     } catch { /* An invalid historical audit cannot supply displayed source amounts. */ }
   }
   // Never choose or add overlapping exports. Identical retained hashes count only once.

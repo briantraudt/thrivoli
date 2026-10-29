@@ -1,5 +1,6 @@
 import { useState } from 'react';
-import { schoolAmount, schoolPeriodTotal, selectedSchoolPeriods, type SchoolCell } from '../../supabase/functions/_shared/cheshire-school-income.ts';
+import { reportingMonths } from './periodSummary';
+import { schoolAmount, schoolPeriodTotal, type SchoolCell } from '../../supabase/functions/_shared/cheshire-school-income.ts';
 import { SCHOOL_SCOPE_NOTE, schoolScopeText } from './schoolScope';
 import type { SchoolSourceResult } from './schoolIncomeSource';
 import './school-income.css';
@@ -10,8 +11,8 @@ function cellLabel(cell: SchoolCell): string {
   if (cell.state === 'dash') return 'Dash · unresolved';
   return cell.value!;
 }
-export function CheshireSchoolIncome({ result, mode, month, selectedRow, onReviewSource }: {
-  result: SchoolSourceResult; mode: 'mtd' | 'ytd'; month: string; selectedRow?: number | null; onReviewSource: () => void;
+export function CheshireSchoolIncome({ result, mode, month, selectedRow, selectedMonths, periodName, onReviewSource }: {
+  result: SchoolSourceResult; mode: 'mtd' | 'ytd'; month: string; selectedRow?: number | null; selectedMonths?: readonly string[]; periodName?: string; onReviewSource: () => void;
 }) {
   const [search, setSearch] = useState('');
   if (result.issue) return <section className="csi-source" role="status"><h2>Reported school income</h2><p>{result.issue}</p><a href="#csd-source-review" onClick={onReviewSource}>Review school source</a></section>;
@@ -21,17 +22,21 @@ export function CheshireSchoolIncome({ result, mode, month, selectedRow, onRevie
   const selectedSchool = selectedRow == null ? null : sheet.rows.find(row => row.row === selectedRow);
   if (selectedRow != null && !selectedSchool) return <section className="csi-source" role="status"><h2>Reported school income</h2><p>The selected school source row is unavailable. Select a school again.</p></section>;
   const scopedSheet = selectedSchool ? { ...sheet, rows: [selectedSchool] } : sheet;
-  const selected = selectedSchoolPeriods(sheet, mode, Number(month.slice(5)));
+  const requestedMonths = reportingMonths(mode, month, selectedMonths);
+  const intervalMonths = (start: number, end: number) => Array.from({ length: end - start + 1 }, (_, index) => `${sheet.year}-${String(start + index).padStart(2, '0')}`);
+  const selected = sheet.periods.map((p, i) => ({ p, i })).filter(({ p }) => p.start !== null && p.end !== null && intervalMonths(p.start, p.end).every(value => requestedMonths.includes(value)));
+  const outsideYear = requestedMonths.filter(value => !value.startsWith(`${sheet.year}-`));
   const total = schoolPeriodTotal(scopedSheet, selected.map(p => p.i));
-  const partialCombined = sheet.periods.some(p => p.start === 7 && (mode === 'mtd' && [7, 8].includes(Number(month.slice(5))) || mode === 'ytd' && Number(month.slice(5)) === 7));
+  const partialCombined = sheet.periods.some(p => p.start !== null && p.end !== null && intervalMonths(p.start, p.end).some(value => requestedMonths.includes(value)) && !intervalMonths(p.start, p.end).every(value => requestedMonths.includes(value)));
   const rows = scopedSheet.rows.filter(r => selectedSchool || r.label.toLocaleLowerCase().includes(search.toLocaleLowerCase()));
   return <section className="csi-source" aria-labelledby="csi-title">
-    <div className="csi-head"><div><p>Private school workbook · {sheet.year}</p><h2 id="csi-title">Reported school income</h2><p>{mode.toUpperCase()} source subtotal · {selected.length} selected source intervals</p></div><div><strong>{total.hundredths === null ? 'No numeric source values' : schoolAmount(total.hundredths)}</strong><span>Currency unconfirmed</span></div></div>
+    <div className="csi-head"><div><p>Private school workbook · {sheet.year}</p><h2 id="csi-title">Reported school income</h2><p>{periodName ?? mode.toUpperCase()} source subtotal{outsideYear.length ? ` · ${sheet.year} portion only` : ''} · {selected.length} selected source intervals</p></div><div><strong>{total.hundredths === null ? 'No numeric source values' : schoolAmount(total.hundredths)}</strong><span>Currency unconfirmed</span></div></div>
     {selectedSchool?<p className="csi-selected-school"><strong>{selectedSchool.label}</strong> · source row {sheet.sheet}!A{selectedSchool.row}. This is a source label; school and therapist mappings still need confirmation.</p>:null}
     <p className="csi-scope">{SCHOOL_SCOPE_NOTE}</p>
     <p>Partial numeric source observations. Accounting basis and completeness are unconfirmed. These amounts are separate from PracticePro payments, QuickBooks revenue and profit.</p>
     <p>{total.numeric} numeric income cells · {total.blank} blank · {total.dashes} dash · {total.errors} error. Blank and error amounts are unknown.</p>
-    {partialCombined ? <p className="csi-warning">July/August is a combined source interval. It cannot supply either individual month or July YTD, so its amount is excluded from this selected subtotal.</p> : null}
+    {outsideYear.length ? <p className="csi-warning">{outsideYear.join(', ')} are outside this {sheet.year} source-year subtotal. This is not the full selected-period total; school identities and amounts from other years have not been combined.</p> : null}
+    {partialCombined ? <p className="csi-warning">July/August is a combined source interval. Both months must fall inside the selected reporting window. Otherwise its amount is excluded from this selected subtotal.</p> : null}
     {sheet.periods.some(p => p.start === null) ? <p className="csi-warning">The leading December has an unconfirmed year and is excluded from calendar-period subtotals.</p> : null}
     <details><summary>School income detail, coverage and source checks</summary>
       <div className="csi-scroll"><table><caption>{selectedSchool?`${selectedSchool.label} · ${sheet.sheet}!A${selectedSchool.row} · all source periods`:`All source periods in ${sheet.year}`}. Numeric detail subtotals do not establish complete monthly or annual revenue.</caption><thead><tr><th scope="col">Source period</th><th scope="col">Numeric income subtotal</th><th scope="col">Numeric / blank / dash / error cells</th></tr></thead><tbody>{sheet.periods.map((p, i) => {
