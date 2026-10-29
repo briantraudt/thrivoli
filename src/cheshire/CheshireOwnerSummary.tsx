@@ -30,17 +30,18 @@ type Row = {
   visitsTitle: string;
 };
 
-function clinicRows(snapshot: FinanceSnapshot | null, mode: PeriodMode, month: string, checking: boolean, unavailable: boolean): Row[] {
+function clinicRows(snapshot: FinanceSnapshot | null, mode: PeriodMode, month: string, checking: boolean, unavailable: boolean, selectedMonths?: readonly string[]): Row[] {
+  const outsideBudget = selectedMonths?.some(value => !/^2026-(0[1-9]|1[0-2])$/.test(value)) ?? false;
   return LOCATIONS.map(name => {
-    const estimate = !checking && !unavailable && snapshot ? estimatedFixedOverhead(snapshot, mode, month, name) : null;
-    const overhead = checking ? 'Checking' : unavailable ? 'Unavailable' : estimate ? money(estimate.value) : 'Not loaded';
+    const estimate = !checking && !unavailable && snapshot ? estimatedFixedOverhead(snapshot, mode, month, name, selectedMonths) : null;
+    const overhead = checking ? 'Checking' : unavailable ? 'Unavailable' : estimate ? money(estimate.value) : outsideBudget ? 'Not covered' : 'Not loaded';
     const overheadTitle = checking
       ? 'Checking the overhead budget. No figure is filled in until that check finishes.'
       : unavailable
         ? 'The overhead budget could not be loaded. Nothing is estimated in its place.'
         : estimate
           ? `${estimate.label}. ${estimate.missingCells} workbook cells are still blank and are not treated as zero. Budget, not actual spending.`
-          : 'The 2026 overhead workbook is not loaded for this clinic. That file supplies the monthly budget. Missing months are not filled with zero.';
+          : outsideBudget ? 'The selected reporting period extends outside the 2026 budget. No budget is extrapolated into another year.' : 'The 2026 overhead workbook is not loaded for this clinic. That file supplies the monthly budget. Missing months are not filled with zero.';
     return {
       id: name,
       name,
@@ -54,19 +55,20 @@ function clinicRows(snapshot: FinanceSnapshot | null, mode: PeriodMode, month: s
 }
 
 /** Owner comparison. Dollar figures come only from a confirmed overhead budget. Visits and profit stay blank until the files exist. */
-export function CheshireOwnerSummary({ snapshot, mode, month, scope, checking, unavailable, onOpenLocation }: {
+export function CheshireOwnerSummary({ snapshot, mode, month, scope, checking, unavailable, selectedMonths, onOpenLocation }: {
   snapshot: FinanceSnapshot | null;
   mode: PeriodMode;
   month: string;
   scope: ProfitCenterScope;
   checking: boolean;
   unavailable: boolean;
+  selectedMonths?: readonly string[];
   onOpenLocation: (scope: ProfitCenterScope) => void;
 }) {
   const [open, setOpen] = useState(false);
   const dialogRef = useRef<HTMLDivElement>(null);
   const titleId = useId();
-  const clinics = clinicRows(snapshot, mode, month, checking, unavailable);
+  const clinics = clinicRows(snapshot, mode, month, checking, unavailable, selectedMonths);
   const pending = checking ? 'Checking' : unavailable ? 'Unavailable' : null;
   const schools: Row = {
     id: 'schools',

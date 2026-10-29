@@ -42,3 +42,13 @@ test('year-to-date overhead keeps every month of 2026, including November and De
   assert.equal(estimatedFixedOverhead(books, 'ytd', '2025-12', 'all'), null);
   assert.equal(estimatedFixedOverhead(books, 'mtd', '2026-11', 'Cheshire').value, 1900);
 });
+
+test('explicit executive windows replace the YTD fallback and never extend the budget year', () => {
+  const books = snapshot();
+  const quarter = estimatedFixedOverhead(books, 'ytd', '2026-11', 'Cheshire', ['2026-10', '2026-11']);
+  assert.equal(quarter.months, 2);
+  assert.equal(quarter.value, 3800);
+  assert.equal(estimatedFixedOverhead(books, 'ytd', '2026-01', 'all', ['2025-12', '2026-01']), null);
+  assert.throws(() => estimatedFixedOverhead(books, 'ytd', '2026-11', 'all', ['2026-11', '2026-11']), /Invalid selected/);
+  assert.throws(() => estimatedFixedOverhead(books, 'ytd', '2026-11', 'all', []), /Invalid selected/);
+});

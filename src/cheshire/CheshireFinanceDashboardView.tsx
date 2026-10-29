@@ -6,7 +6,7 @@ import { CheshireSchoolFilters } from './CheshireSchoolFilters';
 import { filterSelectedSchoolMetrics, schoolFilterIdentity, schoolFilterOptions } from './schoolFilters';
 import { readSchoolIncomeSource } from './schoolIncomeSource';
 import { CheshirePayrollSource } from './CheshirePayrollSource';
-import { readPayrollSourceSummary, type PayrollSourceSummary } from './payrollSourceAudit';
+import { readPayrollSourceSummary } from './payrollSourceAudit';
 import './cumulative-reports.css';
 import { useEffect, useRef, useState } from 'react';
 import { CalendarDays, FileUp, LockKeyhole, RefreshCw, UsersRound } from 'lucide-react';
@@ -48,14 +48,6 @@ function budgetFor(snapshot: FinanceSnapshot | null, scope: ProfitCenterScope, m
   if (!summary.knownCells) return null;
   const cents = summary.knownTotalCents * months.length;
   return Number.isSafeInteger(cents) ? { cents, basis: '2026 overhead budget', partial: summary.missingCellCount > 0, months: months.length } : null;
-}
-
-function payrollWindow(summary: PayrollSourceSummary | null, months: readonly string[]): PayrollSourceSummary | null {
-  if (!summary) return null;
-  const rows = summary.months.filter(row => months.includes(row.month));
-  const grossHundredths = rows.reduce((sum, row) => sum + row.grossHundredths, 0);
-  if (!rows.length || !Number.isSafeInteger(grossHundredths)) return null;
-  return { ...summary, months: rows, grossHundredths, requestedMonthCount: months.length };
 }
 
 function metricPart(responses: Parameters<typeof collectMetricCents>[0], months: readonly string[], source: string, keys: readonly string[], basis: string): MoneyPart | null {
@@ -143,7 +135,7 @@ export function CheshireFinanceDashboardView({ snapshot, state, onRefresh, sampl
   const statusMessage = state === 'no-access' ? 'Financial access has not been enabled for this account.' : state === 'empty' ? (schools ? null : 'The first verified overhead source has not been imported.') : state === 'error' ? 'The protected financial source is unavailable. No cached or estimated values are being displayed.' : state === 'loading' ? 'Loading your protected financial source…' : null;
   const summaryState = state === 'error' || state === 'no-access' || periodView.failedMonths.length ? 'Unavailable' : state === 'loading' || periodView.state !== 'ready' ? 'Checking' : 'Missing';
   const cumulativeReports = !schools && !cash && period === 'ytd' && sourcesVisible ? readCumulativeReports(intake.documents, legacyMode, intake.month) : [];
-  const payrollSource = payrollWindow(selectedScope === 'all' && sourcesVisible ? readPayrollSourceSummary(intake.documents, legacyMode, intake.month, scope) : null, currentMonths);
+  const payrollSource = selectedScope === 'all' && sourcesVisible ? readPayrollSourceSummary(intake.documents, legacyMode, intake.month, scope, currentMonths) : null;
   const cumulativeRevenue = cumulativeReports.length ? cumulativeRevenueSummary(cumulativeReports, scope) : null;
   const windows = comparisonWindows(period, intake.month);
   const priorLabel = period === 'ytd' || period === 't12' ? 'prior year' : 'prior period';
@@ -220,11 +212,11 @@ export function CheshireFinanceDashboardView({ snapshot, state, onRefresh, sampl
     <CategoryBoard title="Expenses by category" lines={model.expenseLines} openId={openLine} onOpen={id => setOpenLine(current => current === id ? null : id)}/>
     <section className="ced-shared" aria-label="Profit before and after shared overhead"><h2>Profit and shared overhead</h2><p>{model.beforeShared}</p><p>{model.afterShared}</p></section>
     <details className="ced-later"><summary>Profitability by location and break-even visits</summary>
-      <CheshireOwnerSummary snapshot={state === 'ready' ? snapshot : null} mode={legacyMode} month={intake.month} scope={selectedScope} checking={summaryState === 'Checking'} unavailable={state === 'error' || state === 'no-access'} onOpenLocation={chooseScope}/>
+      <CheshireOwnerSummary snapshot={state === 'ready' ? snapshot : null} mode={legacyMode} month={intake.month} selectedMonths={currentMonths} scope={selectedScope} checking={summaryState === 'Checking'} unavailable={state === 'error' || state === 'no-access'} onOpenLocation={chooseScope}/>
       <a className="ced-map-link" href="/cheshire/map">Open the profitability map</a>
     </details>
     <CheshirePayrollSource summary={payrollSource} onReviewSource={() => { intake.setSelected('payroll'); if (sourceReviewRef.current) sourceReviewRef.current.open = true; }}/>
-    {(schools || selectedScope === 'all') ? <CheshireSchoolIncome result={schoolSource} selectedRow={selectedSchool?.row} mode={legacyMode} month={intake.month} onReviewSource={() => { intake.setSelected('school_billing'); if (sourceReviewRef.current) sourceReviewRef.current.open = true; }}/> : null}
+    {(schools || selectedScope === 'all') ? <CheshireSchoolIncome result={schoolSource} selectedRow={selectedSchool?.row} mode={legacyMode} month={intake.month} selectedMonths={currentMonths} periodName={period === 'quarter' ? 'Quarter-to-date' : period === 't12' ? 'Trailing twelve months' : undefined} onReviewSource={() => { intake.setSelected('school_billing'); if (sourceReviewRef.current) sourceReviewRef.current.open = true; }}/> : null}
     {schools && sourcesVisible && !schoolSource.source && !schoolSource.issue ? <p className="csd-status" role="status">No historical school workbook is available for this reporting year. Validated monthly school invoices, when available, remain a separate source below.</p> : null}
     <div className="csd-detail-heading"><h2>Explore the detail</h2></div>
     {periodView.state === 'loading' ? <p className="csd-status" role="status">Checking the selected period and profit center. Missing months are never zero.</p> : null}
