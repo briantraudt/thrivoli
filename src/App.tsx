@@ -10,6 +10,7 @@ export default function App() {
     <Route path="/" element={<PublicHome/>}/>
     <Route path="/cheshire" element={<CheshireLogin/>}/>
     <Route path="/cheshire/dashboard" element={<CheshireProtected><CheshireShell><CheshireDashboard/></CheshireShell></CheshireProtected>}/>
+    <Route path="/cheshire/data" element={<CheshireProtected><CheshireShell><CheshireDashboard sourceReview/></CheshireShell></CheshireProtected>}/>
     <Route path="/cheshire/map" element={<CheshireProtected><CheshireShell><CheshireMapPage><CheshireProject/></CheshireMapPage></CheshireShell></CheshireProtected>}/>
     {SamplePreview ? <Route path="/cheshire/preview" element={<Suspense fallback={<main className="cfz-gate"><p>Opening the sample dashboard…</p></main>}><SamplePreview/></Suspense>}/> : null}
     <Route path="*" element={<PublicHome/>}/>

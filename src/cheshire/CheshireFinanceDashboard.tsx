@@ -1,3 +1,4 @@
+import { CheshireSourceReview } from "./CheshireSourceReview";
 import { useEffect, useState } from "react";
 import { cheshireSupabase } from "../lib/cheshireSupabase";
 import { parseFinanceSnapshot, type FinanceSnapshot } from "./finance";
@@ -8,7 +9,7 @@ import {
   type FinanceLoadState,
 } from "./CheshireFinanceDashboardView";
 
-export function CheshireFinanceDashboard() {
+export function CheshireFinanceDashboard({ sourceReview = false }: { sourceReview?: boolean }) {
   const [snapshot, setSnapshot] = useState<FinanceSnapshot | null>(null);
   const [state, setState] = useState<FinanceLoadState>("loading");
   const { setReferenceSnapshot } = useIntake();
@@ -88,6 +89,7 @@ export function CheshireFinanceDashboard() {
       authListener.subscription.unsubscribe();
     };
   }, [attempt]);
+  if (sourceReview) return <CheshireSourceReview snapshot={snapshot} state={state}/>;
   return (
     <CheshireFinanceDashboardView
       snapshot={snapshot}

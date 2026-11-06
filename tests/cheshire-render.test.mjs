@@ -38,12 +38,11 @@ test("dashboard renders verified source and all missing/access states without in
     });
     const { render } = await import(pathToFileURL(`${dir}/render.mjs`));
     const ready = render("ready");
-    assert.match(ready, /\$14,000\.00/);
-    assert.match(ready, /source month unconfirmed/);
-    assert.match(ready, /Not yet available/);
-    assert.match(ready, /140\/140 known/);
-    assert.match(ready, /Expandable financial categories/);
-    assert.match(ready, /All business/);
+    assert.doesNotMatch(ready, /\$14,000\.00/);
+    assert.match(ready, /Missing/);
+    assert.match(ready, /ced-category-list/);
+    assert.match(ready, /Amount unknown/);
+    assert.doesNotMatch(ready, /<details|<table|<p[ >]/);assert.match(ready, /All business/);
     assert.match(ready, /Upload data/);
     assert.doesNotMatch(ready, /Upload Insurance payments/);
     assert.match(ready, /Revenue expenses and profit summary/);
@@ -54,15 +53,15 @@ test("dashboard renders verified source and all missing/access states without in
         /\$14,000\.00|\$2,000\.00|Synthetic test fixture/,
       );
       assert.match(html, /role="status"/);
-      assert.match(html, /Not yet available/);
+      assert.match(html, /Amount unknown/);
     }
     const blank = render("ready", null);
     assert.match(blank, /Missing/);
     assert.doesNotMatch(blank, /<strong>\$0\.00<\/strong>/);
     const zero = render("ready", "0");
-    assert.match(zero, /\$0\.00/);
+    assert.doesNotMatch(zero, /\$0\.00/);
     assert.doesNotMatch(zero, /<strong>\$0\.00<\/strong>/, 'undated monthly source cannot be a period headline');
-    assert.match(zero, /Not yet available/);
+    assert.match(zero, /Amount unknown/);
   } finally {
     await rm(dir, { recursive: true, force: true });
   }

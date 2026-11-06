@@ -1,7 +1,8 @@
+import {category, amount, words, assertCompact} from './helpers/compact-dashboard.mjs';
 import test from 'node:test'; import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, rm } from 'node:fs/promises'; import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build } from 'esbuild'; import React from 'react'; import { create, act } from 'react-test-renderer';
-test('payroll source card follows filters and auth state, shows currency/cutoff caveats, and includes gross wages once in partial expenses', async () => {
+test('payroll category follows filters and auth state, shows currency/cutoff caveats, and includes gross wages once in partial expenses', async () => {
   const root = fileURLToPath(new URL('../', import.meta.url)); const cache = root + 'node_modules/.cache/';
   await mkdir(cache, { recursive: true }); const dir = await mkdtemp(cache + 'payroll-ui-'); let renderer;
   const previousDocument = globalThis.document; globalThis.document = { addEventListener: () => {}, removeEventListener: () => {} }; globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -10,26 +11,18 @@ test('payroll source card follows filters and auth state, shows currency/cutoff 
     const { Harness } = await import(pathToFileURL(dir + '/ui.mjs'));
     await act(async () => { renderer = create(React.createElement(Harness)); });
     const totals = () => renderer.root.findByProps({ className: 'csd-totals' }).findAllByType('strong').map(node => node.children.join(''));
-    const source = () => renderer.root.findByProps({ className: 'cpa-source' });
-    assert.deepEqual(totals(), ['—', '$600.00', '—']);
-    assert.equal(source().findByProps({ className: 'cpa-amount' }).findByType('strong').children.join(''), '$600.00');
-    const rendered = JSON.stringify(renderer.toJSON());
-    for (const text of ['Currency unconfirmed', 'Mar 6, 2026', 'Employer taxes', 'Fully loaded labor and profit still need data', 'Gross already includes', 'individual payroll rows have not been imported']) assert.ok(rendered.includes(text), text);
-    assert.equal(source().findByType('tbody').findAllByType('tr').length, 3);
-    assert.equal(source().findByType('details').props.open, undefined);
-    assert.equal(source().findByType('a').props.href, '#csd-source-review');
-    await act(async () => source().findByType('a').props.onClick());
-    assert.equal(renderer.root.findByProps({ className: 'cfi-compact-selector' }).findByType('select').props.value, 'payroll');
+    assert.deepEqual(totals(), ['—', '$600.00', '—']);assert.equal(amount(renderer,'Payroll · all staff'),'$600.00');assertCompact(renderer);
+    for(const badge of ['Pay-date gross','Missing employer costs','Currency/overlap unconfirmed','2026-03-06']) assert.ok(words(category(renderer,'Payroll · all staff')).includes(badge),badge);
     await act(async () => renderer.root.findAllByType('button').find(button => button.children.join('') === 'Month').props.onClick());
-    assert.equal(source().findByProps({ className: 'cpa-amount' }).findByType('strong').children.join(''), '$300.00');
+    assert.equal(amount(renderer,'Payroll · all staff'), '$300.00');
     assert.deepEqual(totals(), ['—', '$300.00', '—']);
     await act(async () => renderer.root.findByProps({ 'aria-label': 'Profit center' }).props.onClick());
     await act(async () => renderer.root.findAllByProps({ role: 'option' }).find(option => option.findByType('span').children.join('') === 'Pool').props.onClick());
-    assert.equal(renderer.root.findAllByProps({ className: 'cpa-source' }).length, 0);
+    assert.deepEqual(totals(),['—','—','—']);assert.ok(!category(renderer,'Payroll · all staff'));
     await act(async () => renderer.unmount()); renderer = null;
     for (const props of [{ state: 'no-access' }, { state: 'checking' }, { state: 'unavailable' }, { busy: true }, { financeState: 'no-access' }, { financeState: 'error' }, { financeState: 'loading' }]) {
       await act(async () => { renderer = create(React.createElement(Harness, props)); });
-      assert.equal(renderer.root.findAllByProps({ className: 'cpa-source' }).length, 0, JSON.stringify(props));
+      assert.deepEqual(totals(),['—','—','—'],JSON.stringify(props));assert.doesNotMatch(words(renderer.toJSON()),/\$600\.00|\$300\.00/);
       await act(async () => renderer.unmount()); renderer = null;
     }
   } finally { if (renderer) await act(async () => renderer.unmount()); await rm(dir, { recursive: true, force: true }); if (previousDocument === undefined) delete globalThis.document; else globalThis.document = previousDocument; delete globalThis.IS_REACT_ACT_ENVIRONMENT; }
