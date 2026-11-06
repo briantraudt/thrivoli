@@ -1,4 +1,5 @@
 import { useState } from 'react';
+import { supportedSchoolIntervals } from './schoolRevenueObservation';
 import { reportingMonths } from './periodSummary';
 import { schoolAmount, schoolPeriodTotal, type SchoolCell } from '../../supabase/functions/_shared/cheshire-school-income.ts';
 import { SCHOOL_SCOPE_NOTE, schoolScopeText } from './schoolScope';
@@ -26,15 +27,19 @@ export function CheshireSchoolIncome({ result, mode, month, selectedRow, selecte
   const intervalMonths = (start: number, end: number) => Array.from({ length: end - start + 1 }, (_, index) => `${sheet.year}-${String(start + index).padStart(2, '0')}`);
   const selected = sheet.periods.map((p, i) => ({ p, i })).filter(({ p }) => p.start !== null && p.end !== null && intervalMonths(p.start, p.end).every(value => requestedMonths.includes(value)));
   const outsideYear = requestedMonths.filter(value => !value.startsWith(`${sheet.year}-`));
-  const total = schoolPeriodTotal(scopedSheet, selected.map(p => p.i));
+  const supported = sheet.controls.length ? supportedSchoolIntervals(sheet) : selected.map(p => p.i);
+  const included = selected.filter(({ i }) => supported.includes(i));
+  const excluded = selected.filter(({ i }) => !supported.includes(i) && schoolPeriodTotal(scopedSheet, [i]).hundredths !== null);
+  const total = schoolPeriodTotal(scopedSheet, included.map(p => p.i));
   const partialCombined = sheet.periods.some(p => p.start !== null && p.end !== null && intervalMonths(p.start, p.end).some(value => requestedMonths.includes(value)) && !intervalMonths(p.start, p.end).every(value => requestedMonths.includes(value)));
   const rows = scopedSheet.rows.filter(r => selectedSchool || r.label.toLocaleLowerCase().includes(search.toLocaleLowerCase()));
   return <section className="csi-source" aria-labelledby="csi-title">
-    <div className="csi-head"><div><p>Private school workbook · {sheet.year}</p><h2 id="csi-title">Reported school income</h2><p>{periodName ?? mode.toUpperCase()} source subtotal{outsideYear.length ? ` · ${sheet.year} portion only` : ''} · {selected.length} selected source intervals</p></div><div><strong>{total.hundredths === null ? 'No numeric source values' : schoolAmount(total.hundredths)}</strong><span>Currency unconfirmed</span></div></div>
+    <div className="csi-head"><div><p>Private school workbook · {sheet.year}</p><h2 id="csi-title">Reported school income</h2><p>{periodName ?? mode.toUpperCase()} source subtotal{outsideYear.length ? ` · ${sheet.year} portion only` : ''} · {included.length} included source intervals</p></div><div><strong>{total.hundredths === null ? 'No numeric source values' : schoolAmount(total.hundredths)}</strong><span>Currency unconfirmed</span></div></div>
     {selectedSchool?<p className="csi-selected-school"><strong>{selectedSchool.label}</strong> · source row {sheet.sheet}!A{selectedSchool.row}. This is a source label; school and therapist mappings still need confirmation.</p>:null}
     <p className="csi-scope">{SCHOOL_SCOPE_NOTE}</p>
     <p>Partial numeric source observations. Accounting basis and completeness are unconfirmed. These amounts are separate from PracticePro payments, QuickBooks revenue and profit.</p>
     <p>{total.numeric} numeric income cells · {total.blank} blank · {total.dashes} dash · {total.errors} error. Blank and error amounts are unknown.</p>
+    {excluded.length ? <p className="csi-warning">Unresolved source intervals excluded from this subtotal: {excluded.map(({ p }) => p.label).join(', ')}. Their numeric detail is retained below for review; it does not establish revenue.</p> : null}
     {outsideYear.length ? <p className="csi-warning">{outsideYear.join(', ')} are outside this {sheet.year} source-year subtotal. This is not the full selected-period total; school identities and amounts from other years have not been combined.</p> : null}
     {partialCombined ? <p className="csi-warning">July/August is a combined source interval. Both months must fall inside the selected reporting window. Otherwise its amount is excluded from this selected subtotal.</p> : null}
     {sheet.periods.some(p => p.start === null) ? <p className="csi-warning">The leading December has an unconfirmed year and is excluded from calendar-period subtotals.</p> : null}

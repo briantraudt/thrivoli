@@ -21,7 +21,7 @@ export function CategoryBoard({ title, lines, openId, onOpen }: { title: string;
       const open = openId === line.id;
       return <div className={open ? 'ced-item ced-open' : 'ced-item'} key={line.id}>
         <button type="button" className="ced-row" aria-expanded={open} onClick={() => onOpen(line.id)}>
-          <span className="ced-name">{line.label}</span>
+          <span className="ced-name">{line.label}{line.sourceNote ? <small className="ced-source-note">{line.sourceNote}</small> : null}</span>
           {line.cents === null ? <span className="ced-wait">{line.waiting}</span> : amount(line.cents)}
           <span className="ced-share"><span className="ced-cell-label">Share</span>{line.share === null ? '—' : new Intl.NumberFormat('en-US', { style: 'percent', maximumFractionDigits: 1 }).format(line.share)}</span>
           <span className="ced-trend"><span className="ced-cell-label">Trend</span><Trend line={line}/></span>

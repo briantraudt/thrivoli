@@ -4,6 +4,7 @@ import { CheshireCumulativeReports } from './CheshireCumulativeReports';
 import { CheshireSchoolIncome } from './CheshireSchoolIncome';
 import { CheshireSchoolFilters } from './CheshireSchoolFilters';
 import { filterSelectedSchoolMetrics, schoolFilterIdentity, schoolFilterOptions } from './schoolFilters';
+import { schoolRevenueObservation } from './schoolRevenueObservation';
 import { readSchoolIncomeSource } from './schoolIncomeSource';
 import { CheshirePayrollSource } from './CheshirePayrollSource';
 import { readPayrollSourceSummary } from './payrollSourceAudit';
@@ -164,6 +165,17 @@ export function CheshireFinanceDashboardView({ snapshot, state, onRefresh, sampl
     priorOverhead: priorOverhead !== null && Number.isSafeInteger(priorOverhead) ? priorOverhead : null,
     priorOverheadMonths, priorPayroll: null, priorLabel,
   });
+  // Workbook observations fill the category only, never financial totals or profit.
+  const schoolObservation = !sampleParts && therapist === 'all' && !schoolRevenue && (schools || selectedScope === 'all')
+    ? schoolRevenueObservation(schoolSource, currentMonths, selectedSchool?.row) : null;
+  if (schoolObservation) {
+    model.revenueLines = model.revenueLines.map(line => line.id === 'schools' ? {
+      ...line, label: 'School contract income · reported', cents: schoolObservation.cents,
+      sourceNote: schoolObservation.note, basis: schoolObservation.note, drill: schoolObservation.detail,
+      waiting: null, share: null, trend: null, priorCents: null,
+    } : line);
+    if (schools) model.revenueWaiting = 'Partial workbook income shown below; accounting revenue unconfirmed';
+  }
   const overheadSummary = overhead && safeSnapshot ? financeSummary(safeSnapshot, selectedScope) : null;
   const sourceMonths = periodView.months.filter(month => (periodView.responses[month]?.sources.length ?? 0) > 0).length;
   const selectedDetailMonth = periodView.months.includes(detailMonth) ? detailMonth : intake.month;

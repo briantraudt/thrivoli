@@ -9,6 +9,7 @@ export type Comparison = { label: string; text: string; tone: 'up' | 'down' | 'f
 export type CategoryLine = {
   id: string;
   label: string;
+  sourceNote?: string;
   cents: number | null;
   share: number | null;
   trend: Comparison | null;
