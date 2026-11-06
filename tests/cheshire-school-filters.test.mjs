@@ -202,7 +202,7 @@ test('selected school filters all workbook totals/details, never allocates invoi
     assert.equal(totals()[0], '$110.00');
     await pickCenter('All business');
     assert.equal(amount(), '$130.25', 'All business ignores the individual school selection');
-    assert.equal(totals()[0], '—', 'Clinic payments and school invoices stay off one headline');
+    assert.equal(totals()[0], '$310.00', 'Clinic and school invoices are included once in the partial headline');
     const categoryAmounts = renderer.root.findAllByProps({ className: 'ced-money' }).map(words);
     assert.ok(categoryAmounts.includes('$110.00') && categoryAmounts.includes('$200.00'));
     await pickCenter('Schools');

@@ -1,7 +1,7 @@
 import test from 'node:test';import assert from 'node:assert/strict';
 import {mkdtemp,mkdir,rm} from 'node:fs/promises';import {fileURLToPath,pathToFileURL} from 'node:url';
 import {build} from 'esbuild';import React from 'react';import {create,act} from 'react-test-renderer';
-test('school source card follows profit-center selection and periods without changing financial totals',async()=>{
+test('school source card follows profit-center selection and periods while feeding partial source totals',async()=>{
  const root=fileURLToPath(new URL('../',import.meta.url));await mkdir(root+'node_modules/.cache/',{recursive:true});
  const dir=await mkdtemp(root+'node_modules/.cache/school-ui-');let renderer;
  const previousDocument=globalThis.document;globalThis.document={addEventListener:()=>{},removeEventListener:()=>{}};globalThis.IS_REACT_ACT_ENVIRONMENT=true;
@@ -11,7 +11,7 @@ test('school source card follows profit-center selection and periods without cha
   await act(async()=>{renderer=create(React.createElement(Harness))});
   const text=()=>JSON.stringify(renderer.toJSON());
   const totals=()=>renderer.root.findByProps({className:'csd-totals'}).findAllByType('strong').map(n=>n.children.join(''));
-  assert.deepEqual(totals(),['—','—','—']);
+  assert.deepEqual(totals(),['$60.50','—','—']);
   assert.ok(text().includes('School contract income · reported'));
   assert.ok(text().includes('partial workbook income · currency and billed/collected basis unconfirmed'));
   for(const phrase of ['Reported school income','60.50','Currency unconfirmed','Accounting basis','Schools operate independently of clinic locations','Blank','Fictional Academy','Original control formulas'])assert.ok(text().includes(phrase),phrase);
@@ -31,7 +31,7 @@ test('school source card follows profit-center selection and periods without cha
   await act(async()=>renderer.root.findByProps({'aria-label':'Profit center'}).props.onClick());
   await act(async()=>renderer.root.findAllByProps({role:'option'}).find(n=>n.findByType('span').children.join('')==='Schools').props.onClick());
   assert.ok(text().includes('These figures appear under Schools and All business'));assert.ok(text().includes('Fictional Academy'));
-  assert.equal(JSON.stringify(card().findByProps({className:'csi-head'}).findAllByType('strong').map(n=>n.children)),schoolBeforeScope);assert.deepEqual(totals(),['—','—','—']);
+  assert.equal(JSON.stringify(card().findByProps({className:'csi-head'}).findAllByType('strong').map(n=>n.children)),schoolBeforeScope);assert.deepEqual(totals(),['$20.50','—','—']);
   await act(async()=>renderer.unmount());renderer=null;
   for(const props of [{state:'no-access'},{state:'checking'},{state:'unavailable'},{busy:true},{financeState:'no-access'},{financeState:'error'},{financeState:'loading'}]){
    await act(async()=>{renderer=create(React.createElement(Harness,props))});

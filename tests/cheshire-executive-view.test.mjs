@@ -29,15 +29,16 @@ test('period windows and comparisons follow the selected month, quarter, year, a
   assert.equal(trailing.priorYear.at(-1), '2025-10');
 });
 
-test('all-business revenue stays split, and profit waits unless one complete basis matches', () => {
+test('all-business source revenue sums clinic and school once, excludes cash, and leaves profit unknown', () => {
   const split = buildExecutive({
     ...blank, scope: 'all',
     clinic: { cents: 11000, basis: 'payment_date', partial: false },
     schools: { cents: 20000, basis: 'invoice_reported_month', partial: false },
     cash: { cents: 5000, basis: 'program_reported_month', partial: false },
   });
-  assert.equal(split.revenue, null);
-  assert.match(split.revenueWaiting, /reconciled total/);
+  assert.equal(split.revenue.cents, 31000);
+  assert.equal(split.revenue.partial, true);
+  assert.match(split.revenue.basis, /different cutoffs.*overlap unverified/);
   assert.match(split.beforeShared + split.revenueLines.map(line => line.drill).join(' '), /not added|overlap|separate/i);
   assert.deepEqual(split.revenueLines.map(line => line.cents), [11000, 20000, 5000]);
   assert.ok(split.revenueLines.every(line => line.share === null));
@@ -70,12 +71,13 @@ test('schools and cash keep clinic overhead off the expense lines', () => {
   assert.match(cash.expenseLines[0].waiting, /direct costs/);
 });
 
-test('pay-date wages never become the expense headline, and a flat budget is not shown as $0.00', () => {
+test('pay-date wages enter the partial expense headline once without fabricating a full-cost comparison', () => {
   const wages = buildExecutive({ ...blank, scope: 'all', payroll: { cents: 60000, basis: 'Pay-date gross wages', partial: false } });
-  assert.equal(wages.expenses, null);
+  assert.equal(wages.expenses.cents, 60000);
+  assert.equal(wages.expenses.partial, true);
   assert.equal(wages.expenseLines.find(line => line.id === 'payroll')?.cents, 60000);
   assert.match(wages.expenseWaiting, /overhead workbook/);
-  assert.match(wages.expenseLines.find(line => line.id === 'payroll')?.drill ?? '', /not subtracted/);
+  assert.match(wages.expenseLines.find(line => line.id === 'payroll')?.drill ?? '', /counted once/);
 
   const flat = buildExecutive({
     ...blank, scope: 'all', priorLabel: 'prior period',
@@ -84,15 +86,14 @@ test('pay-date wages never become the expense headline, and a flat budget is not
     overheadCategories: [{ category: 'Rent', monthlyCents: 10000, missing: 0 }, { category: 'alarm', monthlyCents: 4000, missing: 0 }],
   });
   assert.equal(flat.expenses?.cents, 14000);
-  assert.equal(flat.expenseComparison?.tone, 'flat');
-  assert.equal(flat.expenseComparison?.text, 'Flat vs prior period');
-  assert.equal(comparisonText(flat.expenseComparison, flat.expenses?.cents ?? null, 14000), 'Flat vs prior period');
+  assert.equal(flat.expenseComparison, null);
+  assert.equal(flat.priorExpenses, null);
   assert.equal(comparisonText({ label: 'prior period', text: '', tone: 'down' }, 1000, 2500), '−$15.00 vs prior period');
   assert.equal(JSON.stringify(flat).includes('$0.00'), false);
   assert.equal(JSON.stringify(flat).includes('0.00'), false);
   const rent = flat.expenseLines.find(line => line.id === 'overhead-Rent');
   assert.equal(rent?.cents, 10000);
-  assert.equal(rent?.share, 10000 / 14000);
+  assert.equal(rent?.share, null);
   assert.equal(rent?.trend?.tone, 'flat');
 });
 
@@ -147,4 +148,16 @@ test('therapist filters accept opaque ids only and blank every company figure', 
   assert.equal(executiveSearch(filters), 'period=quarter&location=Schools&therapist=T014&month=2026-10');
   assert.deepEqual(parseExecutiveSearch('?period=nope&location=Atlantis&therapist=Jane&month=2026-13'), { period: 'ytd', location: 'all', therapist: 'all', month: null });
   assert.deepEqual(parseExecutiveSearch(executiveSearch({ period: 'ytd', location: 'all', therapist: 'all', month: '2026-10' })), { period: 'ytd', location: 'all', therapist: 'all', month: '2026-10' });
+});
+
+test('partial totals include each source once, preserve zero and reject overflow', () => {
+ const part=cents=>({cents,basis:'same',partial:false});
+ const model=buildExecutive({...blank,scope:'all',clinic:part(100),schools:part(200),cash:part(900),payroll:part(400),overhead:{...part(50),months:1}});
+ assert.equal(model.revenue.cents,300);assert.equal(model.expenses.cents,450);
+ assert.equal(model.profitCents,null);assert.equal(model.margin,null);
+ assert.ok(model.revenueLines.every(line=>line.share===null));
+ const zero=buildExecutive({...blank,scope:'all',clinic:part(0),payroll:part(0)});
+ assert.equal(zero.revenue.cents,0);assert.equal(zero.expenses.cents,0);
+ const overflow=buildExecutive({...blank,scope:'all',clinic:part(Number.MAX_SAFE_INTEGER),schools:part(1),payroll:part(Number.MAX_SAFE_INTEGER),overhead:{...part(1),months:1}});
+ assert.equal(overflow.revenue,null);assert.equal(overflow.expenses,null);
 });

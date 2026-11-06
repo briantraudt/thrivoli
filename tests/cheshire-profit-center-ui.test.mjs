@@ -111,7 +111,7 @@ test('profit-center selection isolates school financial results, keeps source ba
     assert(text().includes('60.50'));
     assert(sourceTitles().includes('School billing'));
     const allTotals = totals();
-    assert(!allTotals.some(value => ['$310.00', '$370.50', '$260.50'].includes(value)), 'Separate school evidence must not be added to clinic payments');
+    assert.equal(allTotals[0], '$310.00', 'Clinic and school invoices enter the partial subtotal once; overlapping workbook is not also added');
     assert.match(text(), /overlap|double.count|not added|not combined/i);
 
     await pick('Schools');

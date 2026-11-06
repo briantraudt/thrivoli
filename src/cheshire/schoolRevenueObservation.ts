@@ -1,7 +1,7 @@
 import { schoolPeriodTotal, schoolUnits, type SchoolSheet } from '../../supabase/functions/_shared/cheshire-school-income.ts';
 import type { SchoolSourceResult } from './schoolIncomeSource';
 
-/** A source observation, never a normalized financial metric or a consolidated total. */
+/** A source observation, never a normalized financial metric or reconciled accounting total. */
 export function supportedSchoolIntervals(sheet: SchoolSheet): number[] {
   return sheet.periods.flatMap((period, index) => {
     const total = schoolPeriodTotal(sheet, [index]);
@@ -30,5 +30,5 @@ export function schoolRevenueObservation(result: SchoolSourceResult, months: rea
   const total = schoolPeriodTotal(scoped, indices);
   if (total.hundredths === null || total.hundredths > BigInt(Number.MAX_SAFE_INTEGER) || total.hundredths < BigInt(Number.MIN_SAFE_INTEGER)) return null;
   const coverage = indices.filter(index => schoolPeriodTotal(scoped, [index]).hundredths !== null).map(index => sheet.periods[index].label).join(', ');
-  return { cents: Number(total.hundredths), note: `${year}: ${coverage} · partial workbook income · currency and billed/collected basis unconfirmed`, detail: 'Only numeric source intervals matching their workbook controls are included. Blank months and unresolved values are unknown, not zero. July/August remains combined. Not added to clinic payments or school invoices; overlap, complete coverage and therapist labor still need reconciliation.' };
+  return { cents: Number(total.hundredths), note: `${year}: ${coverage} · partial workbook income · currency and billed/collected basis unconfirmed`, detail: 'Only numeric source intervals matching their workbook controls are included. Blank months and unresolved values are unknown, not zero. July/August remains combined. Included once with clinic collections in the partial all-business source subtotal, never added to school invoices. Overlap, complete coverage and therapist labor still need reconciliation.' };
 }

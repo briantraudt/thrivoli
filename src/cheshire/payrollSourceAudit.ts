@@ -67,7 +67,7 @@ export function parsePayrollSourceAudit(input: unknown, sourceHash: string): Pay
   return { sourceHash, currency: provenance.currency as string | null, firstPayDate, lastPayDate, grossHundredths, detailRows, staffCount, months };
 }
 
-/** Historical source subtotals never enter normalized labor, company expenses, or profit. */
+/** Historical source subtotals can support a labeled partial expense estimate, never normalized labor or profit. */
 export function readPayrollSourceSummary(documents: IntakeDocument[], mode: 'mtd' | 'ytd', month: string, scope: string, selectedMonths?: readonly string[]): PayrollSourceSummary | null {
   if (!isMonth(month) || !['mtd', 'ytd'].includes(mode) || scope !== 'all') return null;
   const requestedMonths = reportingMonths(mode, month, selectedMonths);
