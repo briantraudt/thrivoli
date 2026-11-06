@@ -49,3 +49,6 @@
 }
 
 .ced-source-note { display: block; font-size: .75rem; font-weight: 400; line-height: 1.45; margin-top: .3rem; color: #586579; }
+
+.ced-source-formula, .ced-total-coverage { font-size: .85rem; line-height: 1.5; color: #586579; }
+.ced-total-coverage { margin-bottom: 1rem; }

@@ -1,7 +1,7 @@
 import test from 'node:test'; import assert from 'node:assert/strict';
 import { mkdtemp, mkdir, rm } from 'node:fs/promises'; import { fileURLToPath, pathToFileURL } from 'node:url';
 import { build } from 'esbuild'; import React from 'react'; import { create, act } from 'react-test-renderer';
-test('payroll source card follows filters and auth state, shows currency/cutoff caveats, and leaves totals untouched', async () => {
+test('payroll source card follows filters and auth state, shows currency/cutoff caveats, and includes gross wages once in partial expenses', async () => {
   const root = fileURLToPath(new URL('../', import.meta.url)); const cache = root + 'node_modules/.cache/';
   await mkdir(cache, { recursive: true }); const dir = await mkdtemp(cache + 'payroll-ui-'); let renderer;
   const previousDocument = globalThis.document; globalThis.document = { addEventListener: () => {}, removeEventListener: () => {} }; globalThis.IS_REACT_ACT_ENVIRONMENT = true;
@@ -11,7 +11,7 @@ test('payroll source card follows filters and auth state, shows currency/cutoff 
     await act(async () => { renderer = create(React.createElement(Harness)); });
     const totals = () => renderer.root.findByProps({ className: 'csd-totals' }).findAllByType('strong').map(node => node.children.join(''));
     const source = () => renderer.root.findByProps({ className: 'cpa-source' });
-    assert.deepEqual(totals(), ['—', '—', '—']);
+    assert.deepEqual(totals(), ['—', '$600.00', '—']);
     assert.equal(source().findByProps({ className: 'cpa-amount' }).findByType('strong').children.join(''), '$600.00');
     const rendered = JSON.stringify(renderer.toJSON());
     for (const text of ['Currency unconfirmed', 'Mar 6, 2026', 'Employer taxes', 'Fully loaded labor and profit still need data', 'Gross already includes', 'individual payroll rows have not been imported']) assert.ok(rendered.includes(text), text);
@@ -22,7 +22,7 @@ test('payroll source card follows filters and auth state, shows currency/cutoff 
     assert.equal(renderer.root.findByProps({ className: 'cfi-compact-selector' }).findByType('select').props.value, 'payroll');
     await act(async () => renderer.root.findAllByType('button').find(button => button.children.join('') === 'Month').props.onClick());
     assert.equal(source().findByProps({ className: 'cpa-amount' }).findByType('strong').children.join(''), '$300.00');
-    assert.deepEqual(totals(), ['—', '—', '—']);
+    assert.deepEqual(totals(), ['—', '$300.00', '—']);
     await act(async () => renderer.root.findByProps({ 'aria-label': 'Profit center' }).props.onClick());
     await act(async () => renderer.root.findAllByProps({ role: 'option' }).find(option => option.findByType('span').children.join('') === 'Pool').props.onClick());
     assert.equal(renderer.root.findAllByProps({ className: 'cpa-source' }).length, 0);

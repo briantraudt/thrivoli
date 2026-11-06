@@ -214,7 +214,14 @@ export function buildExecutive(input: ExecutiveInput): ExecutiveModel {
   const cash = blocked ? null : input.scope === 'all' || input.scope === 'cash' ? input.cash : null;
   const present = [clinic, schools, cash].filter((part): part is MoneyPart => part !== null);
   const sameRevenueBasis = present.length > 0 && present.every(part => part.basis === present[0].basis && !part.partial);
-  const revenue = !blocked && present.length === 1 ? present[0] : null;
+  const sourceSubtotal = (parts: (MoneyPart | null)[], basis: string): MoneyPart | null => {
+    const available = parts.filter((part): part is MoneyPart => part !== null);
+    const cents = available.reduce((sum, part) => sum + part.cents, 0);
+    return available.length && available.every(part => Number.isSafeInteger(part.cents)) && Number.isSafeInteger(cents) ? { cents, basis, partial: true } : null;
+  };
+  const revenue = input.scope === 'all'
+    ? sourceSubtotal([clinic, schools], 'Clinic collections + school income · partial source subtotal; different cutoffs and accounting bases; overlap unverified; cash programs excluded')
+    : !blocked && present.length === 1 ? present[0] : null;
   const revenueWaiting = blocked ? 'Waiting on therapist IDs' : present.length > 1
     ? 'Waiting on one reconciled total'
     : input.scope === 'schools' ? 'Waiting on the school workbook or invoices'
@@ -229,6 +236,10 @@ export function buildExecutive(input: ExecutiveInput): ExecutiveModel {
   if (!blocked) {
     if (input.scope === 'schools') expenseWaiting = 'Waiting on therapist time and payroll. Clinic rent is not charged to schools.';
     else if (input.scope === 'cash') expenseWaiting = 'Waiting on direct costs for cash programs. Clinic overhead is not applied.';
+    else if (input.scope === 'all') {
+      expenses = sourceSubtotal([payroll, overhead], 'All-staff gross payroll + estimated overhead · partial source subtotal; different cutoffs; payroll/overhead overlap unverified');
+      expenseWaiting = payroll && overhead ? '' : payroll ? 'Waiting on the overhead workbook' : 'Waiting on a payroll export';
+    }
     else if (overhead) { expenses = overhead; expenseWaiting = ''; }
     else if (payroll) expenseWaiting = 'Waiting on the overhead workbook';
     else expenseWaiting = 'Waiting on the overhead workbook.';
@@ -246,9 +257,9 @@ export function buildExecutive(input: ExecutiveInput): ExecutiveModel {
 
   const revenueLines = shares([
     ...(input.scope === 'all' || (input.scope !== 'schools' && input.scope !== 'cash') ? [line('clinic', 'Clinic visit revenue', clinic, blocked ? THERAPIST_WAIT : 'Waiting on a PracticePro or QuickBooks payments export', 'Payments by payer appear here after a PracticePro export. Treatment type needs that same file.', null, priorLabel ? delta(clinic?.cents ?? null, input.priorClinic, priorLabel) : null, input.priorClinic)] : []),
-    ...(input.scope === 'all' || input.scope === 'schools' ? [line('schools', 'School contract revenue', schools, blocked ? THERAPIST_WAIT : 'Waiting on the school workbook or invoices', 'School income stays out of clinic payments until the overlap is reconciled.', null, priorLabel ? delta(schools?.cents ?? null, input.priorSchools, priorLabel) : null, input.priorSchools)] : []),
+    ...(input.scope === 'all' || input.scope === 'schools' ? [line('schools', 'School contract revenue', schools, blocked ? THERAPIST_WAIT : 'Waiting on the school workbook or invoices', 'School income is counted once alongside clinic collections in the partial all-business source subtotal. Accounting basis and overlap are unverified; this is not reconciled revenue.', null, priorLabel ? delta(schools?.cents ?? null, input.priorSchools, priorLabel) : null, input.priorSchools)] : []),
     ...(input.scope === 'all' || input.scope === 'cash' ? [line('cash', 'Cash specialty programs', cash, blocked ? THERAPIST_WAIT : 'Waiting on the cash-program report', 'Intensive therapy and swim lessons. This is not clinic visit revenue.', null, priorLabel ? delta(cash?.cents ?? null, input.priorCash, priorLabel) : null, input.priorCash)] : []),
-  ], sameRevenueBasis && present.length > 1);
+  ], input.scope !== 'all' && sameRevenueBasis && present.length > 1);
 
   const expenseLines: CategoryLine[] = [];
   if (input.scope === 'schools') {
@@ -257,7 +268,7 @@ export function buildExecutive(input: ExecutiveInput): ExecutiveModel {
   } else if (input.scope === 'cash') {
     expenseLines.push(line('cash-direct', 'Direct program costs', null, 'Waiting on direct costs for intensive therapy and swim', 'Pool, instructors, and program supplies. Clinic rent is not applied.', null, null, null));
   } else {
-    expenseLines.push(line('payroll', 'Therapist and staff payroll', payroll, blocked ? THERAPIST_WAIT : input.scope === 'all' ? 'Waiting on a payroll export' : 'Waiting on therapist time by location', 'Pay-date gross wages are not fully loaded labor and are not subtracted from the overhead budget.', null, priorLabel ? delta(payroll?.cents ?? null, input.priorPayroll, priorLabel) : null, input.priorPayroll));
+    expenseLines.push(line('payroll', 'Payroll / labor · all staff, includes therapists', payroll, blocked ? THERAPIST_WAIT : input.scope === 'all' ? 'Waiting on a payroll export' : 'Waiting on therapist time by location', 'Gross wages include therapists and other staff and are counted once in the all-business expense subtotal. Employer taxes and benefits are incomplete; therapist-only and location allocations are unverified. Payroll/overhead overlap still needs review.', null, priorLabel ? delta(payroll?.cents ?? null, input.priorPayroll, priorLabel) : null, input.priorPayroll));
     const categories = input.overheadCategories;
     const months = overhead?.months ?? 0;
     if (!categories || !overhead) {
@@ -269,7 +280,7 @@ export function buildExecutive(input: ExecutiveInput): ExecutiveModel {
       for (const category of priced) {
         const part = category.cents === null ? null : { cents: category.cents, basis: overhead.basis, partial: category.missing > 0 };
         const priorCents = category.monthlyCents === null || priorMonths === null ? null : category.monthlyCents * priorMonths;
-        expenseLines.push(line(`overhead-${category.category}`, overheadCategoryLabel(category.category), part, 'Waiting on this line in the overhead workbook', `${overheadCategoryLabel(category.category)} from the overhead workbook. ${category.missing ? `${category.missing} blank cells are unknown, not zero.` : 'Every cell in this line has an amount.'} Multiplied by ${months} ${months === 1 ? 'month' : 'months'} of the 2026 budget.`, total > 0 && category.cents !== null ? category.cents / total : null, priorLabel ? delta(category.cents, priorCents, priorLabel) : null, priorCents));
+        expenseLines.push(line(`overhead-${category.category}`, overheadCategoryLabel(category.category), part, 'Waiting on this line in the overhead workbook', `${overheadCategoryLabel(category.category)} from the overhead workbook. ${category.missing ? `${category.missing} blank cells are unknown, not zero.` : 'Every cell in this line has an amount.'} Multiplied by ${months} ${months === 1 ? 'month' : 'months'} of the 2026 budget.`, input.scope !== 'all' && total > 0 && category.cents !== null ? category.cents / total : null, priorLabel ? delta(category.cents, priorCents, priorLabel) : null, priorCents));
       }
     }
   }
