@@ -1,3 +1,4 @@
+import {category, amount as categoryAmount, assertCompact} from './helpers/compact-dashboard.mjs';
 // Fictional source records only. These tests never invoke a network or a database.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -95,7 +96,7 @@ test('an individual school withholds aggregate invoice facts with an explicit bl
   assert.equal(filterSelectedSchoolMetrics(alreadyBlocked, true).blocked.filter(blocker => blocker.source_type === 'school_billing').length, 1);
 });
 
-test('selected school filters all workbook totals/details, never allocates invoices, and resets only when source/year/access changes', async () => {
+test('selected school filters compact workbook amounts, never allocates invoices, and resets only when source/year/access changes', async () => {
   await mkdir(root + 'node_modules/.cache/', { recursive: true });
   const dir = await mkdtemp(root + 'node_modules/.cache/school-filter-ui-');
   const previousDocument = globalThis.document;
@@ -110,7 +111,7 @@ test('selected school filters all workbook totals/details, never allocates invoi
       const source=${JSON.stringify(documentFixture())};
       export function Harness({month='2026-09',state='ready',financeState='empty',busy=false,empty=false,hash='${'a'.repeat(64)}'}) {
         const doc=structuredClone(source);doc.content_sha256=hash;doc.validation.school_income_audit.source.sha256=hash;
-        const [selected,setSelected]=React.useState('coverage_manifest');
+        for(const sheet of doc.validation.school_income_audit.sheets)sheet.controls=[{ref:'C62',state:'number',value:'80.25',formula:'=SUM(C4:C60)'},{ref:'O62',state:'number',value:'50',formula:'=SUM(O4:O60)'}];const [selected,setSelected]=React.useState('coverage_manifest');
         return <IntakeContext.Provider value={{month,state,busy,selected,setSelected,documents:empty?[]:[doc],referenceSnapshot:null,setMonth(){},refresh(){},aiEnabled:false}}>
           <CheshireFinanceDashboardView snapshot={null} state={financeState} onRefresh={()=>{}}/>
         </IntakeContext.Provider>;
@@ -137,9 +138,8 @@ test('selected school filters all workbook totals/details, never allocates invoi
     const words = node => typeof node === 'string' ? node : Array.isArray(node) ? node.map(words).join('') : node?.children?.map(words).join('') ?? '';
     const totals = () => renderer.root.findByProps({ className: 'csd-totals' }).findAllByType('strong').map(words);
     const schoolSelect = () => renderer.root.findByProps({ 'aria-label': 'School' });
-    const card = () => renderer.root.findByProps({ className: 'csi-source' });
-    const amount = () => card().findByProps({ className: 'csi-head' }).findByType('strong').children.join('');
-    const detailRows = () => card().findByProps({ className: 'csi-schools' }).findAllByType('summary').map(words);
+    const card = () => category(renderer,'School');
+    const amount = () => categoryAmount(renderer,'School');
     const pickCenter = async label => {
       await act(async () => renderer.root.findByProps({ 'aria-label': 'Profit center' }).props.onClick());
       await act(async () => renderer.root.findAllByProps({ role: 'option' }).find(option => words(option.findByType('span')) === label).props.onClick());
@@ -159,62 +159,53 @@ test('selected school filters all workbook totals/details, never allocates invoi
     assert.equal(therapist.type, 'select');
     assert.equal(therapist.props.value, 'all');
     assert.match(words(therapist), /All therapists/);
-    assert.match(words(renderer.toJSON()), /Waiting on a payroll or timesheet export with therapist IDs/);
-    assert.equal(amount(), '$130.25');
+    assert.match(words(renderer.toJSON()), /Missing therapist time/);
+    assert.equal(amount(), '$200.00');
     assert.deepEqual(totals(), ['$200.00', '—', '—']);
 
     await pickSchool(row5Value);
     assert.equal(amount(), '$100.00');
-    assert.deepEqual(totals(), ['—', '—', '—']);
-    assert.deepEqual(detailRows(), ['FICTIONAL Academy · 2026!A5']);
-    assert.match(words(card()), /2 numeric income cells/);
-    const periodRows = card().findAllByType('table')[0].findByType('tbody').findAllByType('tr');
-    const january = periodRows.find(row => words(row.findByType('th')) === 'Month 1');
-    const summer = periodRows.find(row => words(row.findByType('th')) === 'July / August');
-    assert.equal(words(january.findAllByType('td')[0]), '$70.00');
-    assert.equal(words(summer.findAllByType('td')[0]), '$30.00');
-    assert.equal(renderer.root.findAllByProps({ className: 'cvm-source' }).length, 0);
-    assert.match(words(renderer.toJSON()), /individual school|selected school|school-specific|not linked to this school/i);
-
+    assert.deepEqual(totals(), ['$100.00', '—', '—']);
+    assertCompact(renderer);assert.match(words(card()),/Jan 2026|Jul\/Aug combined/);
     await clickPeriod('Month');
-    assert.equal(amount(), 'No numeric source values');
+    assert.equal(amount(), '—');
     assert.equal(schoolSelect().props.value, row5Value);
     await act(async () => renderer.update(React.createElement(Harness, { month: '2026-01' })));
     assert.equal(amount(), '$70.00'); assert.equal(schoolSelect().props.value, row5Value);
     await clickPeriod('YTD');
     await act(async () => renderer.update(React.createElement(Harness, { month: '2026-07' })));
     assert.equal(amount(), '$70.00');
-    assert.match(words(card()), /combined source interval/);
-    await clickPeriod('Month'); assert.equal(amount(), 'No numeric source values');
+    assert.match(words(card()), /Missing/);
+    await clickPeriod('Month'); assert.equal(amount(), '—');
     await act(async () => renderer.update(React.createElement(Harness, { month: '2026-08' })));
-    assert.equal(amount(), 'No numeric source values');
+    assert.equal(amount(), '—');
     await clickPeriod('YTD'); assert.equal(amount(), '$100.00');
     assert.equal(schoolSelect().props.value, row5Value);
 
-    await pickSchool(blankValue); assert.equal(amount(), 'No numeric source values');
+    await pickSchool(blankValue); assert.equal(amount(), '—');
     assert.deepEqual(totals(), ['—', '—', '—']);
-    assert.deepEqual(detailRows(), ['Blank Academy · 2026!A6']);
+    assertCompact(renderer);
     await pickSchool(zeroValue); assert.equal(amount(), '$0.00');
-    assert.deepEqual(totals(), ['—', '—', '—'], 'Observed workbook zero is not fabricated USD invoice revenue');
+    assert.deepEqual(totals(), ['$0.00', '—', '—'], 'Observed zero stays a partial source subtotal, not profit');
     await pickSchool(row5Value);
     await pickCenter('Pool');
     assert.equal(renderer.root.findAllByProps({ className: 'csi-source' }).length, 0);
     assert.equal(totals()[0], '$110.00');
     await pickCenter('All business');
-    assert.equal(amount(), '$130.25', 'All business ignores the individual school selection');
+    assert.equal(amount(), '$200.00', 'All business uses invoices rather than overlapping workbook observations');
     assert.equal(totals()[0], '$310.00', 'Clinic and school invoices are included once in the partial headline');
-    const categoryAmounts = renderer.root.findAllByProps({ className: 'ced-money' }).map(words);
+    const categoryAmounts = renderer.root.findAllByType('dd').map(words);
     assert.ok(categoryAmounts.includes('$110.00') && categoryAmounts.includes('$200.00'));
     await pickCenter('Schools');
     assert.equal(schoolSelect().props.value, row5Value);
-    assert.equal(amount(), '$100.00'); assert.deepEqual(totals(), ['—', '—', '—']);
+    assert.equal(amount(), '$100.00'); assert.deepEqual(totals(), ['$100.00', '—', '—']);
 
     await act(async () => renderer.update(React.createElement(Harness, { month: '2025-08' })));
-    assert.equal(schoolSelect().props.value, 'all'); assert.equal(amount(), '$130.25');
+    assert.equal(schoolSelect().props.value, 'all'); assert.equal(amount(), '$200.00');
     const priorValue = schoolSelect().findAllByType('option').find(option => words(option).includes('2025!A5')).props.value;
     await pickSchool(priorValue); assert.equal(amount(), '$100.00');
     await act(async () => renderer.update(React.createElement(Harness, { month: '2025-08', hash: 'b'.repeat(64) })));
-    assert.equal(schoolSelect().props.value, 'all'); assert.equal(amount(), '$130.25');
+    assert.equal(schoolSelect().props.value, 'all'); assert.equal(amount(), '$200.00');
 
     for (const [props, resets] of [[{ state: 'no-access' }, true], [{ state: 'checking', empty: true, month: '2026-10' }, false],
       [{ state: 'unavailable', empty: true }, false], [{ busy: true }, false], [{ financeState: 'no-access' }, true],
@@ -229,7 +220,7 @@ test('selected school filters all workbook totals/details, never allocates invoi
       assert(!words(renderer.toJSON()).includes('FICTIONAL Academy'), 'Unavailable school labels must not leak from selection intent');
       await act(async () => renderer.update(React.createElement(Harness)));
       assert.equal(schoolSelect().props.value, resets ? 'all' : currentValue, JSON.stringify(props));
-      assert.equal(amount(), resets ? '$130.25' : '$100.00');
+      assert.equal(amount(), resets ? '$200.00' : '$100.00');
     }
   } finally {
     if (renderer) await act(async () => renderer.unmount());

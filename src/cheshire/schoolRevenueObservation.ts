@@ -30,5 +30,9 @@ export function schoolRevenueObservation(result: SchoolSourceResult, months: rea
   const total = schoolPeriodTotal(scoped, indices);
   if (total.hundredths === null || total.hundredths > BigInt(Number.MAX_SAFE_INTEGER) || total.hundredths < BigInt(Number.MIN_SAFE_INTEGER)) return null;
   const coverage = indices.filter(index => schoolPeriodTotal(scoped, [index]).hundredths !== null).map(index => sheet.periods[index].label).join(', ');
-  return { cents: Number(total.hundredths), note: `${year}: ${coverage} · partial workbook income · currency and billed/collected basis unconfirmed`, detail: 'Only numeric source intervals matching their workbook controls are included. Blank months and unresolved values are unknown, not zero. July/August remains combined. Included once with clinic collections in the partial all-business source subtotal, never added to school invoices. Overlap, complete coverage and therapist labor still need reconciliation.' };
+  const coveredMonths = indices.filter(index => schoolPeriodTotal(scoped, [index]).hundredths !== null).flatMap(index => {
+    const p = sheet.periods[index];
+    return Array.from({ length: p.end! - p.start! + 1 }, (_, i) => `${year}-${String(p.start! + i).padStart(2, '0')}`);
+  });
+  return { coveredMonths, missingMonths: months.filter(month => !coveredMonths.includes(month)), combined: indices.some(index => sheet.periods[index].start !== sheet.periods[index].end), cents: Number(total.hundredths), note: `${year}: ${coverage} · partial workbook income · currency and billed/collected basis unconfirmed`, detail: 'Only numeric source intervals matching their workbook controls are included. Blank months and unresolved values are unknown, not zero. July/August remains combined. Included once with clinic collections in the partial all-business source subtotal, never added to school invoices. Overlap, complete coverage and therapist labor still need reconciliation.' };
 }

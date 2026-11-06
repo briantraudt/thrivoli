@@ -1,3 +1,4 @@
+import {category, amount, words, assertCompact} from './helpers/compact-dashboard.mjs';
 // Synthetic source values only. UI bundling and mocks never contact Supabase.
 import test from 'node:test';
 import assert from 'node:assert/strict';
@@ -100,55 +101,51 @@ test('profit-center selection isolates school financial results, keeps source ba
     await act(async () => { renderer = create(React.createElement(Harness)); });
     const text = node => JSON.stringify(node ?? renderer.toJSON());
     const totals = () => renderer.root.findByProps({ className: 'csd-totals' }).findAllByType('strong').map(node => node.children.join(''));
-    const sourceTitles = () => renderer.root.findAllByProps({ className: 'cvm-source' }).map(node => node.findByType('h3').children.join(''));
+    const sourceTitles = () => renderer.root.findAllByType('dt').map(words);
     const pick = async label => {
       await act(async () => renderer.root.findByProps({ 'aria-label': 'Profit center' }).props.onClick());
       await act(async () => renderer.root.findAllByProps({ role: 'option' }).find(option => option.findByType('span').children.join('') === label).props.onClick());
     };
-    const schoolCards = () => renderer.root.findAllByProps({ className: 'csi-source' });
+    const schoolCards = () => renderer.root.findAllByProps({className:'ced-item ced-compact-row'}).filter(row => words(row.findByType('dt')).startsWith('School income') && words(row.findByType('dd')) !== '—');
     const periodButton = label => renderer.root.findAllByType('button').find(button => button.children.join('') === label);
     assert.equal(schoolCards().length, 1);
-    assert(text().includes('60.50'));
-    assert(sourceTitles().includes('School billing'));
+    assert.equal(amount(renderer,'School income'),'$200.00');assertCompact(renderer);
+    assert.ok(sourceTitles().some(title=>title.startsWith('School income')));
     const allTotals = totals();
     assert.equal(allTotals[0], '$310.00', 'Clinic and school invoices enter the partial subtotal once; overlapping workbook is not also added');
     assert.match(text(), /overlap|double.count|not added|not combined/i);
 
     await pick('Schools');
     assert.deepEqual(totals(), ['$200.00', '—', '—']);
-    assert.deepEqual(sourceTitles(), ['School billing']);
+    assert.equal(amount(renderer,'School income'),'$200.00');assert.ok(!category(renderer,'Clinic collections'));
     assert.equal(schoolCards().length, 1);
-    assert.equal(renderer.root.findAllByProps({ className: 'cpa-source' }).length, 0);
-    assert.equal(renderer.root.findAllByProps({ className: 'ccr-report' }).length, 0);
-    assert.equal(renderer.root.findAllByProps({ className: 'csd-category csd-category-overhead' }).length, 0);
-    assert.equal(renderer.root.findAllByProps({ className: 'csd-category csd-category-operations' }).length, 0);
+    assert.ok(!category(renderer,'Payroll · all staff'));assert.ok(!category(renderer,'Overhead budget'));assertCompact(renderer);
     assert.match(text(), /therapist labor/i);
-    assert.match(text(), /Clinics absorb|overhead.*Clinics|overhead.*clinics/);
+    assert.ok(!category(renderer,'Rent'));
     assert.doesNotMatch(text(), /\$999\.00|\$110\.00|\$260\.50/);
 
     await act(async () => periodButton('Month').props.onClick());
-    assert(text().includes('No numeric source values'));
+    assert.equal(amount(renderer,'School income'),'$200.00');
     assert.deepEqual(totals(), ['$200.00', '—', '—']);
     await act(async () => renderer.update(React.createElement(Harness, { month: '2026-07' })));
-    assert(text().includes('excluded from this selected subtotal'));
+    assert.equal(amount(renderer,'School income'),'$200.00');
     await act(async () => periodButton('YTD').props.onClick());
-    assert(text().includes('20.50'));
+    assert.equal(amount(renderer,'School income'),'$200.00');
     assert.deepEqual(totals(), ['$200.00', '—', '—']);
 
     await act(async () => renderer.update(React.createElement(Harness)));
     await pick('Pool');
     assert.equal(schoolCards().length, 0);
-    assert(!sourceTitles().includes('School billing'));
+    assert.ok(!category(renderer,'School income'));
     assert.equal(totals()[0], '$80.00');
-    const categoryTable = renderer.root.findAllByProps({ className: 'csd-detail-table' });
-    assert(!categoryTable.some(table => table.findAllByType('strong').some(node => node.children.join('') === 'School invoices')));
+    assertCompact(renderer);
     await pick('All business');
     assert.deepEqual(totals(), allTotals);
     assert.equal(schoolCards().length, 1);
-    assert(sourceTitles().includes('School billing'));
+    assert.ok(sourceTitles().some(title=>title.startsWith('School income')));
 
     await act(async () => renderer.update(React.createElement(Harness, { month: '2026-10', cumulative: true })));
-    assert.equal(renderer.root.findAllByProps({ className: 'ccr-report' }).length, 1);
+    assert.equal(amount(renderer,'Clinic collections'),'$140.00');
     await pick('Schools');
     assert.equal(renderer.root.findAllByProps({ className: 'ccr-report' }).length, 0);
     assert.deepEqual(totals(), ['$200.00', '—', '—']);
@@ -156,7 +153,7 @@ test('profit-center selection isolates school financial results, keeps source ba
     await act(async () => renderer.update(React.createElement(Harness, { empty: true })));
     assert.deepEqual(totals(), ['—', '—', '—']);
     assert.equal(schoolCards().length, 0);
-    assert.deepEqual(sourceTitles(), []);
+    assert.ok(!schoolCards().length);assertCompact(renderer);
     assert.match(text(), /school/i);
     assert.doesNotMatch(text(), /\$0\.00/);
 
@@ -165,7 +162,7 @@ test('profit-center selection isolates school financial results, keeps source ba
       await act(async () => renderer.update(React.createElement(Harness, props)));
       assert.equal(schoolCards().length, 0, JSON.stringify(props));
       assert.deepEqual(totals(), ['—', '—', '—'], JSON.stringify(props));
-      assert.deepEqual(sourceTitles(), [], JSON.stringify(props));
+      assert.doesNotMatch(text(),/\$200\.00|\$110\.00|\$600\.00/);assertCompact(renderer);
     }
   } finally {
     if (renderer) await act(async () => renderer.unmount());
