@@ -112,6 +112,11 @@ test('profit-center selection isolates school financial results, keeps source ba
     assert.equal(amount(renderer,'School income'),'$200.00');assertCompact(renderer);
     assert.ok(sourceTitles().some(title=>title.startsWith('School income')));
     const allTotals = totals();
+    assert.equal(allTotals[2], '-$290.00', 'Profit is displayed revenue minus displayed expenses');
+    assert.match(text(), /Profit · estimate/);
+    assert.match(text(), /Therapist profitability/);
+    assert.match(text(), /Match not verified/);
+    assert.match(text(), /Missing matched revenue \+ labor/);
     assert.equal(allTotals[0], '$310.00', 'Clinic and school invoices enter the partial subtotal once; overlapping workbook is not also added');
     assert.match(text(), /overlap|double.count|not added|not combined/i);
 

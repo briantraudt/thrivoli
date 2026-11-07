@@ -64,7 +64,7 @@ test('quarter and trailing-twelve filters reach school, payroll and clinic compa
     await act(async () => renderer.update(React.createElement(Harness, { month: '2026-10' })));
     await choosePeriod('12 months');
     assert.ok(!category(renderer,'Rent'), '2026 budget cannot be extrapolated into 2025');assert.equal(amount(renderer,'Overhead budget'),'—');
-    assert.match(words(category(renderer,'School')), /Missing.*Nov 2025/);
+    assert.match(words(category(renderer,'School')), /Missing November 2025/);
     assert.equal(schoolAmount(), '$60.50', 'known 2026 source observations remain available but explicitly partial');
 
     await act(async () => renderer.update(React.createElement(Harness, { month: '2027-01' })));

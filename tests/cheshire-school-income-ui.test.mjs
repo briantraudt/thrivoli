@@ -14,7 +14,7 @@ test('school income category follows profit-center selection and periods while f
   const totals=()=>renderer.root.findByProps({className:'csd-totals'}).findAllByType('strong').map(n=>n.children.join(''));
   assert.deepEqual(totals(),['$60.50','—','—']);
   assert.equal(amount(renderer,'School income'),'$60.50');assertCompact(renderer);
-  for(const badge of ['Basis/currency unconfirmed','Overlap unverified','Jul/Aug combined','Missing/unresolved'])assert.ok(words(category(renderer,'School income')).includes(badge),badge);
+  for(const badge of ['Current through August 2026','July/August combined','Missing September'])assert.ok(words(category(renderer,'School income')).includes(badge),badge);
   assert.ok(!text().includes('Fictional Academy'));
   await act(async()=>renderer.root.findAllByType('button').find(n=>n.children.join('')==='Month').props.onClick());
   assert.equal(amount(renderer,'School'),'—');assert.deepEqual(totals(),['—','—','—']);
@@ -27,7 +27,7 @@ test('school income category follows profit-center selection and periods while f
   assert.equal(renderer.root.findAllByProps({className:'csi-source'}).length,0);assert.ok(!text().includes('Fictional Academy'));
   await act(async()=>renderer.root.findByProps({'aria-label':'Profit center'}).props.onClick());
   await act(async()=>renderer.root.findAllByProps({role:'option'}).find(n=>n.findByType('span').children.join('')==='Schools').props.onClick());
-  assert.ok(text().includes('Fictional Academy'));assert.match(words(category(renderer,'School income')),/Basis\/currency unconfirmed/);
+  assert.ok(text().includes('Fictional Academy'));assert.match(words(category(renderer,'School income')),/Current through/);
   assert.equal(amount(renderer,'School income'),schoolBeforeScope);assert.deepEqual(totals(),['$20.50','—','—']);
   await act(async()=>renderer.root.findByProps({'aria-label':'Therapist'}).props.onChange({target:{value:'synthetic-therapist'}}));
   assert.deepEqual(totals(),['—','—','—']);assert.match(words(category(renderer,'School')),/Missing therapist allocation/);assertCompact(renderer);

@@ -12,7 +12,7 @@ test('payroll category follows filters and auth state, shows currency/cutoff cav
     await act(async () => { renderer = create(React.createElement(Harness)); });
     const totals = () => renderer.root.findByProps({ className: 'csd-totals' }).findAllByType('strong').map(node => node.children.join(''));
     assert.deepEqual(totals(), ['—', '$600.00', '—']);assert.equal(amount(renderer,'Payroll · all staff'),'$600.00');assertCompact(renderer);
-    for(const badge of ['Pay-date gross','Missing employer costs','Currency/overlap unconfirmed','2026-03-06']) assert.ok(words(category(renderer,'Payroll · all staff')).includes(badge),badge);
+    for(const badge of ['Current through 2026-03-06','Employer costs missing','March partial']) assert.ok(words(category(renderer,'Payroll · all staff')).includes(badge),badge);
     await act(async () => renderer.root.findAllByType('button').find(button => button.children.join('') === 'Month').props.onClick());
     assert.equal(amount(renderer,'Payroll · all staff'), '$300.00');
     assert.deepEqual(totals(), ['—', '$300.00', '—']);
@@ -20,9 +20,14 @@ test('payroll category follows filters and auth state, shows currency/cutoff cav
     await act(async () => renderer.root.findAllByProps({ role: 'option' }).find(option => option.findByType('span').children.join('') === 'Pool').props.onClick());
     assert.deepEqual(totals(),['—','—','—']);assert.ok(!category(renderer,'Payroll · all staff'));
     await act(async () => renderer.unmount()); renderer = null;
+    await act(async () => { renderer = create(React.createElement(Harness, {month:'2026-11'})); });
+    await act(async () => renderer.root.findAllByType('button').find(button => button.children.join('') === 'Month').props.onClick());
+    assert.match(words(category(renderer,'Payroll')), /Missing November/);
+    assert.deepEqual(totals(), ['—','—','—']);
+    await act(async () => renderer.unmount()); renderer = null;
     for (const props of [{ state: 'no-access' }, { state: 'checking' }, { state: 'unavailable' }, { busy: true }, { financeState: 'no-access' }, { financeState: 'error' }, { financeState: 'loading' }]) {
       await act(async () => { renderer = create(React.createElement(Harness, props)); });
-      assert.deepEqual(totals(),['—','—','—'],JSON.stringify(props));assert.doesNotMatch(words(renderer.toJSON()),/\$600\.00|\$300\.00/);
+      assert.deepEqual(totals(),['—','—','—'],JSON.stringify(props));assert.doesNotMatch(words(category(renderer,'Revenue ↔ therapist')),/Match not verified/);assert.doesNotMatch(words(renderer.toJSON()),/\$600\.00|\$300\.00/);
       await act(async () => renderer.unmount()); renderer = null;
     }
   } finally { if (renderer) await act(async () => renderer.unmount()); await rm(dir, { recursive: true, force: true }); if (previousDocument === undefined) delete globalThis.document; else globalThis.document = previousDocument; delete globalThis.IS_REACT_ACT_ENVIRONMENT; }

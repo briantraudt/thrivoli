@@ -1,3 +1,4 @@
+import { coverageLabels, monthEnd } from './sourceCoverage';
 import { cumulativeRevenueSummary } from '../../supabase/functions/_shared/cheshire-cumulative.ts';
 import { readCumulativeReports } from './cumulativeReports';
 import { CheshireSchoolFilters } from './CheshireSchoolFilters';
@@ -47,7 +48,7 @@ function initialFilters() {
   return { period: parsed.period, location: parsed.location, therapist: parsed.therapist, month: parsed.month };
 }
 
-/** Executive summary first. Missing totals stay blank; source amounts stay in the rows below. */
+/** Executive summary first. Profit estimates subtract displayed source subtotals; missing inputs stay blank. */
 export function CheshireFinanceDashboardView({ snapshot, state, onRefresh, sampleParts, sampleBanner }: {
   snapshot: FinanceSnapshot | null; state: FinanceLoadState; onRefresh: () => void; sampleParts?: SampleParts; sampleBanner?: string;
 }) {
@@ -155,18 +156,6 @@ export function CheshireFinanceDashboardView({ snapshot, state, onRefresh, sampl
     if (schools) model.revenueWaiting = 'Partial workbook income shown below; accounting revenue unconfirmed';
   }
   const chooseScope = (next: ProfitCenterScope) => { setSelectedScope(next); };
-  const monthLabel = (month: string) => new Date(`${month}-01T12:00:00Z`).toLocaleDateString('en-US', { month: 'short', year: 'numeric', timeZone: 'UTC' });
-  const periodRange = (months: readonly string[]) => {
-    const sorted = [...new Set(months)].sort();
-    const groups: string[][] = [];
-    const ordinal = (value: string) => Number(value.slice(0, 4)) * 12 + Number(value.slice(5));
-    for (const month of sorted) {
-      const group = groups.at(-1);
-      if (group && ordinal(month) === ordinal(group.at(-1)!) + 1) group.push(month);
-      else groups.push([month]);
-    }
-    return groups.map(group => `${monthLabel(group[0])}${group.length > 1 ? `–${monthLabel(group.at(-1)!)}` : ''}`).join(', ');
-  };
   const unavailableScope = therapist !== 'all';
   const clinicPeriod = cumulativeRevenue?.report.period;
   const sourceState = state === 'no-access' || intake.state === 'no-access' ? 'Access required'
@@ -174,24 +163,28 @@ export function CheshireFinanceDashboardView({ snapshot, state, onRefresh, sampl
     : state === 'loading' || intake.state === 'checking' || intake.busy || loadedPeriod.state === 'loading' ? 'Checking' : null;
   const metricCoverage = (source: string, keys: readonly string[], basis: string) => {
     const observed = sampleParts ? currentMonths : currentMonths.filter(month => metricPart(periodResponses, [month], source, keys, basis) !== null);
-    const missing = currentMonths.filter(month => !observed.includes(month) && !loadedPeriod.failedMonths.includes(month));
-    return [periodRange(observed), missing.length ? `Missing: ${periodRange(missing)}` : '', loadedPeriod.failedMonths.length ? `Unavailable: ${periodRange(loadedPeriod.failedMonths)}` : ''].filter(Boolean).join(' · ');
+    return coverageLabels(currentMonths, observed, { failed: loadedPeriod.failedMonths });
   };
   const compactRevenueLines = model.revenueLines.map(line => {
     if (sourceState && line.cents === null) return { ...line, sourceNote: sourceState };
     if (line.id === 'schools' && schoolSource.issue && !schoolPart) return { ...line, sourceNote: 'Source review required' };
     if (unavailableScope) return { ...line, sourceNote: 'Missing therapist allocation' };
-    if (line.id === 'clinic' && clinic) return { ...line, label: 'Clinic collections', sourceNote: `${clinicPeriod ? `${clinicPeriod.start}–${clinicPeriod.end}` : metricCoverage('insurance_revenue', ['insurance_payments', 'patient_payments'], 'payment_date')} · ${cumulativeRevenue?.report.kind === 'facility_reported_activity' ? 'Date basis unconfirmed' : cumulativeRevenue?.report.kind === 'insurance_service_cohort' ? 'Service cohort' : 'Posted collections'}${clinic.partial ? ' · Partial' : ''}${clinicPeriod && currentMonths.at(-1)! > clinicPeriod.end.slice(0, 7) ? ` · Missing after ${clinicPeriod.end}` : ''}` };
-    if (line.id === 'schools' && schoolObservation) return { ...line, label: 'School income', sourceNote: `${periodRange(schoolObservation.coveredMonths)}${schoolObservation.missingMonths.length ? ` · Missing/unresolved: ${periodRange(schoolObservation.missingMonths)}` : ''}${schoolObservation.combined ? ' · Jul/Aug combined' : ''} · Basis/currency unconfirmed · Overlap unverified` };
-    if (line.id === 'schools' && schoolPart) return { ...line, label: 'School income', sourceNote: `${metricCoverage('school_billing', ['school_invoices'], 'invoice_reported_month')} · Invoices · ${schoolPart.partial ? 'Partial · ' : ''}Overlap unverified` };
-    if (line.id === 'schools' && schoolSource.source && !schoolPart) return { ...line, label: 'School income', sourceNote: `Missing/unresolved: ${periodRange(currentMonths)}` };
-    if (line.id === 'cash') return { ...line, label: 'Cash programs', sourceNote: line.cents === null ? `${loadedPeriod.failedMonths.length ? `Unavailable: ${periodRange(loadedPeriod.failedMonths)}` : 'Missing program report'}${selectedScope === 'all' ? ' · Excluded from total' : ''}` : `${metricCoverage('cash_programs', ['cash_program_income'], 'program_reported_month')}${selectedScope === 'all' ? ' · Excluded from total' : ''}` };
-    return loadedPeriod.failedMonths.length ? { ...line, sourceNote: `Unavailable: ${periodRange(loadedPeriod.failedMonths)}` } : line;
+    if (line.id === 'clinic' && clinic) {
+      const observed = clinicPeriod ? currentMonths.filter(month => month >= clinicPeriod.start.slice(0, 7) && month <= clinicPeriod.end.slice(0, 7)) : [];
+      const partial = clinicPeriod ? [...new Set([...(clinicPeriod.start.slice(8) !== '01' ? [clinicPeriod.start.slice(0, 7)] : []), ...(clinicPeriod.end < monthEnd(clinicPeriod.end.slice(0, 7)) ? [clinicPeriod.end.slice(0, 7)] : [])])] : [];
+      return { ...line, label: cumulativeRevenue?.report.kind === 'facility_reported_activity' ? 'Clinic collections · reported' : cumulativeRevenue?.report.kind === 'insurance_service_cohort' ? 'Clinic collections · service cohort' : 'Clinic collections', sourceNote: clinicPeriod ? coverageLabels(currentMonths, observed, { through: clinicPeriod.end, partial }) : metricCoverage('insurance_revenue', ['insurance_payments', 'patient_payments'], 'payment_date') };
+    }
+    if (line.id === 'schools' && schoolObservation) return { ...line, label: 'School income · reported', sourceNote: coverageLabels(currentMonths, schoolObservation.coveredMonths, { combined: schoolObservation.combined }) };
+    if (line.id === 'schools' && schoolPart) return { ...line, label: 'School income · invoices', sourceNote: metricCoverage('school_billing', ['school_invoices'], 'invoice_reported_month') };
+    if (line.id === 'schools' && schoolSource.source && !schoolPart) return { ...line, label: 'School income', sourceNote: coverageLabels(currentMonths, []) };
+    if (line.id === 'cash') return { ...line, label: selectedScope === 'all' ? 'Cash programs · excluded' : 'Cash programs', sourceNote: metricCoverage('cash_programs', ['cash_program_income'], 'program_reported_month') };
+    return { ...line, sourceNote: coverageLabels(currentMonths, [], { failed: loadedPeriod.failedMonths }) };
   });
   const compactExpenseLines = model.expenseLines.map(line => {
     if (sourceState && line.cents === null) return { ...line, sourceNote: sourceState };
     if (unavailableScope) return { ...line, sourceNote: 'Missing therapist allocation' };
-    if (line.id === 'payroll' && payrollSource) return { ...line, label: 'Payroll · all staff', sourceNote: `${periodRange(payrollSource.months.map(row => row.month))}${payrollSource.months.some(row => row.month === payrollSource.audit.firstPayDate.slice(0, 7)) ? ` · From ${payrollSource.audit.firstPayDate}` : ''}${payrollSource.months.some(row => row.month === payrollSource.audit.lastPayDate.slice(0, 7)) ? ` · Through ${payrollSource.audit.lastPayDate}` : ''} · Pay-date gross · Partial months${payrollSource.months.length < currentMonths.length ? ` · Missing ${periodRange(currentMonths.filter(month => !payrollSource.months.some(row => row.month === month)))}` : ''} · Missing employer costs · Currency/overlap unconfirmed` };
+    if (line.id === 'payroll' && payrollSource) return { ...line, label: 'Payroll · all staff gross', sourceNote: coverageLabels(currentMonths, payrollSource.months.map(row => row.month), { through: payrollSource.audit.lastPayDate, partial: payrollSource.audit.lastPayDate < monthEnd(payrollSource.audit.lastPayDate.slice(0, 7)) ? [payrollSource.audit.lastPayDate.slice(0, 7)] : [] }) + ' · Employer costs missing' };
+    if (line.id === 'payroll') return { ...line, sourceNote: selectedScope === 'all' ? coverageLabels(currentMonths, []) : 'Missing location labor allocation' };
     if (line.id.startsWith('overhead-') && overhead) {
       const category = overheadCategoryBreakdown(safeSnapshot!, scope as 'all' | LocationName).find(category => `overhead-${category.category}` === line.id);
       return { ...line, sourceNote: `Estimate${category?.missing ? ` · Missing ${category.missing} cost cells` : ''}` };
@@ -199,10 +192,10 @@ export function CheshireFinanceDashboardView({ snapshot, state, onRefresh, sampl
     return line;
   });
   const gap = (id: string, label: string, sourceNote: string) => ({ id, label, sourceNote, cents: null, share: null, trend: null, priorCents: null, waiting: null, basis: '', drill: '' });
-  const profitGaps = unavailableScope ? [gap('allocation', 'Therapist allocation', 'Missing')] : [
-    gap('periods', 'Comparable periods', 'Missing aligned cutoffs'),
-    gap('basis', 'Revenue reconciliation', 'Basis / overlap unverified'),
-    gap('labor', schools ? 'School therapist labor' : cash ? 'Program costs' : 'Employer costs', 'Missing'),
+  const therapistGaps = [
+    gap('therapist-revenue', 'Revenue ↔ therapist', sourceState ?? 'Match not verified'),
+    gap('therapist-payroll', 'Therapist labor', sourceState ?? 'Allocation missing'),
+    gap('therapist-profit', 'Therapist profit', sourceState ?? 'Missing matched revenue + labor'),
   ];
   return <main id="cheshire-financial-summary" className="cfd-dashboard csd-dashboard">
     <h1 className="cps-sr-only">Cheshire financial summary</h1>
@@ -231,13 +224,14 @@ export function CheshireFinanceDashboardView({ snapshot, state, onRefresh, sampl
     <section className="csd-totals" aria-label="Revenue expenses and profit summary">
       <article><span>Revenue{model.revenue?.partial ? ' · partial' : ''}</span><strong>{model.revenue ? money(model.revenue.cents) : '—'}</strong></article>
       <article><span>Expenses{model.expenses ? ' · estimate' : ''}</span><strong>{model.expenses ? money(model.expenses.cents) : '—'}</strong></article>
-      <article><span>Profit</span><strong className={model.profitCents !== null && model.profitCents < 0 ? 'ced-negative' : undefined}>{model.profitCents !== null ? money(model.profitCents) : '—'}</strong></article>
+      <article><span>Profit · estimate</span><strong className={model.profitCents !== null && model.profitCents < 0 ? 'ced-negative' : undefined}>{model.profitCents !== null ? money(model.profitCents) : '—'}</strong></article>
     </section>
+    {model.revenue || model.expenses ? <span className="ced-estimate-note" role="note">Estimate · mixed periods · overlap unverified</span> : null}
     <div id="csd-source-review" className="ced-category-grid">
       <CategoryBoard title="Revenue" lines={compactRevenueLines}/>
       <CategoryBoard title="Expenses" lines={compactExpenseLines}/>
     </div>
-    {model.profitCents === null ? <CategoryBoard title="Profit" lines={profitGaps}/> : null}
+    <CategoryBoard title="Therapist profitability" lines={therapistGaps}/>
     {uploadMonth === intake.month && intake.state === 'ready' ? <CheshireReportUpload key={intake.month} onClose={() => setUploadMonth(null)}/> : null}
   </main>;
 }
