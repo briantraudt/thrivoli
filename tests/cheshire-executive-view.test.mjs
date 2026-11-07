@@ -133,6 +133,9 @@ test('therapist filters accept opaque ids only and blank every company figure', 
   assert.equal(therapistId('Jane Doe'), null);
   assert.equal(therapistId('patient12'), null);
   assert.equal(therapistId('T014'), 'T014');
+  assert.equal(therapistId('provider_aaaaaaaaaaaaaaaa'), 'provider_aaaaaaaaaaaaaaaa');
+  assert.equal(therapistId('provider_aaaaaaaaaaaaaaaaa'), null);
+  assert.equal(parseExecutiveSearch('?therapist=provider_aaaaaaaaaaaaaaaa').therapist, 'provider_aaaaaaaaaaaaaaaa');
   assert.deepEqual(readTherapistIds([
     { validation: { therapist_ids: ['T014', 'Jane', 'T002', 4] } },
     { validation: null },

@@ -1,3 +1,5 @@
+import { readTherapistRoster } from './therapistRoster';
+import { CheshireTherapistProfitability } from './CheshireTherapistProfitability';
 import { coverageLabels, monthEnd } from './sourceCoverage';
 import { cumulativeRevenueSummary } from '../../supabase/functions/_shared/cheshire-cumulative.ts';
 import { readCumulativeReports } from './cumulativeReports';
@@ -74,8 +76,12 @@ export function CheshireFinanceDashboardView({ snapshot, state, onRefresh, sampl
   const schoolValue = schoolOptions.some(option => option.value === schoolSelection) ? schoolSelection : 'all';
   const selectedSchool = schools ? schoolOptions.find(option => option.value === schoolValue) ?? null : null;
   const schoolYear = intake.month.slice(0, 4);
-  const therapistIds = readTherapistIds(intake.documents);
-  const therapistOptions = therapist !== 'all' && !therapistIds.includes(therapist) ? [therapist, ...therapistIds] : therapistIds;
+  const therapistRoster = sourcesVisible ? readTherapistRoster(intake.documents) : { roster: null, issue: null };
+  const legacyTherapistIds = sourcesVisible ? readTherapistIds(intake.documents) : [];
+  const therapistOptions = therapistRoster.roster
+    ? therapistRoster.roster.rows.map(row => ({ value: row.id, label: row.displayName }))
+    : legacyTherapistIds.map(id => ({ value: id, label: id }));
+  if (therapist !== 'all' && !therapistOptions.some(option => option.value === therapist)) therapistOptions.unshift({ value: therapist, label: 'Selected therapist · link unavailable' });
   useEffect(() => { setSchoolSelection('all'); }, [schoolYear]);
   useEffect(() => {
     if (schoolIdentity) { if (lastSchoolIdentity.current !== schoolIdentity) setSchoolSelection('all'); lastSchoolIdentity.current = schoolIdentity; }
@@ -191,12 +197,6 @@ export function CheshireFinanceDashboardView({ snapshot, state, onRefresh, sampl
     }
     return line;
   });
-  const gap = (id: string, label: string, sourceNote: string) => ({ id, label, sourceNote, cents: null, share: null, trend: null, priorCents: null, waiting: null, basis: '', drill: '' });
-  const therapistGaps = [
-    gap('therapist-revenue', 'Revenue ↔ therapist', sourceState ?? 'Match not verified'),
-    gap('therapist-payroll', 'Therapist labor', sourceState ?? 'Allocation missing'),
-    gap('therapist-profit', 'Therapist profit', sourceState ?? 'Missing matched revenue + labor'),
-  ];
   return <main id="cheshire-financial-summary" className="cfd-dashboard csd-dashboard">
     <h1 className="cps-sr-only">Cheshire financial summary</h1>
     {sampleBanner ? <p className="ced-banner" role="note">{sampleBanner}</p> : null}
@@ -210,12 +210,18 @@ export function CheshireFinanceDashboardView({ snapshot, state, onRefresh, sampl
       <label><CalendarDays size={16}/><span className="cps-sr-only">Reporting month</span><input type="month" aria-label="Summary reporting month" value={intake.month} onChange={event => intake.setMonth(event.target.value)}/></label>
       <div className="ced-filter"><span>Location</span><CheshireLocationPicker value={selectedScope} onChange={chooseScope}/></div>
       {schools ? <CheshireSchoolFilters options={schoolOptions} value={schoolValue} onChange={setSchoolSelection}/> : null}
+      <div className="ced-therapist-controls">
       <label className="csd-school-filter csd-therapist-filter"><UsersRound size={16} aria-hidden="true"/><span>Therapist</span>
         <select aria-label="Therapist" value={therapist} onChange={event => { setTherapist(event.target.value); }}>
           <option value="all">All therapists</option>
-          {therapistOptions.map(id => <option key={id} value={id}>{id}</option>)}
+          {therapistOptions.map(option => <option key={option.value} value={option.value}>{option.label}</option>)}
         </select>
       </label>
+      <div className="ced-therapist-links">
+        {therapistRoster.roster ? <span>Company-wide roster</span> : sourcesVisible && !legacyTherapistIds.length ? <span>Roster not linked</span> : null}
+        <a href="#therapist-profitability">{sourceState ? 'Therapist link status' : 'Missing therapist links'}</a>
+      </div>
+      </div>
       <button type="button" className="csd-refresh" aria-label="Refresh financial summary" title="Refresh source coverage" disabled={state === 'loading' || intake.busy || intake.state === 'checking'} onClick={() => { onRefresh(); intake.refresh(); }}><RefreshCw size={16}/></button>
       <button type="button" className="csd-upload" disabled={!canUpload} onClick={() => setUploadMonth(intake.month)}><FileUp size={17}/> Upload data</button>
     </section>
@@ -231,7 +237,7 @@ export function CheshireFinanceDashboardView({ snapshot, state, onRefresh, sampl
       <CategoryBoard title="Revenue" lines={compactRevenueLines}/>
       <CategoryBoard title="Expenses" lines={compactExpenseLines}/>
     </div>
-    <CategoryBoard title="Therapist profitability" lines={therapistGaps}/>
+    <CheshireTherapistProfitability roster={therapistRoster.roster} selectedId={therapist} sourceState={sourceState} issue={therapistRoster.issue}/>
     {uploadMonth === intake.month && intake.state === 'ready' ? <CheshireReportUpload key={intake.month} onClose={() => setUploadMonth(null)}/> : null}
   </main>;
 }

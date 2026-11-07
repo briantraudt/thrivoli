@@ -77,3 +77,9 @@
 .ced-compact-row .ced-name { grid-column: auto; }
 
 .ced-estimate-note { display: block; margin: -4px 0 16px; color: var(--muted, #64706a); font-size: .78rem; }
+
+.ced-therapist-controls { min-width: 0; }
+.ced-therapist-links { display: flex; flex-wrap: wrap; gap: 4px 12px; margin: 4px 0 0 4px; font-size: .75rem; color: var(--muted, #64706a); }
+.ced-therapist-links a { color: var(--ink, #163c34); text-underline-offset: 3px; }
+.ced-therapist-links a:focus-visible { outline: 2px solid currentColor; outline-offset: 3px; }
+#therapist-profitability { scroll-margin-top: 20px; }

@@ -75,6 +75,7 @@ export function periodTitle(period: ExecutivePeriod, anchor: string): string {
 
 /** Staff IDs only. A personal name, email, or date is never a therapist filter. */
 export function therapistId(value: string): string | null {
+  if (value.startsWith('provider_')) return /^provider_[a-f0-9]{16}$/.test(value) ? value : null;
   if (!/^[A-Za-z][A-Za-z0-9_-]{1,31}$/.test(value) || !/\d/.test(value)) return null;
   if (/name|patient|client|dob|ssn|birth|email/i.test(value)) return null;
   return value;
