@@ -79,7 +79,7 @@ export function CheshireFinanceDashboardView({ snapshot, state, onRefresh, sampl
   const therapistRoster = sourcesVisible ? readTherapistRoster(intake.documents) : { roster: null, issue: null };
   const legacyTherapistIds = sourcesVisible ? readTherapistIds(intake.documents) : [];
   const therapistOptions = therapistRoster.roster
-    ? therapistRoster.roster.rows.map(row => ({ value: row.id, label: row.displayName }))
+    ? therapistRoster.roster.rows.filter(row => row.entityKind !== 'resource').map(row => ({ value: row.id, label: row.displayName }))
     : legacyTherapistIds.map(id => ({ value: id, label: id }));
   if (therapist !== 'all' && !therapistOptions.some(option => option.value === therapist)) therapistOptions.unshift({ value: therapist, label: 'Selected therapist · link unavailable' });
   useEffect(() => { setSchoolSelection('all'); }, [schoolYear]);

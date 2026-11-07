@@ -26,12 +26,13 @@ test('private roster names populate the dropdown only with access and never reus
       }
     `,resolveDir:root,loader:'tsx'},outfile:dir+'/ui.mjs',bundle:true,platform:'node',format:'esm',packages:'external',jsx:'automatic',loader:{'.css':'empty'},define:{'import.meta.env':'{}'},logLevel:'silent',plugins:[{name:'synthetic-roster',setup(b){
       b.onResolve({filter:/\/therapistRoster$/},()=>({path:'roster',namespace:'mock'}));
-      b.onLoad({filter:/roster/,namespace:'mock'},()=>({contents:`export function readTherapistRoster(){return {issue:null,roster:{sourceHash:'a'.repeat(64),providerPeriod:{start:'2026-01-01',end:'2026-10-31'},rows:[{id:'provider_'+ 'a'.repeat(16),displayName:'Example Clinician',payrollCandidateName:'Example Payroll Candidate',matchStatus:'candidate_full_name'}]}}}`,loader:'ts'}));
+      b.onLoad({filter:/roster/,namespace:'mock'},()=>({contents:`export function readTherapistRoster(){return {issue:null,roster:{sourceHash:'a'.repeat(64),providerPeriod:{start:'2026-01-01',end:'2026-10-31'},rows:[{id:'provider_'+ 'a'.repeat(16),displayName:'Example Clinician',payrollCandidateName:'Example Payroll Candidate',matchStatus:'candidate_full_name',entityKind:'person',zipStatus:'candidate',zipWorkbook:'Synthetic.xlsx',revenueStatus:'present',paymentStatus:'present'},{id:'provider_'+'b'.repeat(16),displayName:'Synthetic Resource Label',payrollCandidateName:null,matchStatus:'not_applicable',entityKind:'resource',zipStatus:'not_found',zipWorkbook:null,revenueStatus:'present',paymentStatus:'absent'}]}}}`,loader:'ts'}));
     }}]});
     const {Harness}=await import(pathToFileURL(dir+'/ui.mjs'));
     await act(async()=>{renderer=create(React.createElement(Harness));});
     const select=()=>renderer.root.findByProps({'aria-label':'Therapist'});
     assert.match(words(select()),/Example Clinician/);
+    assert.doesNotMatch(words(select()),/Synthetic Resource Label/);
     assert.match(words(renderer.root.findByProps({className:'ced-therapist-links'})),/Company-wide roster/);
     assert.equal(words(renderer.root.findByProps({href:'#therapist-profitability'})),'Missing therapist links');
     assert.equal(renderer.root.findByProps({className:'csd-totals'}).findAllByType('strong')[0].children.join(''),'$123.00');
