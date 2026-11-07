@@ -3,7 +3,12 @@ export type TherapistRosterRow = {
   id: string;
   displayName: string;
   payrollCandidateName: string | null;
-  matchStatus: 'candidate_full_name' | 'candidate_first_surname' | 'no_payroll_candidate';
+  matchStatus: 'candidate_full_name' | 'candidate_first_surname' | 'candidate_alias' | 'no_payroll_candidate' | 'not_applicable';
+  entityKind: 'person' | 'resource';
+  zipStatus: 'available' | 'candidate' | 'not_found' | 'not_reviewed';
+  zipWorkbook: string | null;
+  revenueStatus: 'present' | 'absent' | 'not_reviewed';
+  paymentStatus: 'present' | 'present_zero' | 'absent' | 'not_reviewed';
 };
 export type TherapistRoster = {
   sourceHash: string;
@@ -35,22 +40,36 @@ function date(value: unknown): string {
 export function parseTherapistRoster(value: unknown, sourceHash: string): TherapistRoster {
   const audit = object(value);
   keys(audit, ['version', 'source_sha256', 'provider_period', 'rows']);
-  if (audit.version !== 'therapist-roster-v1' || !/^[a-f0-9]{64}$/.test(sourceHash) || audit.source_sha256 !== sourceHash) throw new Error('Unverified roster source');
+  if (typeof audit.version !== 'string' || !['therapist-roster-v1', 'therapist-roster-v2'].includes(String(audit.version)) || !/^[a-f0-9]{64}$/.test(sourceHash) || audit.source_sha256 !== sourceHash) throw new Error('Unverified roster source');
+  const v2 = audit.version === 'therapist-roster-v2';
   const period = object(audit.provider_period); keys(period, ['start', 'end']);
   const start = date(period.start), end = date(period.end);
   if (start > end) throw new Error('Invalid roster period');
   if (!Array.isArray(audit.rows) || !audit.rows.length || audit.rows.length > 2000) throw new Error('Invalid roster rows');
   const ids = new Set<string>(), names = new Set<string>();
   const rows = audit.rows.map(value => {
-    const row = object(value); keys(row, ['id', 'display_name', 'payroll_candidate_name', 'match_status']);
+    const row = object(value); keys(row, ['id', 'display_name', 'payroll_candidate_name', 'match_status', ...(v2 ? ['entity_kind', 'zip_status', 'zip_workbook', 'revenue_status', 'payment_status'] : [])]);
     if (typeof row.id !== 'string' || !/^provider_[a-f0-9]{16}$/.test(row.id) || ids.has(row.id)) throw new Error('Invalid roster identity');
     const displayName = name(row.display_name), nameKey = displayName.toLocaleLowerCase('en-US').replace(/\s+/g, ' ');
     if (names.has(nameKey)) throw new Error('Duplicate roster name');
     ids.add(row.id); names.add(nameKey);
-    if (typeof row.match_status !== 'string' || !['candidate_full_name', 'candidate_first_surname', 'no_payroll_candidate'].includes(row.match_status)) throw new Error('Invalid match status');
+    if (typeof row.match_status !== 'string' || ![ 'candidate_full_name', 'candidate_first_surname', 'no_payroll_candidate', ...(v2 ? ['candidate_alias', 'not_applicable'] : [])].includes(row.match_status)) throw new Error('Invalid match status');
     const payrollCandidateName = row.payroll_candidate_name === null ? null : name(row.payroll_candidate_name);
-    if ((row.match_status === 'no_payroll_candidate') !== (payrollCandidateName === null)) throw new Error('Conflicting match status');
-    return { id: row.id, displayName, payrollCandidateName, matchStatus: row.match_status as TherapistRosterRow['matchStatus'] };
+    if (['no_payroll_candidate', 'not_applicable'].includes(row.match_status) !== (payrollCandidateName === null)) throw new Error('Conflicting match status');
+    const entityKind = v2 ? row.entity_kind : 'person';
+    const zipStatus = v2 ? row.zip_status : 'not_reviewed';
+    const revenueStatus = v2 ? row.revenue_status : 'not_reviewed';
+    const paymentStatus = v2 ? row.payment_status : 'not_reviewed';
+    for (const [value, allowed] of [[entityKind, ['person', 'resource']], [zipStatus, ['available', 'candidate', 'not_found', 'not_reviewed']], [revenueStatus, ['present', 'absent', 'not_reviewed']], [paymentStatus, ['present', 'present_zero', 'absent', 'not_reviewed']]] as const) {
+      if (typeof value !== 'string' || !(allowed as readonly string[]).includes(value)) throw new Error('Invalid source evidence');
+    }
+    const zipWorkbook = !v2 || row.zip_workbook === null ? null : name(row.zip_workbook);
+    if (['available', 'candidate'].includes(String(zipStatus)) !== (zipWorkbook !== null)) throw new Error('Conflicting ZIP evidence');
+    if ((entityKind === 'resource') !== (row.match_status === 'not_applicable')) throw new Error('Conflicting resource classification');
+    return { id: row.id, displayName, payrollCandidateName, matchStatus: row.match_status as TherapistRosterRow['matchStatus'],
+      entityKind: entityKind as TherapistRosterRow['entityKind'], zipStatus: zipStatus as TherapistRosterRow['zipStatus'], zipWorkbook,
+      revenueStatus: revenueStatus as TherapistRosterRow['revenueStatus'], paymentStatus: paymentStatus as TherapistRosterRow['paymentStatus'] };
+
   });
   rows.sort((a, b) => a.displayName.localeCompare(b.displayName));
   return { sourceHash, providerPeriod: { start, end }, rows };
