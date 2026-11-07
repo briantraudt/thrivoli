@@ -1,9 +1,17 @@
-/** Private provider display names are data, never repository fixtures or verified payroll links. */
+/** A reviewed name/discipline match is not stable-ID or financial-allocation verification. */
+export type TherapistIdentityReview = {
+  payrollStaffId: string;
+  reviewBasis: 'unique_name_and_clinical_discipline';
+  reviewDate: string;
+};
+/** Private provider display names and review evidence are data, never repository fixtures. */
 export type TherapistRosterRow = {
   id: string;
   displayName: string;
   payrollCandidateName: string | null;
-  matchStatus: 'candidate_full_name' | 'candidate_first_surname' | 'candidate_alias' | 'no_payroll_candidate' | 'not_applicable';
+  matchStatus: 'candidate_full_name' | 'candidate_first_surname' | 'candidate_alias' | 'no_payroll_candidate' | 'not_applicable' | 'reviewed_name_discipline';
+  identityReview: TherapistIdentityReview | null;
+  reviewIssue: 'discipline_conflict' | 'alias_unverified' | null;
   entityKind: 'person' | 'resource';
   zipStatus: 'available' | 'candidate' | 'not_found' | 'not_reviewed';
   zipWorkbook: string | null;
@@ -40,33 +48,47 @@ function date(value: unknown): string {
 export function parseTherapistRoster(value: unknown, sourceHash: string): TherapistRoster {
   const audit = object(value);
   keys(audit, ['version', 'source_sha256', 'provider_period', 'rows']);
-  if (typeof audit.version !== 'string' || !['therapist-roster-v1', 'therapist-roster-v2'].includes(String(audit.version)) || !/^[a-f0-9]{64}$/.test(sourceHash) || audit.source_sha256 !== sourceHash) throw new Error('Unverified roster source');
-  const v2 = audit.version === 'therapist-roster-v2';
+  if (typeof audit.version !== 'string' || !['therapist-roster-v1', 'therapist-roster-v2', 'therapist-roster-v3'].includes(audit.version) || !/^[a-f0-9]{64}$/.test(sourceHash) || audit.source_sha256 !== sourceHash) throw new Error('Unverified roster source');
+  const hasSourceEvidence = audit.version !== 'therapist-roster-v1';
+  const hasIdentityReview = audit.version === 'therapist-roster-v3';
   const period = object(audit.provider_period); keys(period, ['start', 'end']);
   const start = date(period.start), end = date(period.end);
   if (start > end) throw new Error('Invalid roster period');
   if (!Array.isArray(audit.rows) || !audit.rows.length || audit.rows.length > 2000) throw new Error('Invalid roster rows');
-  const ids = new Set<string>(), names = new Set<string>();
-  const rows = audit.rows.map(value => {
-    const row = object(value); keys(row, ['id', 'display_name', 'payroll_candidate_name', 'match_status', ...(v2 ? ['entity_kind', 'zip_status', 'zip_workbook', 'revenue_status', 'payment_status'] : [])]);
+  const ids = new Set<string>(), names = new Set<string>(), reviewedStaffIds = new Set<string>();
+  const rows = audit.rows.map((value): TherapistRosterRow => {
+    const row = object(value); keys(row, ['id', 'display_name', 'payroll_candidate_name', 'match_status', ...(hasSourceEvidence ? ['entity_kind', 'zip_status', 'zip_workbook', 'revenue_status', 'payment_status'] : []), ...(hasIdentityReview ? ['identity_review', 'review_issue'] : [])]);
     if (typeof row.id !== 'string' || !/^provider_[a-f0-9]{16}$/.test(row.id) || ids.has(row.id)) throw new Error('Invalid roster identity');
     const displayName = name(row.display_name), nameKey = displayName.toLocaleLowerCase('en-US').replace(/\s+/g, ' ');
     if (names.has(nameKey)) throw new Error('Duplicate roster name');
     ids.add(row.id); names.add(nameKey);
-    if (typeof row.match_status !== 'string' || ![ 'candidate_full_name', 'candidate_first_surname', 'no_payroll_candidate', ...(v2 ? ['candidate_alias', 'not_applicable'] : [])].includes(row.match_status)) throw new Error('Invalid match status');
+    if (typeof row.match_status !== 'string' || ![ 'candidate_full_name', 'candidate_first_surname', 'no_payroll_candidate', ...(hasSourceEvidence ? ['candidate_alias', 'not_applicable'] : []), ...(hasIdentityReview ? ['reviewed_name_discipline'] : [])].includes(row.match_status)) throw new Error('Invalid match status');
     const payrollCandidateName = row.payroll_candidate_name === null ? null : name(row.payroll_candidate_name);
     if (['no_payroll_candidate', 'not_applicable'].includes(row.match_status) !== (payrollCandidateName === null)) throw new Error('Conflicting match status');
-    const entityKind = v2 ? row.entity_kind : 'person';
-    const zipStatus = v2 ? row.zip_status : 'not_reviewed';
-    const revenueStatus = v2 ? row.revenue_status : 'not_reviewed';
-    const paymentStatus = v2 ? row.payment_status : 'not_reviewed';
+    const entityKind = hasSourceEvidence ? row.entity_kind : 'person';
+    const zipStatus = hasSourceEvidence ? row.zip_status : 'not_reviewed';
+    const revenueStatus = hasSourceEvidence ? row.revenue_status : 'not_reviewed';
+    const paymentStatus = hasSourceEvidence ? row.payment_status : 'not_reviewed';
     for (const [value, allowed] of [[entityKind, ['person', 'resource']], [zipStatus, ['available', 'candidate', 'not_found', 'not_reviewed']], [revenueStatus, ['present', 'absent', 'not_reviewed']], [paymentStatus, ['present', 'present_zero', 'absent', 'not_reviewed']]] as const) {
       if (typeof value !== 'string' || !(allowed as readonly string[]).includes(value)) throw new Error('Invalid source evidence');
     }
-    const zipWorkbook = !v2 || row.zip_workbook === null ? null : name(row.zip_workbook);
+    const zipWorkbook = !hasSourceEvidence || row.zip_workbook === null ? null : name(row.zip_workbook);
     if (['available', 'candidate'].includes(String(zipStatus)) !== (zipWorkbook !== null)) throw new Error('Conflicting ZIP evidence');
     if ((entityKind === 'resource') !== (row.match_status === 'not_applicable')) throw new Error('Conflicting resource classification');
-    return { id: row.id, displayName, payrollCandidateName, matchStatus: row.match_status as TherapistRosterRow['matchStatus'],
+    let identityReview: TherapistIdentityReview | null = null;
+    const reviewIssue = hasIdentityReview ? row.review_issue : null;
+    if (reviewIssue !== null && reviewIssue !== 'discipline_conflict' && reviewIssue !== 'alias_unverified') throw new Error('Invalid identity review issue');
+    if (reviewIssue === 'discipline_conflict' && !['candidate_full_name', 'candidate_first_surname'].includes(row.match_status)) throw new Error('Conflicting discipline review issue');
+    if (reviewIssue === 'alias_unverified' && row.match_status !== 'candidate_alias') throw new Error('Conflicting alias review issue');
+    if (hasIdentityReview) {
+      if (row.match_status === 'reviewed_name_discipline') {
+        const review = object(row.identity_review); keys(review, ['payroll_staff_id', 'review_basis', 'review_date']);
+        if (typeof review.payroll_staff_id !== 'string' || !/^\d{1,32}$/.test(review.payroll_staff_id) || reviewedStaffIds.has(review.payroll_staff_id) || review.review_basis !== 'unique_name_and_clinical_discipline') throw new Error('Invalid identity review evidence');
+        identityReview = { payrollStaffId: review.payroll_staff_id, reviewBasis: review.review_basis, reviewDate: date(review.review_date) };
+        reviewedStaffIds.add(review.payroll_staff_id);
+      } else if (row.identity_review !== null) throw new Error('Unexpected identity review evidence');
+    }
+    return { id: row.id, displayName, payrollCandidateName, matchStatus: row.match_status as TherapistRosterRow['matchStatus'], identityReview, reviewIssue,
       entityKind: entityKind as TherapistRosterRow['entityKind'], zipStatus: zipStatus as TherapistRosterRow['zipStatus'], zipWorkbook,
       revenueStatus: revenueStatus as TherapistRosterRow['revenueStatus'], paymentStatus: paymentStatus as TherapistRosterRow['paymentStatus'] };
 

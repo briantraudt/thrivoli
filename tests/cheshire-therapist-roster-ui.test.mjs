@@ -20,13 +20,13 @@ test('private roster names populate the dropdown only with access and never reus
       import React from 'react';
       import {IntakeContext} from './src/cheshire/intakeContext';
       import {CheshireFinanceDashboardView} from './src/cheshire/CheshireFinanceDashboardView';
-      export function Harness({state='ready',intakeState='ready',busy=false}) {
-        const value={month:'2026-10',busy,state:intakeState,selected:'coverage_manifest',documents:[{}],referenceSnapshot:null,setMonth(){},setSelected(){},refresh(){}};
+      export function Harness({state='ready',intakeState='ready',busy=false,reviewed=false}) {
+        const value={month:'2026-10',busy,state:intakeState,selected:'coverage_manifest',documents:[{reviewed}],referenceSnapshot:null,setMonth(){},setSelected(){},refresh(){}};
         return <IntakeContext.Provider value={value}><CheshireFinanceDashboardView state={state} snapshot={null} onRefresh={()=>{}} sampleParts={{clinic:{cents:12300,basis:'synthetic',partial:true},schools:null,cash:null}}/></IntakeContext.Provider>;
       }
     `,resolveDir:root,loader:'tsx'},outfile:dir+'/ui.mjs',bundle:true,platform:'node',format:'esm',packages:'external',jsx:'automatic',loader:{'.css':'empty'},define:{'import.meta.env':'{}'},logLevel:'silent',plugins:[{name:'synthetic-roster',setup(b){
       b.onResolve({filter:/\/therapistRoster$/},()=>({path:'roster',namespace:'mock'}));
-      b.onLoad({filter:/roster/,namespace:'mock'},()=>({contents:`export function readTherapistRoster(){return {issue:null,roster:{sourceHash:'a'.repeat(64),providerPeriod:{start:'2026-01-01',end:'2026-10-31'},rows:[{id:'provider_'+ 'a'.repeat(16),displayName:'Example Clinician',payrollCandidateName:'Example Payroll Candidate',matchStatus:'candidate_full_name',entityKind:'person',zipStatus:'candidate',zipWorkbook:'Synthetic.xlsx',revenueStatus:'present',paymentStatus:'present'},{id:'provider_'+'b'.repeat(16),displayName:'Synthetic Resource Label',payrollCandidateName:null,matchStatus:'not_applicable',entityKind:'resource',zipStatus:'not_found',zipWorkbook:null,revenueStatus:'present',paymentStatus:'absent'}]}}}`,loader:'ts'}));
+      b.onLoad({filter:/roster/,namespace:'mock'},()=>({contents:`export function readTherapistRoster(documents){const reviewed=documents[0].reviewed;return {issue:null,roster:{sourceHash:'a'.repeat(64),providerPeriod:{start:'2026-01-01',end:'2026-10-31'},rows:[{id:'provider_'+ 'a'.repeat(16),displayName:'Example Clinician',payrollCandidateName:'Example Payroll Candidate',matchStatus:reviewed?'reviewed_name_discipline':'candidate_full_name',identityReview:reviewed?{payrollStaffId:'0000000000000001',reviewBasis:'unique_name_and_clinical_discipline',reviewDate:'2026-11-01'}:null,reviewIssue:null,entityKind:'person',zipStatus:'candidate',zipWorkbook:'Synthetic.xlsx',revenueStatus:'present',paymentStatus:'present'},{id:'provider_'+'b'.repeat(16),displayName:'Synthetic Resource Label',payrollCandidateName:null,matchStatus:'not_applicable',entityKind:'resource',zipStatus:'not_found',zipWorkbook:null,revenueStatus:'present',paymentStatus:'absent'}]}}}`,loader:'ts'}));
     }}]});
     const {Harness}=await import(pathToFileURL(dir+'/ui.mjs'));
     await act(async()=>{renderer=create(React.createElement(Harness));});
@@ -38,8 +38,19 @@ test('private roster names populate the dropdown only with access and never reus
     assert.equal(renderer.root.findByProps({className:'csd-totals'}).findAllByType('strong')[0].children.join(''),'$123.00');
     await act(async()=>select().props.onChange({target:{value:'provider_'+'a'.repeat(16)}}));
     assert.deepEqual(renderer.root.findByProps({className:'csd-totals'}).findAllByType('strong').map(words),['—','—','—']);
+    await act(async()=>renderer.update(React.createElement(Harness,{reviewed:true})));
+    assert.match(words(renderer.root),/1 reviewed payroll matches/);
+    assert.match(words(renderer.root),/0 unconfirmed payroll candidates/);
+    assert.match(words(renderer.root),/Reviewed match · name \+ clinical discipline/);
+    assert.match(words(renderer.root),/stable-ID link not verified/);
+    assert.deepEqual(renderer.root.findByProps({className:'csd-totals'}).findAllByType('strong').map(words),['—','—','—']);
+    assert.doesNotMatch(words(renderer.root),/0000000000000001/);
+    await act(async()=>select().props.onChange({target:{value:'all'}}));
+    assert.equal(renderer.root.findByProps({className:'csd-totals'}).findAllByType('strong')[0].children.join(''),'$123.00');
+    for(let i=0;i<2;i++) await act(async()=>select().props.onChange({target:{value:'provider_'+'a'.repeat(16)}}));
+    assert.deepEqual(renderer.root.findByProps({className:'csd-totals'}).findAllByType('strong').map(words),['—','—','—']);
     for (const props of [{state:'no-access'},{state:'error'},{state:'loading'},{intakeState:'no-access'},{intakeState:'unavailable'},{busy:true}]) {
-      await act(async()=>renderer.update(React.createElement(Harness,props)));
+      await act(async()=>renderer.update(React.createElement(Harness,{reviewed:true,...props})));
       assert.doesNotMatch(words(renderer.root),/Example Clinician|Example Payroll Candidate/);
       assert.doesNotMatch(words(renderer.root.findByProps({className:'ced-therapist-links'})),/Roster not linked/);
     }
