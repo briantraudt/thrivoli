@@ -1,0 +1,10 @@
+.ctr-board { scroll-margin-top: 1rem; }
+.ctr-links { display: grid; grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)); gap: .75rem; margin: .75rem 0; }
+.ctr-links dt { font-size: .78rem; color: #60736b; }
+.ctr-links dd { margin: .25rem 0 0; overflow-wrap: anywhere; }
+.ctr-providers { list-style: none; padding: 0; margin: 0; }
+.ctr-provider { border-top: 1px solid #e3e9e4; padding: 1rem 0; }
+.ctr-provider h3 { margin: 0; font-size: 1rem; overflow-wrap: anywhere; }
+.ctr-details { margin-top: 1rem; }
+.ctr-details summary { cursor: pointer; font-weight: 600; }
+@media (max-width: 540px) { .ctr-links { grid-template-columns: 1fr; } }
