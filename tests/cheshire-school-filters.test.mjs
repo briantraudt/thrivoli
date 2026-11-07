@@ -166,7 +166,7 @@ test('selected school filters compact workbook amounts, never allocates invoices
     await pickSchool(row5Value);
     assert.equal(amount(), '$100.00');
     assert.deepEqual(totals(), ['$100.00', '—', '—']);
-    assertCompact(renderer);assert.match(words(card()),/Jan 2026|Jul\/Aug combined/);
+    assertCompact(renderer);assert.match(words(card()),/Current through August 2026|July\/August combined/);
     await clickPeriod('Month');
     assert.equal(amount(), '—');
     assert.equal(schoolSelect().props.value, row5Value);

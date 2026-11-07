@@ -39,7 +39,7 @@ test("dashboard renders verified source and all missing/access states without in
     const { render } = await import(pathToFileURL(`${dir}/render.mjs`));
     const ready = render("ready");
     assert.doesNotMatch(ready, /\$14,000\.00/);
-    assert.match(ready, /Missing/);
+    assert.match(ready, /Missing|Source unavailable/);
     assert.match(ready, /ced-category-list/);
     assert.match(ready, /Amount unknown/);
     assert.doesNotMatch(ready, /<details|<table|<p[ >]/);assert.match(ready, /All business/);
@@ -56,7 +56,7 @@ test("dashboard renders verified source and all missing/access states without in
       assert.match(html, /Amount unknown/);
     }
     const blank = render("ready", null);
-    assert.match(blank, /Missing/);
+    assert.match(blank, /Missing|Source unavailable/);
     assert.doesNotMatch(blank, /<strong>\$0\.00<\/strong>/);
     const zero = render("ready", "0");
     assert.doesNotMatch(zero, /\$0\.00/);

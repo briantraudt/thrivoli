@@ -75,3 +75,5 @@
  .ced-category-badge { font-size: 10px; }
 }
 .ced-compact-row .ced-name { grid-column: auto; }
+
+.ced-estimate-note { display: block; margin: -4px 0 16px; color: var(--muted, #64706a); font-size: .78rem; }

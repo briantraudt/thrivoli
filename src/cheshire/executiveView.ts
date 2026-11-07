@@ -245,9 +245,9 @@ export function buildExecutive(input: ExecutiveInput): ExecutiveModel {
     else expenseWaiting = 'Waiting on the overhead workbook.';
   }
 
-  const profitCents = revenue && expenses && !revenue.partial && !expenses.partial && revenue.basis === expenses.basis && Number.isSafeInteger(revenue.cents - expenses.cents) ? revenue.cents - expenses.cents : null;
+  const profitCents = revenue && expenses && Number.isSafeInteger(revenue.cents - expenses.cents) ? revenue.cents - expenses.cents : null;
   const margin = profitCents !== null && revenue !== null && revenue.cents > 0 ? profitCents / revenue.cents : null;
-  const profitWaiting = profitCents !== null ? '' : 'Waiting on full revenue and matching expenses. Profit is not estimated.';
+  const profitWaiting = profitCents !== null ? '' : 'Missing revenue or expenses for the selected scope.';
 
   const priorLabel = input.priorLabel;
   const priorRevenue = revenue === clinic ? input.priorClinic : revenue === schools ? input.priorSchools : revenue === cash ? input.priorCash : null;

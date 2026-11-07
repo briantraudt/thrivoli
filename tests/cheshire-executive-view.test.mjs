@@ -47,10 +47,10 @@ test('all-business source revenue sums clinic and school once, excludes cash, an
 
   const partial = buildExecutive({ ...blank, scope: 'Pool', clinic: { cents: 8000, basis: 'payment_date', partial: true }, overhead: { cents: 4000, basis: 'payment_date', partial: false, months: 1 } });
   assert.equal(partial.revenue?.cents, 8000);
-  assert.equal(partial.profitCents, null);
+  assert.equal(partial.profitCents, 4000);
 
   const mixed = buildExecutive({ ...blank, scope: 'Pool', clinic: { cents: 8000, basis: 'payment_date', partial: false }, overhead: { cents: 4000, basis: '2026 overhead budget', partial: false, months: 1 } });
-  assert.equal(mixed.profitCents, null);
+  assert.equal(mixed.profitCents, 4000);
 
   const ready = buildExecutive({ ...blank, scope: 'Pool', clinic: { cents: 10000, basis: 'same', partial: false }, overhead: { cents: 4000, basis: 'same', partial: false, months: 1 } });
   assert.equal(ready.profitCents, 6000);
@@ -154,10 +154,11 @@ test('partial totals include each source once, preserve zero and reject overflow
  const part=cents=>({cents,basis:'same',partial:false});
  const model=buildExecutive({...blank,scope:'all',clinic:part(100),schools:part(200),cash:part(900),payroll:part(400),overhead:{...part(50),months:1}});
  assert.equal(model.revenue.cents,300);assert.equal(model.expenses.cents,450);
- assert.equal(model.profitCents,null);assert.equal(model.margin,null);
+ assert.equal(model.profitCents,-150);assert.equal(model.margin,-0.5);
  assert.ok(model.revenueLines.every(line=>line.share===null));
  const zero=buildExecutive({...blank,scope:'all',clinic:part(0),payroll:part(0)});
- assert.equal(zero.revenue.cents,0);assert.equal(zero.expenses.cents,0);
+ assert.equal(zero.revenue.cents,0);assert.equal(zero.expenses.cents,0);assert.equal(zero.profitCents,0);
+ const differenceOverflow=buildExecutive({...blank,scope:'all',clinic:part(Number.MAX_SAFE_INTEGER),payroll:part(-1)});assert.equal(differenceOverflow.profitCents,null);
  const overflow=buildExecutive({...blank,scope:'all',clinic:part(Number.MAX_SAFE_INTEGER),schools:part(1),payroll:part(Number.MAX_SAFE_INTEGER),overhead:{...part(1),months:1}});
  assert.equal(overflow.revenue,null);assert.equal(overflow.expenses,null);
 });
